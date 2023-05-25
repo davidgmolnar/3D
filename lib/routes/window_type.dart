@@ -24,13 +24,13 @@ extension FromString on WindowType{
       case "INITIAL":
         return WindowType.INITIAL;
       case "MAIN_WINDOW":
-        return WindowType.INITIAL;
+        return WindowType.MAIN_WINDOW;
       case "SETTINGS":
-        return WindowType.INITIAL;
+        return WindowType.SETTINGS;
       case "TIME_SERIES_CHART":
-        return WindowType.INITIAL;
+        return WindowType.TIME_SERIES_CHART;
       case "MAP_CHART":
-        return WindowType.INITIAL;
+        return WindowType.MAP_CHART;
       default:
         return null;
     }

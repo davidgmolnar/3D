@@ -12,11 +12,13 @@ class ChildProcess{
     return _instance;
   }
 
-  ChildProcess._internal(){
-    _init();
+  ChildProcess._internal();
+
+  void start() async {
+    await _init();
   }
 
-  void _init() async {
+  Future<void> _init() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
@@ -47,6 +49,10 @@ class ChildProcess{
         }
       }
     });
+  }
+
+  void signalReady(){
+    _sock?.send(Response(localSocketPort, ResponseType.INIT_READY, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
   void signalStop(){

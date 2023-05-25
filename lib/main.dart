@@ -1,27 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'io/logger.dart';
-import 'multiprocess/childprocess.dart';
-import 'multiprocess/childprocess_api.dart';
-import 'routes/window_type.dart';
+import 'routes/startup.dart';
 
 void main(List<String> args) {
-  try{
-    if(args.isEmpty){
-      localSocketPort = masterSocketPort;
-      windowType = WindowType.MAIN_WINDOW;
-      localLogger = Logger(mainLogPath, "Master Logger");
-    }
-    else{
-      localSocketPort = int.parse(args[1]);
-      windowType = windowType.tryParse(args[0])!;
-      localLogger = Logger(mainLogPath, "${windowType.name} Logger @$localSocketPort");
-    }
-  }
-  catch (exc){
-    if(localSocketPort != masterSocketPort){
-      ChildProcess().signalStop();
-    }
+  if(!tryStartup(args)){
     return;
   }
   runApp(const MyApp());

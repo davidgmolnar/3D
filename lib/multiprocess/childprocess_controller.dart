@@ -21,11 +21,13 @@ class ChildProcessController{
     return _instance;
   }
 
-  ChildProcessController._internal(){
-    _init();
+  ChildProcessController._internal();
+
+  void start() async {
+    await _init();
   }
 
-  void _init() async {
+  Future<void> _init() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
@@ -127,7 +129,10 @@ class ChildProcessController{
   }
 
   void dispose(){
-    _dispatcher?.cancel();
+    if(_dispatcher != null && _dispatcher!.isActive){
+        _dispatcher?.cancel();
+        _dispatcher = null;
+    }
     for(int childProcessPort in _activeChildProcesses.keys){
       _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
       _activeChildProcesses.remove(childProcessPort);
