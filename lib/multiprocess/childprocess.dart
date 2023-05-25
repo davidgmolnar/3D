@@ -38,11 +38,11 @@ class ChildProcess{
                 break;
 
               default:
-                masterLogger.error("Childprocess on port ${command.childProcessPort} received an undefined message");
+                localLogger.error("Childprocess on port ${command.childProcessPort} received an undefined message");
             }
           }
           catch (exc){
-            masterLogger.error("Undefined message received");
+            localLogger.error("Undefined message received");
           }
         }
       }

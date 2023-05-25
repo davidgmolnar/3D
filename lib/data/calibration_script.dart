@@ -20,7 +20,7 @@ class ScriptInstruction{
     List<String> neededSignals = usedSignalRegexp.allMatches(line).map((e) { return e[0]!.trim(); }).toList();
     if(neededSignals.any((signal) => !localStack.containsKey(signal))){
       neededSignals.removeWhere((signal) => localStack.containsKey(signal));
-      masterLogger.error("Unknown signals found: $neededSignals");
+      localLogger.error("Unknown signals found: $neededSignals");
       throw Exception(ERR_SIGNAL_UNAVAILABLE);
     }
 
@@ -53,10 +53,13 @@ class CalibrationScript{
       }
       catch (exc){
         if(exc.toString() == ERR_SIGNAL_UNAVAILABLE){
-          masterLogger.error("Failed to execute script $path, signal unavailable at line $i");
+          localLogger.error("Failed to execute script $path, signal unavailable at line $i");
+        }
+        if(exc.toString() == ERR_OPERATION_UNKNOWN){
+          localLogger.error("Failed to execute script $path, operation unknown at line $i");
         }
         else{
-          masterLogger.error("Failed to execute script $path, unknown error at line $i");
+          localLogger.error("Failed to execute script $path, unknown error at line $i");
         }
         return {};
       }

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-const String masterLoggerPath = "./Logs/3D.log";
-Logger masterLogger = Logger(masterLoggerPath, "Master Logger")..start();
+const String mainLogPath = "./Logs/3D.log";
+Logger localLogger = Logger(mainLogPath, "Initial Logger");
 
 enum LogLevel{
   // ignore: constant_identifier_names
@@ -50,15 +50,22 @@ class Logger{
   Logger(this.logPath, this.loggerName);
 
   void start(){
+    if(_isActive){
+      return;
+    }
     _isActive = true;
     timer = Timer.periodic(Duration(milliseconds: loggerFlushIntervalMS), ((timer) async {
       await _flush();
     }));
   }
 
-  void stop(){
+  void stop() async {
+    if(!_isActive){
+      return;
+    }
     _isActive = false;
     timer?.cancel();
+    await _flush();
   }
 
   void info(String message){
@@ -101,13 +108,13 @@ class Logger{
     await logFile.open(mode: FileMode.append);
     
     List<LogEntry> copy = _buffer;
-    await logFile.writeAsString(contentsToString());
+    await logFile.writeAsString(contentsToString(copy));
     _buffer = _buffer.skip(copy.length).toList();
   }
 
-  String contentsToString(){
+  String contentsToString(List<LogEntry> data){
     String str = "";
-    for(LogEntry line in _buffer){
+    for(LogEntry line in data){
       str = "$str[${line.timeStamp}] [$loggerName - ${line.level.name.toUpperCase()}] ${line.message}\n";
     }
     return str;

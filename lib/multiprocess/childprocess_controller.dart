@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:log_analyser/multiprocess/childprocess_api.dart';
-
 import '../io/logger.dart';
 import '../routes/window_type.dart';
+import 'childprocess_api.dart';
 
 const int resendIntervalMS = 200;
 const int maxSendAttempt = 10;
@@ -24,9 +23,6 @@ class ChildProcessController{
 
   ChildProcessController._internal(){
     _init();
-    _dispatcher = Timer.periodic(const Duration(milliseconds: resendIntervalMS), ((timer) {
-      _flush();
-    }));
   }
 
   void _init() async {
@@ -44,7 +40,7 @@ class ChildProcessController{
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
                 }
                 else{
-                  masterLogger.error("Childprocess on port ${response.childProcessPort} unexpectedly reported INIT_READY");
+                  localLogger.error("Childprocess on port ${response.childProcessPort} unexpectedly reported INIT_READY");
                 }
                 break;
 
@@ -56,17 +52,20 @@ class ChildProcessController{
                 if(_activeChildProcesses.containsKey(response.childProcessPort)){
                   _activeChildProcesses.removeWhere((key, value) => key == response.childProcessPort);
                 }
+                else if(_newConnections.containsKey(response.childProcessPort)){
+                  _newConnections.removeWhere((key, value) => key == response.childProcessPort);
+                }
                 else{
-                  masterLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master");
+                  localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master");
                 }
                 break;
 
               default:
-                masterLogger.error("Childprocess on port ${response.childProcessPort} sent an undefined message");
+                localLogger.error("Childprocess on port ${response.childProcessPort} sent an undefined message");
             }
           }
           catch (exc){
-            masterLogger.error("Undefined message received");
+            localLogger.error("Undefined message received");
           }
         }
       }
@@ -74,7 +73,7 @@ class ChildProcessController{
   }
 
   int _findFirstAvailablePort(){
-    int port = 10000;
+    int port = masterSocketPort + 1;
     while(_activeChildProcesses.containsKey(port)){
       port++;
     }
@@ -85,7 +84,7 @@ class ChildProcessController{
     int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
     // Process run
     _newConnections[port] = type;
-    masterLogger.info("Started ${windowTypeDescription[type]}");
+    localLogger.info("Started ${windowTypeDescription[type]}");
     return port;
   }
 
@@ -100,7 +99,7 @@ class ChildProcessController{
       }));
     }
     else{
-      masterLogger.error("Message was attempted to be sent to a port not managed by master");
+      localLogger.error("Message was attempted to be sent to a port not managed by master");
     }
   }
 
@@ -120,12 +119,14 @@ class ChildProcessController{
       }
     }
     else{
-      _dispatcher?.cancel();
-      _dispatcher = null;
+      if(_dispatcher != null && _dispatcher!.isActive){
+        _dispatcher?.cancel();
+        _dispatcher = null;
+      }
     }
   }
 
-  void closeAll(){
+  void dispose(){
     _dispatcher?.cancel();
     for(int childProcessPort in _activeChildProcesses.keys){
       _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
