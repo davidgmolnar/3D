@@ -9,6 +9,8 @@ int localSocketPort = masterSocketPort;
 
 enum CommandType{
   // ignore: constant_identifier_names
+  SET_TITLE,
+  // ignore: constant_identifier_names
   DATA,
   // ignore: constant_identifier_names
   HIGHLIGHT_TIMESTAMP,
@@ -16,6 +18,7 @@ enum CommandType{
   KILL
 }
 
+// MainWindow -> SubWindow
 class Command{
   final int childProcessPort;
   final CommandType type;
@@ -47,6 +50,7 @@ enum ResponseType{
   STOPPING
 }
 
+// SubWindow -> MainWindow
 class Response{
   final int childProcessPort;
   final ResponseType type;

@@ -9,7 +9,8 @@ import 'childprocess_api.dart';
 const int resendIntervalMS = 200;
 const int maxSendAttempt = 10;
 
-class ChildProcessController{
+// DONT inherit/extend
+abstract class ChildProcessController{
   static final Map<int,WindowType> _activeChildProcesses = {};
   static final Map<int,WindowType> _newConnections = {};
   static RawDatagramSocket? _sock;
@@ -110,6 +111,7 @@ class ChildProcessController{
         }
         if(_backlog[command]! >= 10){
           _backlog.remove(command);
+          localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
         }
       }
     }

@@ -57,7 +57,10 @@ bool tryStartup(List<String> args){
   catch (exc){
     return false;
   }
+  return true;
+}
 
+void postStartup(){
   localLogger.start();
   if(windowType == WindowType.MAIN_WINDOW){
     ChildProcessController.start();
@@ -66,7 +69,6 @@ bool tryStartup(List<String> args){
     ChildProcess.start();
     ChildProcess.signalReady();
   }
-  return true;
 }
 
 void shutdown(){

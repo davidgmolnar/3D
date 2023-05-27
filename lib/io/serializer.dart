@@ -110,7 +110,7 @@ abstract class Serializer {
         }
       }
       catch (exc){
-        context.add(LogEntry.warning("Int.parse() or double.parse() exception when loading file ${file.absolute.path} on line $lineCnt"));
+        context.add(LogEntry.warning("Double.parse() exception when loading file ${file.absolute.path} on line $lineCnt"));
         return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
     }

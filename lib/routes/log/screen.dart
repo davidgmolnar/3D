@@ -16,6 +16,7 @@ class _LogAppState extends State<LogApp> {
   @override
   void initState() {
     StyleManager.updater = update;
+    postStartup();
     super.initState();
   }
 
@@ -26,7 +27,7 @@ class _LogAppState extends State<LogApp> {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: windowTypeTitle[windowType]!,
+      title: StyleManager.title ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const LogScreen(),

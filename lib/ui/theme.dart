@@ -49,6 +49,8 @@ abstract class StyleManager{
 
   static Style globalStyle = _styles["DARK"]!;
 
+  static String? title;
+
   static Function? updater;
 
   static void addStlye(Style style){
@@ -59,7 +61,7 @@ abstract class StyleManager{
 
   static void getStyleList() => _styles.keys;
 
-  void changeStyle(String name){
+  static void changeStyle(String name){
     if(_styles.containsKey(name) && updater != null){
       globalStyle = _styles[name]!;
       updater!();

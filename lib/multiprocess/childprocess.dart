@@ -2,8 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../io/logger.dart';
+import '../ui/theme.dart';
 import 'childprocess_api.dart';
 
+// DONT inherit/extend
 abstract class ChildProcess{
   static RawDatagramSocket? _sock;
 
@@ -20,6 +22,13 @@ abstract class ChildProcess{
           try{
             Command command = Command.decode(udpPayload);
             switch (command.type) {
+              case CommandType.SET_TITLE:
+                StyleManager.title = command.data["title"];
+                if(StyleManager.updater != null){
+                  StyleManager.updater!();
+                }
+                break;
+
               case CommandType.DATA:
                 // ...
                 break;

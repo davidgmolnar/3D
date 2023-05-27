@@ -15,6 +15,7 @@ class ScriptInstruction{
   static RegExp usedSignalRegexp = RegExp(r"#[a-zA-Z0-9_ ]+,");
 
   SignalContainer execute(String activeLog, Map<String, SignalContainer> localStack){
+    // ez az egész így nagyon nem jó
     String leftOperand = line.split("=").first;
     List<String> neededSignals = usedSignalRegexp.allMatches(line).map((e) { return e[0]!.trim(); }).toList();
     if(neededSignals.any((signal) => !localStack.containsKey(signal))){
