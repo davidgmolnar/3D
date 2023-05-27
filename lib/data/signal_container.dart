@@ -1,4 +1,10 @@
-import 'measurement.dart';
+class Measurement{
+  final num value;
+  /// Timestamp in ms
+  final int timeStamp;
+
+  Measurement(this.value, this.timeStamp);
+}
 
 class SignalContainer{
   List<Measurement> values;

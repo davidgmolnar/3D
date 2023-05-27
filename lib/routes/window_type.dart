@@ -6,17 +6,10 @@ enum WindowType{
   SETTINGS,
   TIME_SERIES_CHART,
   MAP_CHART,
+  LOG
 }
 
 WindowType windowType = WindowType.INITIAL;
-
-Map<WindowType, String> windowTypeDescription = {
-  WindowType.INITIAL: "Initial window",
-  WindowType.MAIN_WINDOW: "Main window",
-  WindowType.SETTINGS: "Settings window",
-  WindowType.TIME_SERIES_CHART: "Time chart",
-  WindowType.MAP_CHART: "Map chart"
-};
 
 extension FromString on WindowType{
   WindowType? tryParse(String string){
@@ -31,6 +24,8 @@ extension FromString on WindowType{
         return WindowType.TIME_SERIES_CHART;
       case "MAP_CHART":
         return WindowType.MAP_CHART;
+      case "LOG":
+        return WindowType.LOG;
       default:
         return null;
     }

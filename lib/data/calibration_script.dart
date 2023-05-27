@@ -1,6 +1,5 @@
 import '../io/logger.dart';
 import 'data.dart';
-import 'measurement.dart';
 import 'signal_container.dart';
 
 // ignore: constant_identifier_names

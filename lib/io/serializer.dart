@@ -21,6 +21,13 @@ abstract class Serializer {
 
   static Utf8Decoder utf8Decoder = const Utf8Decoder();
 
+  static Map<String, double> timeUnitToMsMultiplier = {
+    "min": 60*1000,
+    "s": 1000,
+    "ms": 1,
+    "us": 0.001
+  };
+
   static String safeUTF8Decode(List<int> bytes){
     List<int> removeIndexes = [];
     for(int i = 0; i < bytes.length; i++){
@@ -61,7 +68,53 @@ abstract class Serializer {
   static Future<LoadContext> _csvLoader(File file) async {
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [LogEntry.info("Started loading csv ${file.absolute.path}")];
-    // ...
+    List<String> lines = safeUTF8Decode(await file.readAsBytes()).split('\n');
+    if(lines.length < 3){
+      context.add(LogEntry.warning("File ${file.absolute.path} has less than 3 lines, cant have meaningful data, skipping"));
+    }
+    //else if(!lines[0].startsWith('Time,')){
+    //  context.add(LogEntry.warning("File ${file.absolute.path} does not start with 'Time' channel declaration, skipping"));
+    //}
+    else{
+      List<String> signals = lines[0].trim().split(',');
+      List<String> units = lines[1].trim().split(',');
+      if(!signals.contains('Time')){
+        context.add(LogEntry.warning("File ${file.absolute.path} does not have 'Time' channel declaration, skipping"));
+        return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
+      }
+      int timeIndex = signals.indexOf('Time');
+      double? timeToMsMultiplier = timeUnitToMsMultiplier[units[signals.indexOf('Time')]];
+      if(timeToMsMultiplier == null){
+        context.add(LogEntry.warning("File ${file.absolute.path} has undefined 'Time' channel unit, skipping"));
+        return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
+      }
+      for(int i = 0; i < signals.length; i++){
+        if(i != timeIndex){
+          storage[signals[i]] = SignalContainer(dbcName: signals[i], values: [], displayName: signals[i], unit: units[i].isEmpty ? null : units[i]);
+        }
+      }
+      int lineCnt = 3;
+      try{
+        for(String line in lines.sublist(2)){
+          List<String> tokens = line.trim().split(',');
+          if(tokens.length != signals.length){
+            continue;
+          }
+          int timeStamp = (double.parse(tokens[timeIndex]) * timeToMsMultiplier).toInt();
+          for(int i = 0; i < signals.length; i++){
+            if(i != timeIndex){
+              storage[signals[i]]!.values.add(Measurement(double.parse(tokens[i]), timeStamp));
+            }
+          }
+          lineCnt++;
+        }
+      }
+      catch (exc){
+        context.add(LogEntry.warning("Int.parse() or double.parse() exception when loading file ${file.absolute.path} on line $lineCnt"));
+        return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
+      }
+    }
+    context.add(LogEntry.info("Successfully loaded csv ${file.absolute.path}"));
     return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }
 

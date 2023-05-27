@@ -86,7 +86,7 @@ class ChildProcessController{
     int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
     // Process run
     _newConnections[port] = type;
-    localLogger.info("Started ${windowTypeDescription[type]}");
+    localLogger.info("Started ${type.name}");
     return port;
   }
 
