@@ -10,24 +10,17 @@ const int resendIntervalMS = 200;
 const int maxSendAttempt = 10;
 
 class ChildProcessController{
-  static final ChildProcessController _instance = ChildProcessController._internal();
-  final Map<int,WindowType> _activeChildProcesses = {};
-  final Map<int,WindowType> _newConnections = {};
-  RawDatagramSocket? _sock;
-  final Map<Command,int> _backlog = {};
-  Timer? _dispatcher;
+  static final Map<int,WindowType> _activeChildProcesses = {};
+  static final Map<int,WindowType> _newConnections = {};
+  static RawDatagramSocket? _sock;
+  static final Map<Command,int> _backlog = {};
+  static Timer? _dispatcher;
 
-  factory ChildProcessController(){
-    return _instance;
-  }
-
-  ChildProcessController._internal();
-
-  void start() async {
+  static void start() async {
     await _init();
   }
 
-  Future<void> _init() async {
+  static Future<void> _init() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
@@ -74,7 +67,7 @@ class ChildProcessController{
     });
   }
 
-  int _findFirstAvailablePort(){
+  static int _findFirstAvailablePort(){
     int port = masterSocketPort + 1;
     while(_activeChildProcesses.containsKey(port)){
       port++;
@@ -82,7 +75,7 @@ class ChildProcessController{
     return port;
   }
 
-  int addConnection(WindowType type){
+  static int addConnection(WindowType type){
     int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
     // Process run
     _newConnections[port] = type;
@@ -90,7 +83,7 @@ class ChildProcessController{
     return port;
   }
 
-  void sendTo(Command command){
+  static void sendTo(Command command){
     if(_activeChildProcesses.containsKey(command.childProcessPort)){
       _sock?.send(command.encode(), InternetAddress.loopbackIPv4, command.childProcessPort);
     }
@@ -105,7 +98,7 @@ class ChildProcessController{
     }
   }
 
-  void _flush(){
+  static void _flush(){
     if(_backlog.isNotEmpty){
       for(Command command in _backlog.keys){
         if(_activeChildProcesses.containsKey(command.childProcessPort)){
@@ -128,7 +121,7 @@ class ChildProcessController{
     }
   }
 
-  void dispose(){
+  static void dispose(){
     if(_dispatcher != null && _dispatcher!.isActive){
         _dispatcher?.cancel();
         _dispatcher = null;

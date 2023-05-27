@@ -4,21 +4,14 @@ import 'dart:typed_data';
 import '../io/logger.dart';
 import 'childprocess_api.dart';
 
-class ChildProcess{
-  static final ChildProcess _instance = ChildProcess._internal();
-  RawDatagramSocket? _sock;
+abstract class ChildProcess{
+  static RawDatagramSocket? _sock;
 
-  factory ChildProcess(){
-    return _instance;
-  }
-
-  ChildProcess._internal();
-
-  void start() async {
+  static void start() async {
     await _init();
   }
 
-  Future<void> _init() async {
+  static Future<void> _init() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
@@ -51,11 +44,11 @@ class ChildProcess{
     });
   }
 
-  void signalReady(){
+  static void signalReady(){
     _sock?.send(Response(localSocketPort, ResponseType.INIT_READY, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
-  void signalStop(){
+  static void signalStop(){
     _sock?.send(Response(localSocketPort, ResponseType.STOPPING, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
     _sock?.close();
   }

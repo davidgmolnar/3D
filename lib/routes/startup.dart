@@ -60,11 +60,11 @@ bool tryStartup(List<String> args){
 
   localLogger.start();
   if(windowType == WindowType.MAIN_WINDOW){
-    ChildProcessController().start();
+    ChildProcessController.start();
   }
   else{
-    ChildProcess().start();
-    ChildProcess().signalReady();
+    ChildProcess.start();
+    ChildProcess.signalReady();
   }
   return true;
 }
@@ -72,9 +72,9 @@ bool tryStartup(List<String> args){
 void shutdown(){
   localLogger.stop();
   if(windowType == WindowType.MAIN_WINDOW){
-    ChildProcessController().dispose();
+    ChildProcessController.dispose();
   }
   else{
-    ChildProcess().signalStop();
+    ChildProcess.signalStop();
   }
 }
