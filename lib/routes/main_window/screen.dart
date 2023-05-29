@@ -1,7 +1,9 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme.dart';
+import '../../ui/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
 
@@ -46,6 +48,16 @@ class MainWindowScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      body: WindowBorder(
+        color: StyleManager.globalStyle.secondaryColor,
+        width: 1,
+        child: Column(
+          children: const [
+            CustomWindowTitleBar()
+          ],
+        ),
+      ),
+    );
   }
 }

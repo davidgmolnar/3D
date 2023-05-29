@@ -1,3 +1,4 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,6 +11,7 @@ class Style{
   final double subTitleFontSize;
   final Color textColor;
   final double titleFontSize;
+  final double padding;
 
   Style({
     required this.name,
@@ -19,7 +21,8 @@ class Style{
     required this.secondaryColor,
     required this.fontSize,
     required this.subTitleFontSize,
-    required this.titleFontSize
+    required this.titleFontSize,
+    required this.padding,
   });
 }
 
@@ -33,7 +36,8 @@ abstract class StyleManager{
       secondaryColor: const Color.fromARGB(255, 42, 45, 62),
       fontSize: 14,
       subTitleFontSize: 20,
-      titleFontSize: 30
+      titleFontSize: 30,
+      padding: 8.0
     ),
     "BRIGHT": Style(
       name: "BRIGHT",
@@ -43,7 +47,8 @@ abstract class StyleManager{
       secondaryColor: const Color.fromARGB(255, 137, 149, 221),
       fontSize: 14,
       subTitleFontSize: 20,
-      titleFontSize: 30
+      titleFontSize: 30,
+      padding: 8.0
     ),
     };
 
@@ -82,4 +87,10 @@ abstract class StyleManager{
     ),
     appBarTheme: Theme.of(context).appBarTheme.copyWith(elevation: 0, backgroundColor: globalStyle.secondaryColor)
   );
+
+  static TextStyle get textStyle => TextStyle(color: globalStyle.textColor, fontSize: globalStyle.fontSize);
+  static TextStyle get subTitleStyle => TextStyle(color: globalStyle.textColor, fontSize: globalStyle.subTitleFontSize);
+  static TextStyle get titleStyle => TextStyle(color: globalStyle.textColor, fontSize: globalStyle.titleFontSize);
+
+  static WindowButtonColors get windowButtonColors => WindowButtonColors(iconNormal: globalStyle.primaryColor);
 }

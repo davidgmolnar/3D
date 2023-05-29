@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_api.dart';
 import '../multiprocess/childprocess_controller.dart';
+import '../ui/theme.dart';
 import 'log/screen.dart';
 import 'main_window/screen.dart';
 import 'map_chart/screen.dart';
@@ -20,7 +22,7 @@ Map<WindowType,String> windowTypeTitle = {
   WindowType.LOG: "Log",
 };
 
-void runSelectedApp(){
+void runSelectedApp() async {
   if(windowType == WindowType.MAIN_WINDOW){
     runApp(const MainWindowApp());
   }
@@ -38,7 +40,12 @@ void runSelectedApp(){
   }
   else{
     localLogger.critical("Failed to select app type to start, app type was ${windowType.name}");
+    return;
   }
+  doWhenWindowReady(() {
+    appWindow.title = StyleManager.title ?? windowTypeTitle[windowType]!;
+    appWindow.show();
+  });
 }
 
 bool tryStartup(List<String> args){

@@ -6,5 +6,3 @@ void main(List<String> args) {
   }
   runSelectedApp();
 }
-
-

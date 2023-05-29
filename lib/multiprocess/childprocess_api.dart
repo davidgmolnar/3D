@@ -9,7 +9,7 @@ int localSocketPort = masterSocketPort;
 
 enum CommandType{
   // ignore: constant_identifier_names
-  SET_TITLE,
+  WINDOW_SETUP,
   // ignore: constant_identifier_names
   DATA,
   // ignore: constant_identifier_names
