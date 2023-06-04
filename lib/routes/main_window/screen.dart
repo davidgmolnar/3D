@@ -1,4 +1,3 @@
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
@@ -6,6 +5,7 @@ import '../../ui/theme.dart';
 import '../../ui/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
+import 'main_window_widgets/main_window_layout.dart';
 
 class MainWindowApp extends StatefulWidget {
   const MainWindowApp({super.key});
@@ -49,12 +49,11 @@ class MainWindowScreen extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WindowBorder(
-        color: StyleManager.globalStyle.secondaryColor,
-        width: 1,
-        child: Column(
+      body: SafeArea(
+        child: ListView(
           children: const [
-            CustomWindowTitleBar()
+            CustomWindowTitleBar(),
+            MainWindowLayout()
           ],
         ),
       ),

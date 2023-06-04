@@ -31,7 +31,7 @@ abstract class StyleManager{
     "DARK": Style(
       name: "DARK",
       textColor: Colors.white,
-      bgColor: const Color.fromARGB(255, 33, 35, 50),
+      bgColor: const Color.fromARGB(255, 23, 24, 34),
       primaryColor: const Color.fromARGB(255, 22, 108, 189),
       secondaryColor: const Color.fromARGB(255, 42, 45, 62),
       fontSize: 14,

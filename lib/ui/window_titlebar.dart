@@ -47,7 +47,7 @@ class _WindowButtonsState extends State<WindowButtons> {
               : MaximizeWindowButton(colors: StyleManager.windowButtonColors,
                   onPressed: maximizeOrRestore,
                 ),
-          CloseWindowButton(colors: StyleManager.windowButtonColors,),
+          CloseWindowButton(colors: StyleManager.windowButtonColors..mouseOver = Colors.red,),
         ],
       ),
     );
