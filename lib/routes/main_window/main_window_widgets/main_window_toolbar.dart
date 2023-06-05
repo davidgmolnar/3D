@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:log_analyser/multiprocess/childprocess_api.dart';
 import 'package:log_analyser/ui/theme.dart';
 
 import '../../../multiprocess/childprocess_controller.dart';
@@ -18,7 +19,10 @@ class MainWindowToolbar extends StatelessWidget {
   static _calfileRunnerWindow (){}
   static _traceEditorWindow (){}
   static _calfileCreatorWindow (){}
-  static _settingsWindow (){ChildProcessController.addConnection(WindowType.MAIN_WINDOW);}
+  static _settingsWindow () async {
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS);
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, {"yoo": "miafasz"}));
+  }
 
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [

@@ -18,12 +18,12 @@ abstract class ChildProcessController{
   static final Map<Command,int> _backlog = {};
   static Timer? _dispatcher;
 
-  static void start() async {
-    await _init();
+  static Future<void> start() async {
+    _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+    _init();
   }
 
-  static Future<void> _init() async {
-    _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+  static void _init() async {
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = _sock?.receive()?.data;
@@ -35,6 +35,7 @@ abstract class ChildProcessController{
                 if(_newConnections.containsKey(response.childProcessPort)){
                   _activeChildProcesses[response.childProcessPort] = _newConnections[response.childProcessPort]!;
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
+                  localLogger.info("Established connection with childprocess on port ${response.childProcessPort}");
                 }
                 else{
                   localLogger.error("Childprocess on port ${response.childProcessPort} unexpectedly reported INIT_READY");
@@ -83,7 +84,7 @@ abstract class ChildProcessController{
     if(dir == null){
       return -1;
     }
-    await Process.run(
+    Process.run(
       "${dir}log_analyser.exe", [type.name , port.toString()],
     );
     _newConnections[port] = type;
@@ -108,18 +109,23 @@ abstract class ChildProcessController{
 
   static void _flush(){
     if(_backlog.isNotEmpty){
+      List<Command> toRemove = [];
       for(Command command in _backlog.keys){
         if(_activeChildProcesses.containsKey(command.childProcessPort)){
           _sock?.send(command.encode(), InternetAddress.loopbackIPv4, command.childProcessPort);
-          _backlog.remove(command);
+          toRemove.add(command);
         }
         else{
           _backlog[command] = _backlog[command]! + 1;
+            if(_backlog[command]! >= 10){
+            _backlog.remove(command);
+            toRemove.add(command);
+            localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
+          }
         }
-        if(_backlog[command]! >= 10){
-          _backlog.remove(command);
-          localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
-        }
+      }
+      for(int i = 0; i < toRemove.length; i++) {
+        _backlog.remove(toRemove[i]);
       }
     }
     else{

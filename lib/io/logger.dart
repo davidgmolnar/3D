@@ -105,11 +105,11 @@ class Logger{
     if(!await logFile.exists()){
       await logFile.create(recursive: true);
     }
-    await logFile.open(mode: FileMode.append);
-    
+    RandomAccessFile access = await logFile.open(mode: FileMode.append);
     List<LogEntry> copy = _buffer;
-    await logFile.writeAsString(contentsToString(copy));
+    await access.writeString(contentsToString(copy));
     _buffer = _buffer.skip(copy.length).toList();
+    await access.close();
   }
 
   String contentsToString(List<LogEntry> data){

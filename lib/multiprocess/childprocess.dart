@@ -12,12 +12,12 @@ import 'childprocess_api.dart';
 abstract class ChildProcess{
   static RawDatagramSocket? _sock;
 
-  static void start() async {
-    await _init();
+  static Future<void> start() async {
+    _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+    _init();
   }
 
-  static Future<void> _init() async {
-    _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+  static void _init() {
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = _sock?.receive()?.data;
