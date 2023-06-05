@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:log_analyser/ui/theme.dart';
 
+const double toolbarItemSize = 50;
+
 class ToolbarItemWithDropdown extends StatefulWidget {
   const ToolbarItemWithDropdown({super.key, required this.iconData, required this.dropdownItems});
 
@@ -28,16 +30,19 @@ class ToolbarItemWithDropdownState extends State<ToolbarItemWithDropdown> {
       },
       child: GestureDetector(
         onTap: () async {
+          if(widget.dropdownItems.isEmpty){
+            return;
+          }
           final render = itemKey.currentContext!.findRenderObject() as RenderBox;
           final String? result = await showMenu(
             color: StyleManager.globalStyle.secondaryColor,
             constraints: BoxConstraints(
-              maxWidth: widget.dropdownItems.fold<int>(0, (previousValue, element) => previousValue = element.text.length) * StyleManager.globalStyle.fontSize,
+              maxWidth: widget.dropdownItems.fold(0, (previousValue, element) => previousValue += element.text.length) * StyleManager.globalStyle.fontSize,
             ),
             context: context,
             position: RelativeRect.fromLTRB(
               render.localToGlobal(Offset.zero).dx,
-              render.localToGlobal(Offset.zero).dy + 50,
+              render.localToGlobal(Offset.zero).dy + toolbarItemSize,
               double.infinity,
               double.infinity
             ),
@@ -46,7 +51,9 @@ class ToolbarItemWithDropdownState extends State<ToolbarItemWithDropdown> {
               PopupMenuItem(
                 value: e.text,
                 height: StyleManager.globalStyle.fontSize,
-                child: Text(e.text, style: StyleManager.textStyle,),
+                child: Container(
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: StyleManager.globalStyle.primaryColor, width: 1),)),
+                  child: Text(e.text, style: StyleManager.textStyle,)),
               )
             ).toList()
           );
@@ -56,10 +63,10 @@ class ToolbarItemWithDropdownState extends State<ToolbarItemWithDropdown> {
         },
         child: Container(
           key: itemKey,
-          width: 50,
-          height: 50,
+          width: toolbarItemSize,
+          height: toolbarItemSize,
           color: isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
-          child: Icon(widget.iconData, size: 50 - 2 * StyleManager.globalStyle.padding,),
+          child: Icon(widget.iconData, size: toolbarItemSize - 2 * StyleManager.globalStyle.padding,),
         ),
       ),
     );
@@ -90,11 +97,14 @@ class ToolbarItemState extends State<ToolbarItem> {
         isHover = false;
         setState(() {});
       },
-      child: Container(
-        width: 50,
-        height: 50,
-        color: isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
-        child: Icon(widget.iconData, size: 50 - 2 * StyleManager.globalStyle.padding,),
+      child: GestureDetector(
+        onTap: () => widget.onPressed(),
+        child: Container(
+          width: toolbarItemSize,
+          height: toolbarItemSize,
+          color: isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
+          child: Icon(widget.iconData, size: toolbarItemSize - 2 * StyleManager.globalStyle.padding,),
+        ),
       ),
     );
   }

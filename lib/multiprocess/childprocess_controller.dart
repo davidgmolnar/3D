@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../io/file_system.dart';
 import '../io/logger.dart';
 import '../routes/window_type.dart';
 import 'childprocess_api.dart';
@@ -76,9 +77,15 @@ abstract class ChildProcessController{
     return port;
   }
 
-  static int addConnection(WindowType type){
+  static Future<int> addConnection(WindowType type) async {
     int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
-    // Process run
+    String? dir = await getCurrentDirectory();
+    if(dir == null){
+      return -1;
+    }
+    await Process.run(
+      "${dir}log_analyser.exe", [type.name , port.toString()],
+    );
     _newConnections[port] = type;
     localLogger.info("Started ${type.name}");
     return port;
