@@ -14,6 +14,7 @@ abstract class ChildProcess{
 
   static Future<void> start() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+    _sock!.broadcastEnabled = true;
     _init();
   }
 
@@ -40,9 +41,9 @@ abstract class ChildProcess{
                 break;
 
               case CommandType.KILL:
-                // ...
-                break;
-
+                localLogger.info("Controller killed this childprocess, stopping");
+                localLogger.stop();
+                exit(0);
               case CommandType.HIGHLIGHT_TIMESTAMP:
                 // ...
                 break;
@@ -65,6 +66,10 @@ abstract class ChildProcess{
 
   static void signalStop(){
     _sock?.send(Response(localSocketPort, ResponseType.STOPPING, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
+    _sock?.close();
+  }
+
+  static void stopWithoutSignaling(){
     _sock?.close();
   }
 }

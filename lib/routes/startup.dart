@@ -67,15 +67,14 @@ bool tryStartup(List<String> args){
   return true;
 }
 
-void postStartup() async {
+Future<void> postStartup() async {
   localLogger.start();
   localLogger.info("Starting ${windowType.name}");
   if(windowType == WindowType.MAIN_WINDOW){
     await ChildProcessController.start();
   }
   else{
-    await ChildProcess.start();
-    ChildProcess.signalReady();
+    await ChildProcess.start().then((_) => ChildProcess.signalReady());
   }
 }
 

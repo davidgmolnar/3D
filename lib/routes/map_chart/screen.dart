@@ -33,12 +33,6 @@ class _MapAppState extends State<MapApp> {
       home: const MapScreen(),
     );
   }
-
-  @override
-  void dispose() {
-    shutdown();
-    super.dispose();
-  }
 }
 
 class MapScreen extends StatelessWidget{

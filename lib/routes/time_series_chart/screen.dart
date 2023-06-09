@@ -33,12 +33,6 @@ class _ChartAppState extends State<ChartApp> {
       home: const ChartScreen(),
     );
   }
-
-  @override
-  void dispose() {
-    shutdown();
-    super.dispose();
-  }
 }
 
 class ChartScreen extends StatelessWidget{

@@ -118,10 +118,9 @@ abstract class ChildProcessController{
         else{
           _backlog[command] = _backlog[command]! + 1;
             if(_backlog[command]! >= 10){
-            _backlog.remove(command);
-            toRemove.add(command);
-            localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
-          }
+              toRemove.add(command);
+              localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
+            }
         }
       }
       for(int i = 0; i < toRemove.length; i++) {
@@ -143,12 +142,12 @@ abstract class ChildProcessController{
     }
     for(int childProcessPort in _activeChildProcesses.keys){
       _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
-      _activeChildProcesses.remove(childProcessPort);
     }
+    _activeChildProcesses.clear();
     for(int childProcessPort in _newConnections.keys){
       _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
-      _newConnections.remove(childProcessPort);
     }
+    _newConnections.clear();
     _sock?.close();
   }
 }

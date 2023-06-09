@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme.dart';
+import '../../ui/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
+import 'settings_widgets/settings_container.dart';
 
 class SettingApp extends StatefulWidget {
   const SettingApp({super.key});
@@ -33,12 +35,6 @@ class _SettingAppState extends State<SettingApp> {
       home: const SettingScreen(),
     );
   }
-
-  @override
-  void dispose() {
-    shutdown();
-    super.dispose();
-  }
 }
 
 class SettingScreen extends StatelessWidget{
@@ -46,6 +42,21 @@ class SettingScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const CustomWindowTitleBar(),
+            Expanded(
+              child: ListView(
+                children: const [
+                  SettingsContainer()
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

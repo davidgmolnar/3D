@@ -33,12 +33,6 @@ class _LogAppState extends State<LogApp> {
       home: const LogScreen(),
     );
   }
-
-  @override
-  void dispose() {
-    shutdown();
-    super.dispose();
-  }
 }
 
 class LogScreen extends StatelessWidget{

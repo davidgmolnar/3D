@@ -35,12 +35,6 @@ class _MainWindowAppState extends State<MainWindowApp> {
       home: const MainWindowScreen(),
     );
   }
-
-  @override
-  void dispose() {
-    shutdown();
-    super.dispose();
-  }
 }
 
 class MainWindowScreen extends StatelessWidget{
@@ -50,10 +44,16 @@ class MainWindowScreen extends StatelessWidget{
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          children: const [
-            CustomWindowTitleBar(),
-            MainWindowLayout()
+        child: Column(
+          children: [
+            const CustomWindowTitleBar(),
+            Expanded(
+              child: ListView(
+                children: const [
+                  MainWindowLayout()
+                ],
+              ),
+            ),
           ],
         ),
       ),

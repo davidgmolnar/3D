@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 
@@ -47,7 +49,13 @@ class _WindowButtonsState extends State<WindowButtons> {
               : MaximizeWindowButton(colors: StyleManager.windowButtonColors,
                   onPressed: maximizeOrRestore,
                 ),
-          CloseWindowButton(colors: StyleManager.windowButtonColors..mouseOver = Colors.red,),
+          CloseWindowButton(
+            colors: StyleManager.windowButtonColors..mouseOver = Colors.red,
+            onPressed: () {
+              shutdown();
+              exit(0);
+            },
+          ),
         ],
       ),
     );
