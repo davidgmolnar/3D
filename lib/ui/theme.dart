@@ -50,7 +50,7 @@ abstract class StyleManager{
       titleFontSize: 30,
       padding: 8.0
     ),
-    };
+  };
 
   static Style globalStyle = _styles["DARK"]!;
 
@@ -64,7 +64,7 @@ abstract class StyleManager{
     }
   }
 
-  static void getStyleList() => _styles.keys;
+  static List<String> getStyleList() => _styles.keys.toList();
 
   static void changeStyle(String name){
     if(_styles.containsKey(name) && updater != null){
@@ -93,4 +93,5 @@ abstract class StyleManager{
   static TextStyle get titleStyle => TextStyle(color: globalStyle.textColor, fontSize: globalStyle.titleFontSize);
 
   static WindowButtonColors get windowButtonColors => WindowButtonColors(iconNormal: globalStyle.primaryColor);
+  static String get activeStyle => _styles.keys.where((element) => _styles[element] == globalStyle).first;
 }

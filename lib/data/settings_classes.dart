@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 enum SettingType{
   // ignore: constant_identifier_names
   BOOL,
@@ -100,4 +102,57 @@ class Setting{
     }
     return ret;
   }
+}
+
+class TraceSetting{
+  final String signal;
+  Color color;
+  bool isVisible = false;
+  num offset = 0;
+  num scale = 1;
+
+  TraceSetting({
+    required this.signal,
+    required this.color,
+  });
+
+  void update({Color? color, bool? isVisible, num? offset, num? scale}){
+    this.color = color ?? this.color;
+    this.isVisible = isVisible ?? this.isVisible;
+    this.offset = offset ?? this.offset;
+    this.scale = scale ?? this.scale;
+  }
+
+  static TraceSetting? fromJson(Map<String,dynamic> json){
+    if(!json.containsKey('signal') || json['signal'] !is String){
+      return null;
+    }
+    else if(!json.containsKey('color') || json['color'] !is List || json['color'].length != 4 || !json['color'].every((element) => element is int)){
+      return null;
+    }
+    else if(!json.containsKey('isVisible') || json['isVisible'] !is int || json['isVisible'] < 0 || json['isVisible'] > 1){
+      return null;
+    }
+    else if(!json.containsKey('offset') || json['offset'] !is num){
+      return null;
+    }
+    else if(!json.containsKey('scale') || json['scale'] !is num){
+      return null;
+    }
+    else{
+      final Color color = Color.fromARGB(json['color'][0], json['color'][1], json['color'][2], json['color'][3]);
+      return TraceSetting(signal: json['signal'], color: color)..isVisible = json['isVisible']..offset = json['offset']..scale = json['scale'];
+    }
+  }
+
+  Map<String,dynamic> toJson(){
+    Map<String, dynamic> ret = {};
+    ret['signal'] = signal;
+    ret['color'] = [color.alpha, color.red, color.green, color.blue];
+    ret['isVisible'] = isVisible ? 1 : 0;
+    ret['offset'] = offset;
+    ret['scale'] = scale;
+    return ret;
+  }
+
 }
