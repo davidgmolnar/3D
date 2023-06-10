@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../ui/charts/main_window_chart.dart';
 import 'main_window_toolbar.dart';
 
 class MainWindowLayout extends StatelessWidget {
@@ -10,6 +11,7 @@ class MainWindowLayout extends StatelessWidget {
     return Column(
       children: const [
         MainWindowToolbar(),
+        ChartContainer()
       ],
     );
   }

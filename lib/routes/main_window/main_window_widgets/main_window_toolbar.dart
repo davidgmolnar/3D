@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:log_analyser/multiprocess/childprocess_api.dart';
-import 'package:log_analyser/ui/theme.dart';
+import 'package:log_analyser/ui/theme/theme.dart';
 
 import '../../../multiprocess/childprocess_controller.dart';
-import '../../../ui/toolbar_item.dart';
+import '../../../ui/toolbar/toolbar_item.dart';
 import '../../window_type.dart';
 
 class MainWindowToolbar extends StatelessWidget {
@@ -23,6 +23,7 @@ class MainWindowToolbar extends StatelessWidget {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS);
     ChildProcessController.sendTo(Command(port, CommandType.DATA, {"yoo": "miafasz"}));
   }
+  static _logWindow (){}
 
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
@@ -36,6 +37,7 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [],),
     ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
     ToolbarItem(iconData: Icons.settings, onPressed: _settingsWindow),
+    ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
   ];
 
   static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
@@ -47,6 +49,7 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
     ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
     ToolbarDropdownItem(onPressed: _settingsWindow, text: "Settings"),
+    ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
   ];
 
   static int _mainWindowToolbarItemsHiddenSkip(int i) => 

@@ -5,7 +5,7 @@ import 'dart:ui';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import '../io/logger.dart';
-import '../ui/theme.dart';
+import '../ui/theme/theme.dart';
 import 'childprocess_api.dart';
 
 // DONT inherit/extend
@@ -19,7 +19,7 @@ abstract class ChildProcess{
   }
 
   static void _init() {
-    _sock!.listen((udp) {
+    _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = _sock?.receive()?.data;
         if (udpPayload != null && udpPayload.isNotEmpty) {
@@ -32,7 +32,7 @@ abstract class ChildProcess{
                 appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
                 // appWindow.title = command.data["title"];
                 if(StyleManager.updater != null){
-                  StyleManager.updater!();
+                  StyleManager.updater();
                 }
                 break;
 
@@ -42,7 +42,7 @@ abstract class ChildProcess{
 
               case CommandType.KILL:
                 localLogger.info("Controller killed this childprocess, stopping");
-                localLogger.stop();
+                await localLogger.stop();
                 exit(0);
               case CommandType.HIGHLIGHT_TIMESTAMP:
                 // ...

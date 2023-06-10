@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
@@ -5,7 +7,7 @@ import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_api.dart';
 import '../multiprocess/childprocess_controller.dart';
-import '../ui/theme.dart';
+import '../ui/theme/theme.dart';
 import 'log/screen.dart';
 import 'main_window/screen.dart';
 import 'map_chart/screen.dart';
@@ -78,12 +80,13 @@ Future<void> postStartup() async {
   }
 }
 
-void shutdown(){
-  localLogger.stop();
+Future<void> shutdown() async {
+  await localLogger.stop();
   if(windowType == WindowType.MAIN_WINDOW){
     ChildProcessController.dispose();
   }
   else{
     ChildProcess.signalStop();
   }
+  exit(0);
 }

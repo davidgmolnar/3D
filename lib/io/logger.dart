@@ -59,7 +59,7 @@ class Logger{
     }));
   }
 
-  void stop() async {
+  Future<void> stop() async {
     if(!_isActive){
       return;
     }

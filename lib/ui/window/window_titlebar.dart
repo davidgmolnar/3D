@@ -1,11 +1,11 @@
-import 'dart:io';
-
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 
-import '../routes/startup.dart';
-import '../routes/window_type.dart';
-import 'theme.dart';
+import '../../routes/startup.dart';
+import '../../routes/window_type.dart';
+import '../theme/theme.dart';
+
+const titlebarHeight = 25; // Windows default
 
 class WindowTitle extends StatelessWidget {
   const WindowTitle({super.key, required this.title});
@@ -51,9 +51,8 @@ class _WindowButtonsState extends State<WindowButtons> {
                 ),
           CloseWindowButton(
             colors: StyleManager.windowButtonColors..mouseOver = Colors.red,
-            onPressed: () {
+            onPressed: () async {
               shutdown();
-              exit(0);
             },
           ),
         ],

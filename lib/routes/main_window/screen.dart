@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
-import '../../ui/theme.dart';
-import '../../ui/window_titlebar.dart';
+import '../../ui/theme/theme.dart';
+import '../../ui/window/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
 import 'main_window_widgets/main_window_layout.dart';

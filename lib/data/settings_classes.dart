@@ -87,26 +87,38 @@ class Setting{
     }
   }
 
-  Map<String, dynamic> toJson(){
-    Map<String, dynamic> ret = {};
-    ret['identifier'] = identifier;
-    ret['value'] = value;
-    if(selection != null){
-      ret['selection'] = selection;
+  Map<String, dynamic> get asJson => 
+    type == SettingType.BOOL ?
+    {
+      'identifier': identifier,
+      'value' : value,
+      'type': type.index
     }
-    if(max != null){
-      ret['max'] = max;
+    : type == SettingType.SELECTION ?
+    {
+      'identifier': identifier,
+      'value': value,
+      'selection': selection,
+      'type': type.index
     }
-    if(min != null){
-      ret['min'] = min;
+    : type == SettingType.MINMAX ?
+    {
+      'identifier': identifier,
+      'value': value,
+      'max': max,
+      'min': min,
+      'type': type.index,
     }
-    return ret;
-  }
+    :
+    {
+      'type': -1
+    };
 }
 
 class TraceSetting{
   final String signal;
   Color color;
+  int scalingGroup;
   bool isVisible = false;
   num offset = 0;
   num scale = 1;
@@ -114,6 +126,7 @@ class TraceSetting{
   TraceSetting({
     required this.signal,
     required this.color,
+    required this.scalingGroup,
   });
 
   void update({Color? color, bool? isVisible, num? offset, num? scale}){
@@ -139,20 +152,21 @@ class TraceSetting{
     else if(!json.containsKey('scale') || json['scale'] !is num){
       return null;
     }
+    else if(!json.containsKey('scalingGroup') || json['scalingGroup'] !is int){
+      return null;
+    }
     else{
       final Color color = Color.fromARGB(json['color'][0], json['color'][1], json['color'][2], json['color'][3]);
-      return TraceSetting(signal: json['signal'], color: color)..isVisible = json['isVisible']..offset = json['offset']..scale = json['scale'];
+      return TraceSetting(signal: json['signal'], color: color, scalingGroup: json['scalingGroup'])..isVisible = json['isVisible']..offset = json['offset']..scale = json['scale'];
     }
   }
 
-  Map<String,dynamic> toJson(){
-    Map<String, dynamic> ret = {};
-    ret['signal'] = signal;
-    ret['color'] = [color.alpha, color.red, color.green, color.blue];
-    ret['isVisible'] = isVisible ? 1 : 0;
-    ret['offset'] = offset;
-    ret['scale'] = scale;
-    return ret;
-  }
-
+  Map<String,dynamic> get asJson => {
+    'signal': signal,
+    'color': [color.alpha, color.red, color.green, color.blue],
+    'isVisible': isVisible ? 1 : 0,
+    'offset': offset,
+    'scale': scale,
+    'scalingGroup': scalingGroup
+  };
 }

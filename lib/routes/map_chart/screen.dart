@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
-import '../../ui/theme.dart';
+import '../../ui/theme/theme.dart';
 import '../startup.dart';
 import '../window_type.dart';
 
