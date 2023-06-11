@@ -17,7 +17,7 @@ class SettingApp extends StatefulWidget {
 class _SettingAppState extends State<SettingApp> {
   @override
   void initState() {
-    StyleManager.updater = update;
+    StyleManager.titleNotifier.addListener(update);
     postStartup();
     super.initState();
   }
@@ -29,11 +29,17 @@ class _SettingAppState extends State<SettingApp> {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.title ?? windowTypeTitle[windowType]!,
+      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const SettingScreen(),
     );
+  }
+
+  @override
+  void dispose() {
+    StyleManager.titleNotifier.removeListener(update);
+    super.dispose();
   }
 }
 

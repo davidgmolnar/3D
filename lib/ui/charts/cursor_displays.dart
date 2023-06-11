@@ -12,7 +12,7 @@ class CursorInfo{
   List<bool> isDelta = [];
 }
 
-UpdateableValueNotifier<CursorInfo> cursorInfoNotifier = UpdateableValueNotifier<CursorInfo>(CursorInfo());
+final UpdateableValueNotifier<CursorInfo> cursorInfoNotifier = UpdateableValueNotifier<CursorInfo>(CursorInfo());
 
 
 class CursorDisplay extends StatefulWidget {

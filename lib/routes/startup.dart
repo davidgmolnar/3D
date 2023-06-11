@@ -45,7 +45,7 @@ void runSelectedApp() async {
     return;
   }
   doWhenWindowReady(() {
-    appWindow.title = StyleManager.title ?? windowTypeTitle[windowType]!;
+    appWindow.title = StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!;
     appWindow.show();
   });
 }

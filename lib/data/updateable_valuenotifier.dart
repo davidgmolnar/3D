@@ -7,4 +7,8 @@ class UpdateableValueNotifier<T> extends ValueNotifier<T>{
     updater(value);
     notifyListeners();
   }
+
+  void updateWithoutNotify(void Function(T value) updater){
+    updater(value);
+  }
 }

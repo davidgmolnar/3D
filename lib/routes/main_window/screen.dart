@@ -17,7 +17,7 @@ class MainWindowApp extends StatefulWidget {
 class _MainWindowAppState extends State<MainWindowApp> {
   @override
   void initState() {
-    StyleManager.updater = update;
+    StyleManager.titleNotifier.addListener(update);
     postStartup();
     super.initState();
   }
@@ -29,11 +29,17 @@ class _MainWindowAppState extends State<MainWindowApp> {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.title ?? windowTypeTitle[windowType]!,
+      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const MainWindowScreen(),
     );
+  }
+
+  @override
+  void dispose() {
+    StyleManager.titleNotifier.removeListener(update);
+    super.dispose();
   }
 }
 

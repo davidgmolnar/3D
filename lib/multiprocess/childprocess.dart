@@ -27,11 +27,14 @@ abstract class ChildProcess{
             Command command = Command.decode(udpPayload);
             switch (command.type) {
               case CommandType.WINDOW_SETUP:
-                StyleManager.title = command.data["title"];
-                appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
-                appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
-                // appWindow.title = command.data["title"];
-                StyleManager.updater();
+                StyleManager.titleNotifier.update((value) {
+                  value = command.data["title"];
+                });
+                // ezeket uifileban kéne felparsolni runapp előtt ezek szerint
+                //appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
+                //appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
+                //appWindow.title = command.data["title"];
+                //StyleManager.updater();
                 break;
 
               case CommandType.DATA:
@@ -56,6 +59,10 @@ abstract class ChildProcess{
         }
       }
     });
+  }
+
+  static void send(List<int> bytes){
+    _sock?.send(bytes, InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
   static void signalReady(){

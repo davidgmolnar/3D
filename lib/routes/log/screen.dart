@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
+import '../../ui/window/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
+import 'log_widgets/log_container.dart';
 
 class LogApp extends StatefulWidget {
   const LogApp({super.key});
@@ -15,23 +17,29 @@ class LogApp extends StatefulWidget {
 class _LogAppState extends State<LogApp> {
   @override
   void initState() {
-    StyleManager.updater = update;
+    StyleManager.titleNotifier.addListener(_update);
     postStartup();
     super.initState();
   }
 
-  void update() => setState(() {});
+  void _update() => setState(() {});
   
   @override
   Widget build(BuildContext context) {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.title ?? windowTypeTitle[windowType]!,
+      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const LogScreen(),
     );
+  }
+
+  @override
+  void dispose() {
+    StyleManager.titleNotifier.removeListener(_update);
+    super.dispose();
   }
 }
 
@@ -40,6 +48,17 @@ class LogScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: const [
+            CustomWindowTitleBar(),
+            Expanded(
+              child: LogContainer()
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

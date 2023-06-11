@@ -96,6 +96,10 @@ class Logger{
     _buffer.add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()));
   }
 
+  void addAll(List<LogEntry> entries){
+    _buffer.addAll(entries);
+  }
+
   Future<void> _flush() async {
     if(_buffer.isEmpty){
       return;

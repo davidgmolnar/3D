@@ -15,7 +15,7 @@ class ChartApp extends StatefulWidget {
 class _ChartAppState extends State<ChartApp> {
   @override
   void initState() {
-    StyleManager.updater = update;
+    StyleManager.titleNotifier.addListener(update);
     postStartup();
     super.initState();
   }
@@ -27,11 +27,17 @@ class _ChartAppState extends State<ChartApp> {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.title ?? windowTypeTitle[windowType]!,
+      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const ChartScreen(),
     );
+  }
+
+  @override
+  void dispose() {
+    StyleManager.titleNotifier.removeListener(update);
+    super.dispose();
   }
 }
 

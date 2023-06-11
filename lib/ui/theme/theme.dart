@@ -2,6 +2,8 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../data/updateable_valuenotifier.dart';
+
 class Style{
   final Color bgColor;
   final double fontSize;
@@ -54,7 +56,7 @@ abstract class StyleManager{
 
   static Style globalStyle = _styles["DARK"]!;
 
-  static String? title;
+  static final UpdateableValueNotifier<String?> titleNotifier = UpdateableValueNotifier<String?>(null);
 
   static Function updater = (){};
 

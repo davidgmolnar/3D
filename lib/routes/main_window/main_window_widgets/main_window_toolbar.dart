@@ -10,7 +10,10 @@ import '../../window_type.dart';
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
-  static _importLogWindow (){}
+  static _importLogWindow () async {
+    int port = await ChildProcessController.addConnection(WindowType.LOG);
+    ChildProcessController.sendTo(Command(port, CommandType.WINDOW_SETUP, {"title": "Import Log",}));
+  }
   static _importCALWindow (){}
   static _importUIWindow (){}
 

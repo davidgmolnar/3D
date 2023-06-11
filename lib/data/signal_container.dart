@@ -6,6 +6,15 @@ class Measurement{
   final int timeStamp;
 
   Measurement(this.value, this.timeStamp);
+
+  Map<String, num> get asJson => {
+    "value": value,
+    "timeStamp": timeStamp
+  };
+
+  static Measurement fromJson(Map<String, num> map){
+    return Measurement(map['value']!, map['timeStamp']! as int);
+  }
 }
 
 class SignalContainer{
@@ -21,6 +30,22 @@ class SignalContainer{
     this.unit
   });
 
+  Map<String, dynamic> get asJson => {
+    "dbcName": dbcName,
+    "displayName": displayName,
+    "unit": unit ?? "NOT_SET",
+    "values": values.asMap().map((key, value) => MapEntry(key, value.asJson))
+  };
+
+  static SignalContainer fromJson(Map<String, dynamic> map){
+    return SignalContainer(
+      dbcName: map['dbcName'],
+      displayName: map['displayName'],
+      unit: map['unit'] == "NOT_SET" ? null : map['unit'],
+      values: map['values'].values.map((element) => element.fromJson(element)).toList()
+    );
+  }
+
   void updateSignalContainer(ChartShowDuration duration){
     
   }
@@ -28,5 +53,4 @@ class SignalContainer{
   static SignalContainer create(ChartShowDuration duration) {
     return SignalContainer(dbcName: "", values: [], displayName: "");
   }
-  // etc
 } 
