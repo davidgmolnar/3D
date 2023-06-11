@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-
 import '../../../data/settings.dart';
 import '../../../data/signal_container.dart';
+import '../../../data/updateable_valuenotifier.dart';
 
 const int _scrollMultiplier = 1; // setting
 const int _moveMultiplier = 1; // setting
@@ -14,17 +13,20 @@ class ChartShowDuration{
 }
 
 abstract class ChartController{
-  static final ChartShowDuration _shownDuration = ChartShowDuration(offset: 0, duration: 1000);
-  static final ValueNotifier shownDurationNotifier = ValueNotifier(_shownDuration);
+  static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(offset: 0, duration: 1000));
 
   static set zoomInTime(double pointerSignalScrollDelta){
-    final int delta = (_shownDuration.duration * 0.01 * pointerSignalScrollDelta * _scrollMultiplier).toInt();
-    _shownDuration.offset -= delta;
-    _shownDuration.duration += delta * 2;
+    final int delta = (shownDurationNotifier.value.duration * 0.01 * pointerSignalScrollDelta * _scrollMultiplier).toInt();
+    shownDurationNotifier.update((shown) {
+      shown.offset -= delta;
+      shown.duration += delta * 2;
+    });
   }
 
   static set moveInTime(double horizontalDragUpdateDelta){
-    _shownDuration.offset -= horizontalDragUpdateDelta.toInt() * _moveMultiplier;
+    shownDurationNotifier.update((shown) {
+      shown.offset -= horizontalDragUpdateDelta.toInt() * _moveMultiplier;
+    });
   }
 
   static final Map<String, Map<String, SignalContainer>> _shownData = {};
@@ -49,10 +51,10 @@ abstract class ChartController{
       _shownData[measurement] ??= {};
       for(String signal in visibleSignals[measurement]!){
         if(_shownData[measurement]!.containsKey(signal)){
-          _shownData[measurement]![signal]!.updateSignalContainer(_shownDuration);
+          _shownData[measurement]![signal]!.updateSignalContainer(shownDurationNotifier.value);
         }
         else{
-          _shownData[measurement]![signal] = SignalContainer.create(_shownDuration);  // ez static signalcontainer member kéne legyen
+          _shownData[measurement]![signal] = SignalContainer.create(shownDurationNotifier.value);
         }
       }
     }

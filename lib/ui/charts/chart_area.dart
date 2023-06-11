@@ -52,21 +52,21 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
           print('onPointerSignal ${event.scrollDelta.dy}');
-          // zoom időben
+          ChartController.zoomInTime = event.scrollDelta.dy;
         }
       },
       behavior: HitTestBehavior.opaque,
       child: GestureDetector(
         onHorizontalDragUpdate: (details) {
           print('onHorizontalDragUpdate ${details.primaryDelta}');
-          // húz jobbra balra
+          ChartController.moveInTime = details.primaryDelta ?? 0;
         },
         onSecondaryTapDown: (details) {
-          // add cursor at position
-          // position to timestamp
           print('onSecondaryTapDown ${details.localPosition.dx}');
-          cursorInfo.timeStamps.add(details.localPosition.dx.toInt());
-          update();
+          cursorInfoNotifier.update((cursorInfo) {
+            // position to timestamp calc
+            cursorInfo.timeStamps.add(details.localPosition.dx.toInt());
+          });
         },
         behavior: HitTestBehavior.opaque,
         child: Stack(
@@ -74,10 +74,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
           children: [
             CustomPaint(painter: _ChartLinePainter(),),
             // time axis
-            for(int i = 0; i < cursorInfo.timeStamps.length; i++)
-              Positioned(left: cursorInfo.timeStamps[i].toDouble(), child: Cursor(cursorIndex: i, gestureAreaUpdater: update,)),
-            for(int i = 0; i < cursorInfo.timeStamps.length; i++)
-              Positioned(left: cursorInfo.timeStamps[i] + cursorHorizontalDragBuffer, child: CursorTooltip(cursorIndex: i, gestureAreaUpdater: update,))
+            const CursorOverlay()
           ],
         ),
       ),

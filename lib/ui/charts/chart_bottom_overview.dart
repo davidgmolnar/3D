@@ -27,7 +27,6 @@ class _ChartBottomOverviewState extends State<ChartBottomOverview> {
       onHorizontalDragUpdate: (details) {
         print('bottom onHorizontalDragUpdate ${details.primaryDelta}');
         ChartController.moveInTime = details.primaryDelta ?? 0;
-        setState(() {});
       },
       child: Container(
         // draw frame around visible part

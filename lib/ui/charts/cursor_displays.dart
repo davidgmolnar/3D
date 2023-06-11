@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/updateable_valuenotifier.dart';
 import '../theme/theme.dart';
 import 'chart_area.dart';
 
@@ -11,8 +12,7 @@ class CursorInfo{
   List<bool> isDelta = [];
 }
 
-CursorInfo cursorInfo = CursorInfo();
-ValueNotifier _cursorUpdateNotifier = ValueNotifier(cursorInfo);
+UpdateableValueNotifier<CursorInfo> cursorInfoNotifier = UpdateableValueNotifier<CursorInfo>(CursorInfo());
 
 
 class CursorDisplay extends StatefulWidget {
@@ -27,7 +27,7 @@ class _CursorDisplayState extends State<CursorDisplay> {
 
   @override
   void initState() {
-    _cursorUpdateNotifier.addListener(update);
+    cursorInfoNotifier.addListener(update);
     super.initState();
   }
 
@@ -43,17 +43,16 @@ class _CursorDisplayState extends State<CursorDisplay> {
 
   @override
   void dispose() {
-    _cursorUpdateNotifier.removeListener(update);
+    cursorInfoNotifier.removeListener(update);
     super.dispose();
   }
 }
 
 
 class CursorTooltip extends StatelessWidget {
-  const CursorTooltip({super.key, required this.cursorIndex, required this.gestureAreaUpdater});
+  const CursorTooltip({super.key, required this.cursorIndex});
 
   final int cursorIndex;
-  final Function gestureAreaUpdater;
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +66,9 @@ class CursorTooltip extends StatelessWidget {
 }
 
 class Cursor extends StatelessWidget {
-  const Cursor({super.key, required this.cursorIndex, required this.gestureAreaUpdater});
+  const Cursor({super.key, required this.cursorIndex,});
 
   final int cursorIndex;
-  final Function gestureAreaUpdater;
 
   @override
   Widget build(BuildContext context) {
@@ -80,8 +78,9 @@ class Cursor extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onHorizontalDragUpdate: (details) {
-          cursorInfo.timeStamps[cursorIndex] += details.delta.dx.toInt();
-          gestureAreaUpdater();
+          cursorInfoNotifier.update((cursorInfo) {
+            cursorInfo.timeStamps[cursorIndex] += details.delta.dx.toInt();
+          });
         },
         child: SizedBox(
           width: 1 + 2 * cursorHorizontalDragBuffer,
@@ -95,5 +94,42 @@ class Cursor extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class CursorOverlay extends StatefulWidget {
+  const CursorOverlay({super.key});
+
+  @override
+  State<CursorOverlay> createState() => _CursorOverlayState();
+}
+
+class _CursorOverlayState extends State<CursorOverlay> {
+
+  @override
+  void initState() {
+    cursorInfoNotifier.addListener(update);
+    super.initState();
+  }
+
+  void update() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Timestamp to position calc
+        for(int i = 0; i < cursorInfoNotifier.value.timeStamps.length; i++)
+          Positioned(left: cursorInfoNotifier.value.timeStamps[i].toDouble(), child: Cursor(cursorIndex: i)),
+        for(int i = 0; i < cursorInfoNotifier.value.timeStamps.length; i++)
+          Positioned(left: cursorInfoNotifier.value.timeStamps[i] + cursorHorizontalDragBuffer, child: CursorTooltip(cursorIndex: i)),
+      ]);
+  }
+
+  @override
+  void dispose() {
+    cursorInfoNotifier.removeListener(update);
+    super.dispose();
   }
 }

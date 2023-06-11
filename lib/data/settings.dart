@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 import 'package:log_analyser/ui/theme/theme.dart';
 
 import 'settings_classes.dart';
+import 'updateable_valuenotifier.dart';
 
 final Map<String, List<Setting>> _defaultSettings = {
   "Visual": [
@@ -24,26 +24,24 @@ abstract class SettingsProvider{
 }
 
 abstract class TraceSettingsProvider{
-  static final Map<String, List<TraceSetting>> _traceSetting = {};
-
-  static ValueNotifier traceSettingNotifier = ValueNotifier(_traceSetting);
+  static UpdateableValueNotifier<Map<String, List<TraceSetting>>> traceSettingNotifier = UpdateableValueNotifier<Map<String, List<TraceSetting>>>({});
 
   static Map<String, List> get toJsonFormattable => 
-    _traceSetting.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
+    traceSettingNotifier.value.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
 
   static set update(Map<String, List> newData){
     for(String measurement in newData.keys){
-      _traceSetting.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().removedWhere((element) => element == null) as List<TraceSetting>);
+      traceSettingNotifier.value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().removedWhere((element) => element == null) as List<TraceSetting>);
     }
   }
 
   static Map<int, List<TraceSetting>> get scalingGroups {
     Map<int, List<TraceSetting>> tmp = {};
-    for(String measurement in _traceSetting.keys){
-      for(int i = 0; i < _traceSetting[measurement]!.length; i++){
-        tmp.update(_traceSetting[measurement]![i].scalingGroup, (value) {
-          if(_traceSetting[measurement]![i].isVisible){
-            return value..add(_traceSetting[measurement]![i]);
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        tmp.update(traceSettingNotifier.value[measurement]![i].scalingGroup, (value) {
+          if(traceSettingNotifier.value[measurement]![i].isVisible){
+            return value..add(traceSettingNotifier.value[measurement]![i]);
           }
             return value;
           });
@@ -54,11 +52,11 @@ abstract class TraceSettingsProvider{
 
   static Map<String, List<String>> get visibleSignals {
     Map<String, List<String>> tmp = {};
-    for(String measurement in _traceSetting.keys){
-      for(int i = 0; i < _traceSetting[measurement]!.length; i++){
-        if(_traceSetting[measurement]![i].isVisible){
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].isVisible){
           tmp[measurement] ??= [];
-          tmp[measurement]!.add(_traceSetting[measurement]![i].signal);
+          tmp[measurement]!.add(traceSettingNotifier.value[measurement]![i].signal);
         }
       }
     }

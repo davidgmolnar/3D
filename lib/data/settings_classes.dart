@@ -121,7 +121,7 @@ class TraceSetting{
   int scalingGroup;
   bool isVisible = false;
   num offset = 0;
-  num scale = 1;
+  num span = 1;
 
   TraceSetting({
     required this.signal,
@@ -129,11 +129,11 @@ class TraceSetting{
     required this.scalingGroup,
   });
 
-  void update({Color? color, bool? isVisible, num? offset, num? scale}){
+  void update({Color? color, bool? isVisible, num? offset, num? span}){
     this.color = color ?? this.color;
     this.isVisible = isVisible ?? this.isVisible;
     this.offset = offset ?? this.offset;
-    this.scale = scale ?? this.scale;
+    this.span = span ?? this.span;
   }
 
   static TraceSetting? fromJson(Map<String,dynamic> json){
@@ -149,7 +149,7 @@ class TraceSetting{
     else if(!json.containsKey('offset') || json['offset'] !is num){
       return null;
     }
-    else if(!json.containsKey('scale') || json['scale'] !is num){
+    else if(!json.containsKey('span') || json['span'] !is num){
       return null;
     }
     else if(!json.containsKey('scalingGroup') || json['scalingGroup'] !is int){
@@ -157,7 +157,7 @@ class TraceSetting{
     }
     else{
       final Color color = Color.fromARGB(json['color'][0], json['color'][1], json['color'][2], json['color'][3]);
-      return TraceSetting(signal: json['signal'], color: color, scalingGroup: json['scalingGroup'])..isVisible = json['isVisible']..offset = json['offset']..scale = json['scale'];
+      return TraceSetting(signal: json['signal'], color: color, scalingGroup: json['scalingGroup'])..isVisible = json['isVisible']..offset = json['offset']..span = json['span'];
     }
   }
 
@@ -166,7 +166,7 @@ class TraceSetting{
     'color': [color.alpha, color.red, color.green, color.blue],
     'isVisible': isVisible ? 1 : 0,
     'offset': offset,
-    'scale': scale,
+    'span': span,
     'scalingGroup': scalingGroup
   };
 }
