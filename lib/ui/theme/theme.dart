@@ -56,7 +56,7 @@ abstract class StyleManager{
 
   static Style globalStyle = _styles["DARK"]!;
 
-  static final UpdateableValueNotifier<String?> titleNotifier = UpdateableValueNotifier<String?>(null);
+  static String? title;
 
   static Function updater = (){};
 

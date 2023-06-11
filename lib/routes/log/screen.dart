@@ -17,7 +17,7 @@ class LogApp extends StatefulWidget {
 class _LogAppState extends State<LogApp> {
   @override
   void initState() {
-    StyleManager.titleNotifier.addListener(_update);
+    StyleManager.updater = _update;
     postStartup();
     super.initState();
   }
@@ -29,17 +29,11 @@ class _LogAppState extends State<LogApp> {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
+      title: StyleManager.title ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const LogScreen(),
     );
-  }
-
-  @override
-  void dispose() {
-    StyleManager.titleNotifier.removeListener(_update);
-    super.dispose();
   }
 }
 

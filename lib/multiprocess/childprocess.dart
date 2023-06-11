@@ -26,15 +26,13 @@ abstract class ChildProcess{
           try{
             Command command = Command.decode(udpPayload);
             switch (command.type) {
+              // ilyen nem lesz lásd lenn
               case CommandType.WINDOW_SETUP:
-                StyleManager.titleNotifier.update((value) {
-                  value = command.data["title"];
-                });
-                // ezeket uifileban kéne felparsolni runapp előtt ezek szerint
-                //appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
-                //appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
-                //appWindow.title = command.data["title"];
-                //StyleManager.updater();
+                // ezeket uifileban kéne felparsolni runapp előtt ezek szerint ^^ meg a title-t is
+                // appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
+                // appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
+                // appWindow.title = command.data["title"];
+                // StyleManager.updater();
                 break;
 
               case CommandType.DATA:

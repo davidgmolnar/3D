@@ -7,35 +7,15 @@ import '../theme/theme.dart';
 
 const titlebarHeight = 25 + 5; // Windows default + nemtom miért de nagyobb
 
-class WindowTitle extends StatefulWidget {
+class WindowTitle extends StatelessWidget {
   const WindowTitle({super.key,});
-
-  @override
-  State<WindowTitle> createState() => _WindowTitleState();
-}
-
-class _WindowTitleState extends State<WindowTitle> {
-
-  @override
-  void initState() {
-    StyleManager.titleNotifier.addListener(update);
-    super.initState();
-  }
-
-  void update() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-      child: Text(StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!, style: StyleManager.subTitleStyle),
+      child: Text(StyleManager.title ?? windowTypeTitle[windowType]!, style: StyleManager.subTitleStyle),
     );
-  }
-
-  @override
-  void dispose() {
-    StyleManager.titleNotifier.removeListener(update);
-    super.dispose();
   }
 }
 
@@ -91,7 +71,7 @@ class CustomWindowTitleBar extends StatelessWidget {
             child: Container(
               color: StyleManager.globalStyle.secondaryColor,
               child: MoveWindow(
-                child: WindowTitle()
+                child: const WindowTitle()
               ),
             )
           ),

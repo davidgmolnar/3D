@@ -15,29 +15,23 @@ class MapApp extends StatefulWidget {
 class _MapAppState extends State<MapApp> {
   @override
   void initState() {
-    StyleManager.titleNotifier.addListener(update);
+    StyleManager.updater = _update;
     postStartup();
     super.initState();
   }
 
-  void update() => setState(() {});
+  void _update() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     rebuildAllChildren(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: StyleManager.titleNotifier.value ?? windowTypeTitle[windowType]!,
+      title: StyleManager.title ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const MapScreen(),
     );
-  }
-
-  @override
-  void dispose() {
-    StyleManager.titleNotifier.removeListener(update);
-    super.dispose();
   }
 }
 

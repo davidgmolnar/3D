@@ -11,7 +11,7 @@ class LogContainer extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    Widget child = Center(child: Text(StyleManager.titleNotifier.value ?? "null", style: StyleManager.subTitleStyle,),);
+    Widget child = Center(child: Text("Loading", style: StyleManager.subTitleStyle,),);
     switch (logWindowType) {
       case LogWindowActionType.DISPLAY:
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
