@@ -4,6 +4,9 @@ import 'package:log_analyser/ui/theme/theme.dart';
 import 'settings_classes.dart';
 import 'updateable_valuenotifier.dart';
 
+const int _scrollMultiplierVertical = 1; // setting
+const int _dragMultiplierVertical = 1; // setting
+
 final Map<String, List<Setting>> _defaultSettings = {
   "Visual": [
     Setting(identifier: "Theme", type: SettingType.SELECTION, selection: StyleManager.getStyleList(), max: null, min: null, value: StyleManager.getStyleList().indexOf(StyleManager.activeStyle)),
@@ -61,6 +64,32 @@ abstract class TraceSettingsProvider{
       }
     }
     return tmp;
+  }
+
+  static void dragScalingGroup(int group, double delta){
+    traceSettingNotifier.update((traceSetting) {
+      for(String measurement in traceSetting.keys){
+        for(int i = 0; i < traceSetting[measurement]!.length; i++){
+          if(traceSetting[measurement]![i].scalingGroup == group){
+            traceSetting[measurement]![i].offset -= delta.toInt() * _dragMultiplierVertical;
+          }
+        }
+      }
+    });
+  }
+
+  static void zoomScalingGroup(int group, double delta){
+    traceSettingNotifier.update((traceSetting) {
+      for(String measurement in traceSetting.keys){
+        for(int i = 0; i < traceSetting[measurement]!.length; i++){
+          if(traceSetting[measurement]![i].scalingGroup == group){
+            final int diff = (traceSetting[measurement]![i].span * 0.01 * delta * _scrollMultiplierVertical).toInt();
+            traceSetting[measurement]![i].offset -= diff;
+            traceSetting[measurement]![i].span += diff * 2;
+          }
+        }
+      }
+    });
   }
 
 }

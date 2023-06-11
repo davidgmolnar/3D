@@ -22,17 +22,14 @@ class _ChartScalerState extends State<ChartScaler> {
     setState(() {});
   }
 
-  void handleDrag(int group, double delta){
-    TraceSettingsProvider.traceSettingNotifier.removeListener(handleTraceSettingUpdate);
-    // TraceSettingsProvider.dragScalingGroup(group, delta)
-    TraceSettingsProvider.traceSettingNotifier.addListener(handleTraceSettingUpdate);
+  ///////// Ezek egy szintel lejjebb
+  /*void handleDrag(int group, double delta){
+    TraceSettingsProvider.dragScalingGroup(group, delta);
   }
 
   void handleZoom(int group, double delta){
-    TraceSettingsProvider.traceSettingNotifier.removeListener(handleTraceSettingUpdate);
-    // TraceSettingsProvider.zoomScalingGroup(group, delta)
-    TraceSettingsProvider.traceSettingNotifier.addListener(handleTraceSettingUpdate);
-  }
+    TraceSettingsProvider.zoomScalingGroup(group, delta);
+  }*/
 
   @override
   Widget build(BuildContext context) {
