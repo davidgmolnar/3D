@@ -1,3 +1,5 @@
+import '../ui/charts/chart_logic/chart_controller.dart';
+
 class Measurement{
   final num value;
   /// Timestamp in ms
@@ -18,5 +20,13 @@ class SignalContainer{
     required this.displayName,
     this.unit
   });
+
+  void updateSignalContainer(ChartShowDuration duration){
+    
+  }
+
+  static SignalContainer create(ChartShowDuration duration) {
+    return SignalContainer(dbcName: "", values: [], displayName: "");
+  }
   // etc
 } 

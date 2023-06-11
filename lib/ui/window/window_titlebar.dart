@@ -5,7 +5,7 @@ import '../../routes/startup.dart';
 import '../../routes/window_type.dart';
 import '../theme/theme.dart';
 
-const titlebarHeight = 25; // Windows default
+const titlebarHeight = 25 + 5; // Windows default + nemtom miért de nagyobb
 
 class WindowTitle extends StatelessWidget {
   const WindowTitle({super.key, required this.title});

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../data/settings.dart';
 import '../theme/theme.dart';
 import '../toolbar/toolbar_item.dart';
 import '../window/window_titlebar.dart';
@@ -16,7 +15,7 @@ class ChartContainer extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
-          height: MediaQuery.of(context).size.height - toolbarItemSize - titlebarHeight,
+          height: MediaQuery.of(context).size.height - toolbarItemSize - titlebarHeight - 2 * 1, // symmetric border
           width: constraints.maxWidth,
           decoration: BoxDecoration(
             border: Border.symmetric(horizontal: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))
@@ -28,24 +27,8 @@ class ChartContainer extends StatelessWidget {
   }
 }
 
-class Chart extends StatefulWidget {
+class Chart extends StatelessWidget {
   const Chart({super.key});
-
-  @override
-  State<Chart> createState() => _ChartState();
-}
-
-class _ChartState extends State<Chart> {
-
-  @override
-  void initState() {
-    TraceSettingsProvider.chartUpdater = update;
-    super.initState();
-  }
-
-  void update(){
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +36,13 @@ class _ChartState extends State<Chart> {
       children: [
         Expanded(
           child: Row(
-            children: [
-              ChartScaler(chartUpdater: update),
-              const Expanded(child: ChartArea()),
+            children: const [
+              ChartScaler(),
+              Expanded(child: ChartArea()),
             ],
           ),
         ),
-        ChartBottomOverview(chartUpdater: update)
+        const ChartBottomOverview()
       ],
     );
   }

@@ -31,9 +31,7 @@ abstract class ChildProcess{
                 appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
                 appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
                 // appWindow.title = command.data["title"];
-                if(StyleManager.updater != null){
-                  StyleManager.updater();
-                }
+                StyleManager.updater();
                 break;
 
               case CommandType.DATA:

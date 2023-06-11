@@ -1,4 +1,4 @@
 import 'signal_container.dart';
 
-// [log][signal] = data
+// [measurement][signal] = data
 Map<String, Map<String, SignalContainer>> signalData = {};

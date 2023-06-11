@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 import 'package:log_analyser/ui/theme/theme.dart';
 
@@ -25,7 +26,7 @@ abstract class SettingsProvider{
 abstract class TraceSettingsProvider{
   static final Map<String, List<TraceSetting>> _traceSetting = {};
 
-  static Function chartUpdater = (){};
+  static ValueNotifier traceSettingNotifier = ValueNotifier(_traceSetting);
 
   static Map<String, List> get toJsonFormattable => 
     _traceSetting.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
@@ -34,7 +35,6 @@ abstract class TraceSettingsProvider{
     for(String measurement in newData.keys){
       _traceSetting.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().removedWhere((element) => element == null) as List<TraceSetting>);
     }
-    chartUpdater();
   }
 
   static Map<int, List<TraceSetting>> get scalingGroups {
@@ -47,6 +47,19 @@ abstract class TraceSettingsProvider{
           }
             return value;
           });
+      }
+    }
+    return tmp;
+  }
+
+  static Map<String, List<String>> get visibleSignals {
+    Map<String, List<String>> tmp = {};
+    for(String measurement in _traceSetting.keys){
+      for(int i = 0; i < _traceSetting[measurement]!.length; i++){
+        if(_traceSetting[measurement]![i].isVisible){
+          tmp[measurement] ??= [];
+          tmp[measurement]!.add(_traceSetting[measurement]![i].signal);
+        }
       }
     }
     return tmp;

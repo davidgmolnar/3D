@@ -1,5 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/settings.dart';
+import 'chart_logic/chart_controller.dart';
 import 'cursor_displays.dart';
 
 const double cursorDisplayHeight = 25;
@@ -33,23 +36,59 @@ class _ChartGestureArea extends StatefulWidget {
 
 class __ChartGestureAreaState extends State<_ChartGestureArea> {
 
-  List<int> cursorPositions = [100, 300];
-  bool isDelta = false;
+  // listen to TraceSettingProvider changes
+  @override
+  void initState() {
+    ChartController.shownDurationNotifier.addListener(update);
+    TraceSettingsProvider.traceSettingNotifier.addListener(update);
+    super.initState();
+  }
+
+  void update() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          CustomPaint(painter: _ChartLinePainter(),),
-          for(int timeStamp in cursorPositions)
-            Positioned(right: timeStamp.toDouble(), child: const Cursor()),
-          for(int timeStamp in cursorPositions)
-            Positioned(right: timeStamp.toDouble(), child: CursorTooltip(isDelta: isDelta,))
-        ],
+    return Listener(
+      onPointerSignal: (event) {
+        if(event is PointerScrollEvent){
+          print('onPointerSignal ${event.scrollDelta.dy}');
+          // zoom időben
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: GestureDetector(
+        onHorizontalDragUpdate: (details) {
+          print('onHorizontalDragUpdate ${details.primaryDelta}');
+          // húz jobbra balra
+        },
+        onSecondaryTapDown: (details) {
+          // add cursor at position
+          // position to timestamp
+          print('onSecondaryTapDown ${details.localPosition.dx}');
+          cursorInfo.timeStamps.add(details.localPosition.dx.toInt());
+          update();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(painter: _ChartLinePainter(),),
+            // time axis
+            for(int i = 0; i < cursorInfo.timeStamps.length; i++)
+              Positioned(left: cursorInfo.timeStamps[i].toDouble(), child: Cursor(cursorIndex: i, gestureAreaUpdater: update,)),
+            for(int i = 0; i < cursorInfo.timeStamps.length; i++)
+              Positioned(left: cursorInfo.timeStamps[i] + cursorHorizontalDragBuffer, child: CursorTooltip(cursorIndex: i, gestureAreaUpdater: update,))
+          ],
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    ChartController.shownDurationNotifier.removeListener(update);
+    TraceSettingsProvider.traceSettingNotifier.removeListener(update);
+    super.dispose();
   }
 }
 
