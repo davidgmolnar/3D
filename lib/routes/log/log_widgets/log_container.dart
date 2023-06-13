@@ -13,16 +13,16 @@ class LogContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = Center(child: Text("Loading", style: StyleManager.subTitleStyle,),);
     switch (logWindowType) {
-      case LogWindowActionType.DISPLAY:
+      case LogWindowType.DISPLAY:
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
-      case LogWindowActionType.IMPORT:
+      case LogWindowType.IMPORT:
         child = const LogImport();
         break;
-      case LogWindowActionType.EXPORT:
+      case LogWindowType.EXPORT:
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
-      case LogWindowActionType.CALCULATION:
+      case LogWindowType.CALCULATION:
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
       default:

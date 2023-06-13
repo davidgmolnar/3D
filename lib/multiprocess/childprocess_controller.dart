@@ -1,9 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../data/data.dart';
+import '../data/signal_container.dart';
+import '../io/deserializer.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
+import '../io/serializer.dart';
+import '../routes/startup.dart';
 import '../routes/window_type.dart';
 import 'childprocess_api.dart';
 
@@ -46,6 +52,10 @@ abstract class ChildProcessController{
                 // ...
                 break;
 
+              case ResponseType.FINISHED:
+                _handleFinished(response.childProcessPort, response.data);
+                break;
+
               case ResponseType.STOPPING:
                 if(_activeChildProcesses.containsKey(response.childProcessPort)){
                   _activeChildProcesses.removeWhere((key, value) => key == response.childProcessPort);
@@ -70,6 +80,26 @@ abstract class ChildProcessController{
     });
   }
 
+  static void _handleFinished(int port, Map data) async {
+    ResponseFinishable? finishedTask = ResponseFinishable.fromJson(data);
+    if(finishedTask == null){
+      localLogger.error("Invalid finish message was received from $port: $data");
+      return;
+    }
+    switch (finishedTask.type) {
+      case ResponseFinishableType.IMPORT_LOG:
+        for(String id in finishedTask.data.keys){
+          final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
+          LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]));
+          signalData[measurementAlias] = (result.storage as Map<String, SignalContainer>);
+        }
+        break;
+      default:
+        localLogger.error("Finished task ${finishedTask.type.name} handling not implemented");
+    }
+    sendTo(Command(port, CommandType.KILL, {}));
+  }
+
   static int _findFirstAvailablePort(){
     int port = masterSocketPort + 1;
     while(_activeChildProcesses.containsKey(port)){
@@ -78,14 +108,18 @@ abstract class ChildProcessController{
     return port;
   }
 
-  static Future<int> addConnection(WindowType type) async {
-    int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
-    String? dir = await getCurrentDirectory();
+  static Future<int> addConnection(WindowType type, WindowSetupInfo windowSetupInfo) async {
+    final int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
+    String? dir = await getCurrentDirectory;
     if(dir == null){
       return -1;
     }
+    final File windowSetupFile = await File("${dir}Local/${port}_setup.3D").create(recursive: true);
+    final RandomAccessFile access = await windowSetupFile.open(mode: FileMode.write);
+    access.writeFromSync(Deserializer.utf8Decoder.convert(jsonEncode(windowSetupInfo.asJson)));
+    await access.close();
     Process.run(
-      "${dir}log_analyser.exe", [type.name , port.toString()],
+      "${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],
     );
     _newConnections[port] = type;
     localLogger.info("Started ${type.name}");

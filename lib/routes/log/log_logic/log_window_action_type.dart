@@ -1,4 +1,7 @@
-enum LogWindowActionType{
+import '../../../io/logger.dart';
+import '../../../ui/theme/theme.dart';
+
+enum LogWindowType{
   // ignore: constant_identifier_names
   INITIAL,
   // ignore: constant_identifier_names
@@ -11,4 +14,25 @@ enum LogWindowActionType{
   CALCULATION,
 }
 
-LogWindowActionType logWindowType = LogWindowActionType.INITIAL;
+Map setLogWindowTypePayload(LogWindowType type) => {
+  'instruction': LogWindowInstruction.SET_TYPE.index,
+  'type': type.index
+};
+
+enum LogWindowInstruction{
+  // ignore: constant_identifier_names
+  SET_TYPE,
+}
+
+LogWindowType logWindowType = LogWindowType.INITIAL;
+
+void logHandleDataReceived(Map data){
+  switch (LogWindowInstruction.values[data['instruction']]) {
+    case LogWindowInstruction.SET_TYPE:
+      logWindowType = LogWindowType.values[data['type']];
+      StyleManager.updater();
+      break;
+    default:
+      localLogger.error("LogWindowInstruction not implemented for idx ${data['instruction']}");
+  }
+}

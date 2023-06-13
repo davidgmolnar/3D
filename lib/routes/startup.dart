@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
+import '../io/file_system.dart';
 import '../io/logger.dart';
+import '../io/serializer.dart';
 import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_api.dart';
 import '../multiprocess/childprocess_controller.dart';
@@ -23,6 +26,45 @@ Map<WindowType,String> windowTypeTitle = {
   WindowType.MAP_CHART: "Map",
   WindowType.LOG: "Log",
 };
+
+class WindowSetupInfo{
+  final String title;
+  final Size size;
+  final Offset position;
+
+  WindowSetupInfo(this.title, this.size, this.position);
+
+  static WindowSetupInfo? fromJson(Map<String, dynamic> json){
+    if(!json.containsKey('title') || json['title'] is! String){
+      return null;
+    }
+    else if(!json.containsKey('size_x') || json['size_x'] is! num){
+      return null;
+    }
+    else if(!json.containsKey('size_y') || json['size_y'] is! num){
+      return null;
+    }
+    else if(!json.containsKey('pos_x') || json['pos_x'] is! num){
+      return null;
+    }
+    else if(!json.containsKey('pos_y') || json['pos_y'] is! num){
+      return null;
+    }
+    else{
+      return WindowSetupInfo(json['title'], Size(json['size_x'].toDouble(), json['size_y'].toDouble()), Offset(json['pos_x'].toDouble(), json['pos_y'].toDouble()));
+    }
+  }
+
+  Map<String, dynamic> get asJson => {
+    "title": title,
+    "size_x": size.width,
+    "size_y": size.height,
+    "pos_x": position.dx,
+    "pos_y": position.dy
+  };
+}
+
+WindowSetupInfo? windowSetup;
 
 void runSelectedApp() async {
   if(windowType == WindowType.MAIN_WINDOW){
@@ -45,22 +87,35 @@ void runSelectedApp() async {
     return;
   }
   doWhenWindowReady(() {
-    appWindow.title = StyleManager.title ?? windowTypeTitle[windowType]!;
+    if(windowSetup != null){
+      appWindow.title = windowSetup!.title;
+      StyleManager.title = windowSetup!.title;
+      appWindow.size = windowSetup!.size;
+      appWindow.position = windowSetup!.position;
+      appWindow.alignment = Alignment.center;
+    }
+    else{
+      appWindow.title = windowTypeTitle[windowType]!;
+    }
     appWindow.show();
   });
 }
 
-bool tryStartup(List<String> args){
+Future<bool> tryStartup(List<String> args) async {
   try{
     if(args.isEmpty){
       localSocketPort = masterSocketPort;
       windowType = WindowType.MAIN_WINDOW;
-      localLogger = Logger(mainLogPath, "Master Logger");
+      localLogger = Logger(mainLogPath, "MASTER Logger");
     }
     else{
       localSocketPort = int.parse(args[1]);
       windowType = windowType.tryParse(args[0])!;
       localLogger = Logger(mainLogPath, "${windowType.name} Logger @$localSocketPort");
+
+      final File windowSetupFile = File("${await getCurrentDirectory}Local/${args[2]}");
+      windowSetup = WindowSetupInfo.fromJson(jsonDecode(Serializer.utf8Decoder.convert(await windowSetupFile.readAsBytes())));
+      windowSetupFile.delete();
     }
   }
   catch (exc){
@@ -72,6 +127,9 @@ bool tryStartup(List<String> args){
 Future<void> postStartup() async {
   localLogger.start();
   localLogger.info("Starting ${windowType.name}");
+  if(windowType != WindowType.MAIN_WINDOW && windowSetup == null){
+    localLogger.error("Failed to load window setup file");
+  }
   if(windowType == WindowType.MAIN_WINDOW){
     await ChildProcessController.start();
   }

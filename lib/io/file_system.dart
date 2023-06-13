@@ -1,6 +1,11 @@
 import 'dart:io';
 
-Future<String?> getCurrentDirectory() async {
+String? _currentDirectory;
+
+Future<String?> get getCurrentDirectory async {
+  if(_currentDirectory != null){
+    return _currentDirectory;
+  }
   String dir = Platform.resolvedExecutable;
   if(Platform.isWindows){  // Linux nem buzi
     dir = dir.replaceAll(r'\', '/');
@@ -9,10 +14,12 @@ Future<String?> getCurrentDirectory() async {
   if(Platform.isWindows){
     dir = dir.replaceAll('/', r'\');
     dir = dir + r'\';
+    _currentDirectory = dir;
     return dir;
   }
   else if(Platform.isLinux){
     dir = dir + r'/';
+    _currentDirectory = dir;
     return dir;
   }
   else{

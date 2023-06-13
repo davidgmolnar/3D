@@ -47,7 +47,48 @@ enum ResponseType{
   // ignore: constant_identifier_names
   DATA,
   // ignore: constant_identifier_names
+  FINISHED,
+  // ignore: constant_identifier_names
   STOPPING
+}
+
+enum ResponseFinishableType{
+  // ignore: constant_identifier_names
+  IMPORT_LOG,
+    // ignore: constant_identifier_names
+  IMPORT_CAL,
+    // ignore: constant_identifier_names
+  IMPORT_UI,
+  // ignore: constant_identifier_names
+  EXPORT,
+  // ignore: constant_identifier_names
+  SETTING,
+  // ignore: constant_identifier_names
+  CALCULATION
+}
+
+class ResponseFinishable{
+  final ResponseFinishableType type;
+  final Map data;
+
+  ResponseFinishable(this.type, this.data);
+
+  static ResponseFinishable? fromJson(Map json){
+    if(!json.containsKey('type') || json['type'] is! int){
+      return null;
+    }
+    else if(!json.containsKey('data') || json['data'] is! Map){
+      return null;
+    }
+    else{
+      return ResponseFinishable(ResponseFinishableType.values[json['type']], json['data']);
+    }
+  }
+
+  Map get asJson => {
+    "type": type.index,
+    "data": data
+  };
 }
 
 // SubWindow -> MainWindow

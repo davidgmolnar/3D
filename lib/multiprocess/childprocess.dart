@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
-
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import '../io/logger.dart';
-import '../ui/theme/theme.dart';
+import '../routes/log/log_logic/log_window_action_type.dart';
+import '../routes/window_type.dart';
 import 'childprocess_api.dart';
 
 // DONT inherit/extend
@@ -26,17 +24,8 @@ abstract class ChildProcess{
           try{
             Command command = Command.decode(udpPayload);
             switch (command.type) {
-              // ilyen nem lesz lásd lenn
-              case CommandType.WINDOW_SETUP:
-                // ezeket uifileban kéne felparsolni runapp előtt ezek szerint ^^ meg a title-t is
-                // appWindow.size = Size(command.data["size_width"], command.data["size_height"]);
-                // appWindow.position = Offset(command.data["position_dx"], command.data["position_dy"]);
-                // appWindow.title = command.data["title"];
-                // StyleManager.updater();
-                break;
-
               case CommandType.DATA:
-                // ...
+                _handleData(command.data);
                 break;
 
               case CommandType.KILL:
@@ -59,8 +48,18 @@ abstract class ChildProcess{
     });
   }
 
-  static void send(List<int> bytes){
-    _sock?.send(bytes, InternetAddress.loopbackIPv4, masterSocketPort);
+  static void _handleData(Map data){
+    switch (windowType) {
+      case WindowType.LOG:
+        logHandleDataReceived(data);
+        break;
+      default:
+        localLogger.error("Data interpretation not implemented");
+    }
+  }
+
+  static void send(Response response){
+    _sock?.send(response.encode(), InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
   static void signalReady(){

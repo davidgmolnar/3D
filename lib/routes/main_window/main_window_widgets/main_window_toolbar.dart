@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:log_analyser/multiprocess/childprocess_api.dart';
-import 'package:log_analyser/ui/theme/theme.dart';
 
+import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
+import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
+import '../../log/log_logic/log_window_action_type.dart';
+import '../../startup.dart';
 import '../../window_type.dart';
 
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
   static _importLogWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG);
-    ChildProcessController.sendTo(Command(port, CommandType.WINDOW_SETUP, {"title": "Import Log",}));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(800,700), const Offset(0,0)));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
   static _importCALWindow (){}
   static _importUIWindow (){}
@@ -23,8 +25,7 @@ class MainWindowToolbar extends StatelessWidget {
   static _traceEditorWindow (){}
   static _calfileCreatorWindow (){}
   static _settingsWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.SETTINGS);
-    ChildProcessController.sendTo(Command(port, CommandType.DATA, {"yoo": "miafasz"}));
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
   }
   static _logWindow (){}
 

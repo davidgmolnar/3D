@@ -11,9 +11,11 @@ class LogIOInfo{
   bool ready = false;
   bool error = false;
   bool sendingToController = false;
-  int successulLoads = 0;
+  int successfulLoads = 0;
   List<LogEntry> context = [];
   Map resultJsonEncodeable = {};
+  List<String> selectedPaths = [];
+  List<String?> measurementAliases = [];
 }
 
 class LogIOInfoController{
@@ -21,8 +23,9 @@ class LogIOInfoController{
 
   static final List<String> _extensions = [];
 
-  static Future<void> loadFiles(List<File> files) async {
+  static Future<void> loadFiles() async {
     final List<LoadContext> result = [];
+    List<File> files = logIOInfoNotifier.value.selectedPaths.map((path) => File(path)).toList();
     for(int i = 0; i < files.length; i++){
       logIOInfoNotifier.update((value) {
         value.processingFile = files[i].absolute.path;
@@ -46,20 +49,23 @@ class LogIOInfoController{
         }
         else{
           result.add(loadContext);
-          value.successulLoads++;
+          value.successfulLoads++;
         }
       });
     }
 
-    Map<int, Map<String, dynamic>> resultJsonEncodeable = {};
+    /*Map<String, Map<String, Map<String, List<num>>>> resultJsonEncodeable = {};
     for(int i = 0; i < result.length; i++){
-      resultJsonEncodeable[i] = {};
       switch (_extensions[i]) {
         case 'csv':
-          resultJsonEncodeable[i] = (result[i].storage as Map<String, SignalContainer>).map((key, value) => MapEntry(key, value.asJson));
+          resultJsonEncodeable[result[i].filePath] = (result[i].storage as Map<String, SignalContainer>).map((signal, signalContainer) => MapEntry(signal, {"values": signalContainer.values.map((meas) => meas.value).toList(), "timeStamps": signalContainer.values.map((meas) => meas.timeStamp).toList()}));
           break;
         default:
       }
+    }*/
+    Map resultJsonEncodeable = {};
+    for(int i = 0; i < result.length; i++){
+      resultJsonEncodeable[i.toString()] = {"path": result[i].filePath, "alias": logIOInfoNotifier.value.measurementAliases[i] ?? result[i].filePath.replaceAll('\\', '/').split('/').last};
     }
     
     localLogger.addAll(logIOInfoNotifier.value.context);
@@ -77,8 +83,11 @@ class LogIOInfoController{
       value.progressPercentage = 0;
       value.ready = false;
       value.error = false;
-      value.successulLoads = 0;
+      value.successfulLoads = 0;
       value.context = [];
+      value.selectedPaths = [];
+      value.sendingToController = false;
+      value.measurementAliases = [];
     });
   }
 }
