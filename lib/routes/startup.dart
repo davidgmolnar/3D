@@ -115,7 +115,7 @@ Future<bool> tryStartup(List<String> args) async {
 
       //final File windowSetupFile = File("${await FileSystem.getCurrentDirectory}Local/${args[2]}");
       //windowSetup = WindowSetupInfo.fromJson(jsonDecode(Serializer.utf8Decoder.convert(await windowSetupFile.readAsBytes())));
-      windowSetup = WindowSetupInfo.fromJson(await FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: false));
+      windowSetup = WindowSetupInfo.fromJson(await FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: true));
       //windowSetupFile.delete();
     }
   }
