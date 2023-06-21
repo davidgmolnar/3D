@@ -93,5 +93,5 @@ abstract class StyleManager{
   static TextStyle get titleStyle => TextStyle(color: globalStyle.textColor, fontSize: globalStyle.titleFontSize);
 
   static WindowButtonColors get windowButtonColors => WindowButtonColors(iconNormal: globalStyle.primaryColor);
-  static String get activeStyle => _styles.keys.where((element) => _styles[element] == globalStyle).first;
+  static String get activeStyle => globalStyle.name;
 }

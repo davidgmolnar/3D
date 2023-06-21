@@ -27,7 +27,7 @@ class Command{
   Command(this.childProcessPort, this.type, this.data);
 
   static Command decode(Uint8List payload){
-    final Map<String,dynamic> decoded = jsonDecode(Serializer.safeUTF8Decode(payload));
+    final Map decoded = Serializer.jsonFromBytes(payload);
     return Command(decoded["port"], CommandType.values[decoded["type"]], decoded["data"]);
   }
 
@@ -37,7 +37,7 @@ class Command{
       "type": type.index,
       "data": data
     };
-    return Deserializer.utf8Decoder.convert(jsonEncode(payload));
+    return Deserializer.jsonToBytes(payload);
   }
 }
 
@@ -100,7 +100,7 @@ class Response{
   Response(this.childProcessPort, this.type, this.data);
 
   static Response decode(Uint8List payload){
-    final Map<String,dynamic> decoded = jsonDecode(Serializer.safeUTF8Decode(payload));
+    final Map decoded = Serializer.jsonFromBytes(payload);
     return Response(decoded["port"], ResponseType.values[decoded["type"]], decoded["data"]);
   }
 
@@ -110,6 +110,6 @@ class Response{
       "type": type.index,
       "data": data
     };
-    return Deserializer.utf8Decoder.convert(jsonEncode(payload));
+    return Deserializer.jsonToBytes(payload);
   }
 }

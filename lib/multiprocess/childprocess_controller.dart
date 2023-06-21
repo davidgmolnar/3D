@@ -110,14 +110,15 @@ abstract class ChildProcessController{
 
   static Future<int> addConnection(WindowType type, WindowSetupInfo windowSetupInfo) async {
     final int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
-    String? dir = await getCurrentDirectory;
+    String? dir = await FileSystem.getCurrentDirectory;
     if(dir == null){
       return -1;
     }
-    final File windowSetupFile = await File("${dir}Local/${port}_setup.3D").create(recursive: true);
+    /*final File windowSetupFile = await File("${dir}Local/${port}_setup.3D").create(recursive: true);
     final RandomAccessFile access = await windowSetupFile.open(mode: FileMode.write);
     access.writeFromSync(Deserializer.utf8Decoder.convert(jsonEncode(windowSetupInfo.asJson)));
-    await access.close();
+    await access.close();*/
+    await FileSystem.trySaveMapToLocalAsync("", "${port}_setup.3D", windowSetupInfo.asJson);
     Process.run(
       "${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],
     );

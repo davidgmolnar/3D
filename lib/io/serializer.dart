@@ -21,6 +21,10 @@ abstract class Serializer {
 
   static Utf8Decoder utf8Decoder = const Utf8Decoder();
 
+  static JsonDecoder jsonDecoder = const JsonDecoder();
+
+  static Map jsonFromBytes(List<int> bytes) => jsonDecoder.convert(safeUTF8Decode(bytes));
+
   static Map<String, double> timeUnitToMsMultiplier = {
     "min": 60*1000,
     "s": 1000,

@@ -34,7 +34,7 @@ class WindowSetupInfo{
 
   WindowSetupInfo(this.title, this.size, this.position);
 
-  static WindowSetupInfo? fromJson(Map<String, dynamic> json){
+  static WindowSetupInfo? fromJson(Map json){
     if(!json.containsKey('title') || json['title'] is! String){
       return null;
     }
@@ -113,9 +113,10 @@ Future<bool> tryStartup(List<String> args) async {
       windowType = windowType.tryParse(args[0])!;
       localLogger = Logger(mainLogPath, "${windowType.name} Logger @$localSocketPort");
 
-      final File windowSetupFile = File("${await getCurrentDirectory}Local/${args[2]}");
-      windowSetup = WindowSetupInfo.fromJson(jsonDecode(Serializer.utf8Decoder.convert(await windowSetupFile.readAsBytes())));
-      windowSetupFile.delete();
+      //final File windowSetupFile = File("${await FileSystem.getCurrentDirectory}Local/${args[2]}");
+      //windowSetup = WindowSetupInfo.fromJson(jsonDecode(Serializer.utf8Decoder.convert(await windowSetupFile.readAsBytes())));
+      windowSetup = WindowSetupInfo.fromJson(await FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: false));
+      //windowSetupFile.delete();
     }
   }
   catch (exc){

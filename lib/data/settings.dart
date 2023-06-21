@@ -1,6 +1,6 @@
 import 'package:log_analyser/extensions.dart';
-import 'package:log_analyser/ui/theme/theme.dart';
 
+import '../ui/theme/theme.dart';
 import 'settings_classes.dart';
 import 'updateable_valuenotifier.dart';
 

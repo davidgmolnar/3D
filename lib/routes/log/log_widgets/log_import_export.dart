@@ -112,7 +112,7 @@ class _LogImportState extends State<LogImport> {
                         LogIOInfoController.loadFiles();
                         setState(() {});
                       },
-                      child: Text("Process", style: StyleManager.textStyle,),
+                      child: Text("Preprocess", style: StyleManager.textStyle,),
                     ),
                   ],
                 ),
@@ -187,7 +187,7 @@ class _LogImportState extends State<LogImport> {
                       ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, ResponseFinishable(ResponseFinishableType.IMPORT_LOG, LogIOInfoController.logIOInfoNotifier.value.resultJsonEncodeable).asJson));
                       LogIOInfoController.reset();
                     },
-                    child: const Text("Send to app"),
+                    child: const Text("Import"),
                   )
                 ],
               )

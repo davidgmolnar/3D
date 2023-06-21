@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:log_analyser/ui/theme/theme.dart';
+
+import '../theme/theme.dart';
 
 const double toolbarItemSize = 50;
 
