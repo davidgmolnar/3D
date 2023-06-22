@@ -18,7 +18,7 @@ class Measurement{
 }
 
 class SignalContainer{
-  List<Measurement> values;
+  final List<Measurement> values;
   final String dbcName;
   final String? unit;
   String displayName;
@@ -46,8 +46,10 @@ class SignalContainer{
     );
   }
 
-  void updateSignalContainer(ChartShowDuration duration){
-    
+  bool updateSignalContainer(ChartShowDuration duration){
+    bool wasUpdated = false;
+    // ...
+    return wasUpdated;
   }
 
   static SignalContainer create(ChartShowDuration duration) {

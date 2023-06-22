@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import '../data/data.dart';
 import '../data/signal_container.dart';
-import '../io/deserializer.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
 import '../io/serializer.dart';

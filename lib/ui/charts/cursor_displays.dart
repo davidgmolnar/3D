@@ -7,7 +7,7 @@ import 'chart_area.dart';
 const double cursorHorizontalDragBuffer = 2; // setting,
 
 class CursorInfo{
-  List<int> timeStamps = [100];
+  List<int> timeStamps = [];
   List<num> values = [];
   List<bool> isDelta = [];
 }
