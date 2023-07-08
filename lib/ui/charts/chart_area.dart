@@ -8,28 +8,37 @@ import 'cursor_displays.dart';
 
 const double cursorDisplayHeight = 25;
 
-// TODO ez már legyen chartarea méretre skálázva, és a Chartcontroller is tudjon méretről, ChartController::scalingFor is úgy számoljon
 class ScalingInfo{
-  final int duration;
-  final double spanY;
-  final double offsetY;
+  final int timeDuration;
+  final int timeOffset;
+  final double valueRange;
+  final double valueOffset;
 
   ScalingInfo({
-    required this.duration,
-    required this.spanY,
-    required this.offsetY
+    required this.timeDuration,
+    required this.timeOffset,
+    required this.valueRange,
+    required this.valueOffset
   });
+
+  bool timeDataChanged(ScalingInfo other) => other.timeDuration != timeDuration || other.timeOffset != timeOffset;
+  bool valueDataChanged(ScalingInfo other) => other.valueRange != valueRange || other.valueOffset != valueOffset;
+  ChartShowDuration get timedata => ChartShowDuration(timeDuration: timeDuration, timeOffset: timeOffset);
 }
 
 class _PlotContext{
   ScalingInfo scalingInfo;
   SignalContainer signalContainer;
   bool hadChange;
+  List<Offset> scaledChartLine;
+  Color color;
 
   _PlotContext({
     required this.scalingInfo,
     required this.signalContainer,
-    required this.hadChange
+    required this.hadChange,
+    required this.scaledChartLine,
+    required this.color
   });
 }
 
@@ -62,7 +71,7 @@ class _ChartGestureArea extends StatefulWidget {
 
 class __ChartGestureAreaState extends State<_ChartGestureArea> {
   Map<String, Map<String, _PlotContext>> dataSeen = {};
-  // listen to TraceSettingProvider changes
+  
   @override
   void initState() {
     ChartController.shownDurationNotifier.addListener(update);
@@ -96,19 +105,27 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       dataSeen[measurement] ??= {};
       for(String signal in visibleSignals[measurement]!){
         if(dataSeen[measurement]!.containsKey(signal)){
-          if(dataSeen[measurement]![signal]!.signalContainer.updateSignalContainer(ChartController.shownDurationNotifier.value)){
+          final ScalingInfo actualScalingInfo = ChartController.scalingFor(measurement, signal);
+          if(dataSeen[measurement]![signal]!.scalingInfo.timeDataChanged(actualScalingInfo)){
+            dataSeen[measurement]![signal]!.signalContainer.updateSignalContainer(actualScalingInfo.timedata, dataSeen[measurement]![signal]!.scalingInfo.timedata);
+            // calc points from actualScalingInfo and chart area size
+            dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo;
             dataSeen[measurement]![signal]!.hadChange = true;
           }
-          else if(dataSeen[measurement]![signal]!.scalingInfo != ChartController.scalingFor(measurement, signal)){
-            dataSeen[measurement]![signal]!.scalingInfo = ChartController.scalingFor(measurement, signal);
+          else if(dataSeen[measurement]![signal]!.scalingInfo.valueDataChanged(actualScalingInfo)){
+            // calc points from actualScalingInfo and chart area size
+            dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo;
             dataSeen[measurement]![signal]!.hadChange = true;
           }
+          dataSeen[measurement]![signal]!.color = TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).color;
         }
         else{
           dataSeen[measurement]![signal] = _PlotContext(
             scalingInfo: ChartController.scalingFor(measurement, signal),
             signalContainer: SignalContainer.create(ChartController.shownDurationNotifier.value),
-            hadChange: true
+            hadChange: true,
+            scaledChartLine: [],
+            color: TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).color
           );
         }
       }
@@ -166,13 +183,26 @@ class _ChartLinePainter extends CustomPainter {
 
   final _PlotContext plotContext;
 
+  static final Paint _chartLinePaint = Paint()..style = PaintingStyle.stroke..strokeWidth = 0.5;
+
   _ChartLinePainter({
     required this.plotContext,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Rect.fromLTRB(0, 0, size.width, size.height), Paint()..style = PaintingStyle.fill..color = Colors.red);
+    bool first = true;
+    Path path = Path();
+    for(Offset point in plotContext.scaledChartLine){
+      if(first){
+        canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+        path.moveTo(point.dx, point.dy);
+        first = false;
+        continue;
+      }
+      path.lineTo(point.dx, point.dy);
+    }
+    canvas.drawPath(path, _chartLinePaint..color = plotContext.color);
   }
   
   @override

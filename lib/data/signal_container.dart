@@ -46,10 +46,9 @@ class SignalContainer{
     );
   }
 
-  bool updateSignalContainer(ChartShowDuration duration){
-    bool wasUpdated = false;
+  void updateSignalContainer(ChartShowDuration duration, ChartShowDuration oldDuration){
     // ...
-    return wasUpdated;
+    return;
   }
 
   static SignalContainer create(ChartShowDuration duration) {
