@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:log_analyser/data/settings.dart';
+import 'package:log_analyser/routes/settings/settings_logic/settings_window_type.dart';
 
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
@@ -13,7 +15,7 @@ class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
   static _importLogWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(800,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
   static _importCALWindow (){}
@@ -22,7 +24,11 @@ class MainWindowToolbar extends StatelessWidget {
   static _exportLogWindow (){}
 
   static _calfileRunnerWindow (){}
-  static _traceEditorWindow (){}
+  static _traceEditorWindow () async {
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(500,700), const Offset(0,0)));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
+  }
   static _calfileCreatorWindow (){}
   static _settingsWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));

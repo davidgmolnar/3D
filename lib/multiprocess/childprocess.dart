@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:log_analyser/routes/settings/settings_logic/settings_window_type.dart';
+
 import '../io/logger.dart';
 import '../routes/log/log_logic/log_window_action_type.dart';
 import '../routes/window_type.dart';
@@ -41,7 +43,7 @@ abstract class ChildProcess{
             }
           }
           catch (exc){
-            localLogger.error("Undefined message received");
+            localLogger.error("Undefined message received ${exc.toString()}");
           }
         }
       }
@@ -52,6 +54,9 @@ abstract class ChildProcess{
     switch (windowType) {
       case WindowType.LOG:
         logHandleDataReceived(data);
+        break;
+      case WindowType.SETTINGS:
+        settingsHandleDataReceived(data);
         break;
       default:
         localLogger.error("Data interpretation not implemented");

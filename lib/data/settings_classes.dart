@@ -137,36 +137,36 @@ class TraceSetting{
   }
 
   static TraceSetting? fromJson(Map<String,dynamic> json){
-    if(!json.containsKey('signal') || json['signal'] !is String){
+    if(!json.containsKey('1') || json['1'] is! String){
       return null;
     }
-    else if(!json.containsKey('color') || json['color'] !is List || json['color'].length != 4 || !json['color'].every((element) => element is int)){
+    else if(!json.containsKey('2') || json['2'] is! List || json['2'].length != 4 || !json['2'].every((element) => element is int)){
       return null;
     }
-    else if(!json.containsKey('isVisible') || json['isVisible'] !is int || json['isVisible'] < 0 || json['isVisible'] > 1){
+    else if(!json.containsKey('3') || json['3'] is! int || json['3'] < 0 || json['3'] > 1){
       return null;
     }
-    else if(!json.containsKey('offset') || json['offset'] !is num){
+    else if(!json.containsKey('4') || json['4'] is! num){
       return null;
     }
-    else if(!json.containsKey('span') || json['span'] !is num){
+    else if(!json.containsKey('5') || json['5'] is! num){
       return null;
     }
-    else if(!json.containsKey('scalingGroup') || json['scalingGroup'] !is int){
+    else if(!json.containsKey('6') || json['6'] is! int){
       return null;
     }
     else{
-      final Color color = Color.fromARGB(json['color'][0], json['color'][1], json['color'][2], json['color'][3]);
-      return TraceSetting(signal: json['signal'], color: color, scalingGroup: json['scalingGroup'])..isVisible = json['isVisible']..offset = json['offset']..span = json['span'];
+      final Color color = Color.fromARGB(json['2'][0], json['2'][1], json['2'][2], json['2'][3]);
+      return TraceSetting(signal: json['1'], color: color, scalingGroup: json['6'])..isVisible = json['3'] != 0..offset = json['4']..span = json['5'];
     }
   }
 
   Map<String,dynamic> get asJson => {
-    'signal': signal,
-    'color': [color.alpha, color.red, color.green, color.blue],
-    'isVisible': isVisible ? 1 : 0,
-    'offset': offset,
-    'span': span,
-    'scalingGroup': scalingGroup
+    '1': signal,
+    '2': [color.alpha, color.red, color.green, color.blue],
+    '3': isVisible ? 1 : 0,
+    '4': num.parse(offset.toStringAsPrecision(8)),
+    '5': num.parse(span.toStringAsPrecision(8)),
+    '6': scalingGroup
   };
 }

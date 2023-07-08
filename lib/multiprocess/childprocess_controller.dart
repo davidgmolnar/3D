@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:log_analyser/data/settings.dart';
+
 import '../data/data.dart';
 import '../data/signal_container.dart';
 import '../io/file_system.dart';
@@ -90,6 +92,7 @@ abstract class ChildProcessController{
           final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
           LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]));
           signalData[measurementAlias] = (result.storage as Map<String, SignalContainer>);
+          TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
         }
         break;
       default:

@@ -1,7 +1,11 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
 import '../ui/theme/theme.dart';
 import 'settings_classes.dart';
+import 'signal_container.dart';
 import 'updateable_valuenotifier.dart';
 
 const int _scrollMultiplierVertical = 1; // setting
@@ -29,13 +33,50 @@ abstract class SettingsProvider{
 abstract class TraceSettingsProvider{
   static UpdateableValueNotifier<Map<String, List<TraceSetting>>> traceSettingNotifier = UpdateableValueNotifier<Map<String, List<TraceSetting>>>({});
 
+  static int _maxScalingGroup = -1;
+  static int _newColorIndex = -1;
+
+  static List<Color> colorBank = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.orange,
+    Colors.brown,
+  ];
+
   static Map<String, List> get toJsonFormattable => 
     traceSettingNotifier.value.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
 
-  static set update(Map<String, List> newData){
+  static void reload(Map newData){
     for(String measurement in newData.keys){
-      traceSettingNotifier.value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().removedWhere((element) => element == null) as List<TraceSetting>);
-    }
+      traceSettingNotifier.update((value) {
+        value[measurement] ??= [];
+        value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
+      });
+    } 
+  }
+
+  static void addEntriesFrom(final String measurement, final List<SignalContainer> signalContainers){
+    traceSettingNotifier.update((traceSetting) {
+      traceSetting[measurement] = signalContainers.map((signalContainer) {
+        final num minValue = signalContainer.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
+        final num maxValue = signalContainer.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        return TraceSetting(signal: signalContainer.dbcName, color: _nextColor, scalingGroup: _nextScalingGroup)
+          ..offset = minValue..span = maxValue - minValue;
+        }
+      ).toList();
+    });
+  }
+
+  static int get itemCount => traceSettingNotifier.value.values.fold(0, (previousValue, element) => previousValue + element.length) + traceSettingNotifier.value.keys.length;
+  // TODO maintain private flattened widget descriptor + subtitle list of map through changes with public getter
+
+
+  static int get _nextScalingGroup => _maxScalingGroup++;
+
+  static Color get _nextColor {
+    _newColorIndex = _newColorIndex >= colorBank.length - 1 ? 0 : _newColorIndex + 1;
+    return colorBank[_newColorIndex];
   }
 
   static Map<int, List<TraceSetting>> get scalingGroups {
