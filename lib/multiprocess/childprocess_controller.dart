@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:log_analyser/data/settings.dart';
-
 import '../data/data.dart';
+import '../data/settings.dart';
 import '../data/signal_container.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
@@ -30,6 +29,7 @@ abstract class ChildProcessController{
   }
 
   static void _init() async {
+    localLogger.info("ChildProcessController started listening");
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = _sock?.receive()?.data;
@@ -44,7 +44,7 @@ abstract class ChildProcessController{
                   localLogger.info("Established connection with childprocess on port ${response.childProcessPort}");
                 }
                 else{
-                  localLogger.error("Childprocess on port ${response.childProcessPort} unexpectedly reported INIT_READY");
+                  localLogger.error("A process on port ${response.childProcessPort} unexpectedly reported INIT_READY");
                 }
                 break;
 
@@ -91,7 +91,7 @@ abstract class ChildProcessController{
         for(String id in finishedTask.data.keys){
           final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
           LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]));
-          signalData[measurementAlias] = (result.storage as Map<String, SignalContainer>);
+          signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
           TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
         }
         break;
@@ -103,7 +103,7 @@ abstract class ChildProcessController{
 
   static int _findFirstAvailablePort(){
     int port = masterSocketPort + 1;
-    while(_activeChildProcesses.containsKey(port)){
+    while(_activeChildProcesses.containsKey(port) || _newConnections.containsKey(port)){
       port++;
     }
     return port;
@@ -115,14 +115,8 @@ abstract class ChildProcessController{
     if(dir == null){
       return -1;
     }
-    /*final File windowSetupFile = await File("${dir}Local/${port}_setup.3D").create(recursive: true);
-    final RandomAccessFile access = await windowSetupFile.open(mode: FileMode.write);
-    access.writeFromSync(Deserializer.utf8Decoder.convert(jsonEncode(windowSetupInfo.asJson)));
-    await access.close();*/
     await FileSystem.trySaveMapToLocalAsync("", "${port}_setup.3D", windowSetupInfo.asJson);
-    Process.run(
-      "${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],
-    );
+    Process.run("${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],);
     _newConnections[port] = type;
     localLogger.info("Started ${type.name}");
     return port;
@@ -172,6 +166,7 @@ abstract class ChildProcessController{
   }
 
   static void dispose(){
+    localLogger.info("ChildProcessController started to dispose clients");
     if(_dispatcher != null && _dispatcher!.isActive){
         _dispatcher?.cancel();
         _dispatcher = null;
@@ -185,5 +180,6 @@ abstract class ChildProcessController{
     }
     _newConnections.clear();
     _sock?.close();
+    localLogger.info("ChildProcessController finished disposing clients");
   }
 }

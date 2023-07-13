@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:log_analyser/routes/settings/settings_widgets/settings_bottom_bar.dart';
 
 import '../../../data/settings.dart';
+import 'settings_bottom_bar.dart';
 
 class SettingsTraceEditor extends StatefulWidget{
   const SettingsTraceEditor({super.key});

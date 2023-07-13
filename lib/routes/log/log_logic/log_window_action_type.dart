@@ -27,12 +27,14 @@ enum LogWindowInstruction{
 LogWindowType logWindowType = LogWindowType.INITIAL;
 
 void logHandleDataReceived(Map data){
+  localLogger.info("Data received from master");
   switch (LogWindowInstruction.values[data['instruction']]) {
     case LogWindowInstruction.SET_TYPE:
       logWindowType = LogWindowType.values[data['type']];
+      localLogger.info("LogWindowType changed to ${logWindowType.name}");
       StyleManager.updater();
       break;
     default:
-      localLogger.error("LogWindowInstruction not implemented for idx ${data['instruction']}");
+      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}");
   }
 }

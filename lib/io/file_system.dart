@@ -29,6 +29,7 @@ abstract class FileSystem{
       return dir;
     }
     else{
+      localLogger.error("Unsupported operating system, FileSystem.getCurrentDirectory only supports Linux and Windows");
       return null;
     }
   }
@@ -71,7 +72,7 @@ abstract class FileSystem{
     return Serializer.jsonFromBytes(buffer);
   }
 
-  static Future<Map> tryLoadMapFromLocalSync(String path, String filename, {bool deleteWhenDone = false}) async{
+  static Future<Map> tryLoadMapFromLocalSync(String path, String filename, {bool deleteWhenDone = false}) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory");
       return {};

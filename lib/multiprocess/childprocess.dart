@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:log_analyser/routes/settings/settings_logic/settings_window_type.dart';
-
 import '../io/logger.dart';
 import '../routes/log/log_logic/log_window_action_type.dart';
+import '../routes/settings/settings_logic/settings_window_type.dart';
 import '../routes/window_type.dart';
 import 'childprocess_api.dart';
 
@@ -19,6 +18,7 @@ abstract class ChildProcess{
   }
 
   static void _init() {
+    localLogger.info("ChildProcess started listening");
     _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = _sock?.receive()?.data;
@@ -59,7 +59,7 @@ abstract class ChildProcess{
         settingsHandleDataReceived(data);
         break;
       default:
-        localLogger.error("Data interpretation not implemented");
+        localLogger.error("Data interpretation not implemented for WindowType.${windowType.name}");
     }
   }
 
