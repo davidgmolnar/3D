@@ -25,13 +25,14 @@ class MainWindowToolbar extends StatelessWidget {
 
   static _calfileRunnerWindow (){}
   static _traceEditorWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(500,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(900,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
   }
   static _calfileCreatorWindow (){}
   static _settingsWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.SETTINGS)));
   }
   static _logWindow (){}
 

@@ -3,7 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
+import '../routes/window_type.dart';
 import '../ui/theme/theme.dart';
+import 'data.dart';
 import 'settings_classes.dart';
 import 'signal_container.dart';
 import 'updateable_valuenotifier.dart';
@@ -43,6 +45,7 @@ abstract class TraceSettingsProvider{
     Colors.orange,
     Colors.brown,
   ];
+  
 
   static Map<String, List> get toJsonFormattable => 
     traceSettingNotifier.value.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
@@ -53,7 +56,16 @@ abstract class TraceSettingsProvider{
         value[measurement] ??= [];
         value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
       });
+      _postUpdate(measurement);
     } 
+  }
+
+  static void _postUpdate(final String measurement){
+    if(windowType == WindowType.MAIN_WINDOW){
+      for(TraceSetting traceSetting in traceSettingNotifier.value[measurement]!){
+        signalData[measurement]![traceSetting.signal]!.displayName = traceSetting.displayName;
+      }
+    }
   }
 
   static void addEntriesFrom(final String measurement, final List<SignalContainer> signalContainers){
@@ -61,16 +73,16 @@ abstract class TraceSettingsProvider{
       traceSetting[measurement] = signalContainers.map((signalContainer) {
         final num minValue = signalContainer.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
         final num maxValue = signalContainer.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
-        return TraceSetting(signal: signalContainer.dbcName, color: _nextColor, scalingGroup: _nextScalingGroup)
+        return TraceSetting(signal: signalContainer.dbcName, color: _nextColor, scalingGroup: _nextScalingGroup, displayName: signalContainer.displayName)
           ..offset = minValue..span = maxValue - minValue;
         }
       ).toList();
     });
   }
 
-  static int get itemCount => traceSettingNotifier.value.values.fold(0, (previousValue, element) => previousValue + element.length) + traceSettingNotifier.value.keys.length;
-  // TODO maintain private flattened widget descriptor + subtitle list of map through changes with public getter
-
+  static int itemCount(String measurement){
+    return traceSettingNotifier.value[measurement]?.length ?? 0;
+  }
 
   static int get _nextScalingGroup => _maxScalingGroup++;
 
