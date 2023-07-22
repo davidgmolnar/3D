@@ -1,60 +1,75 @@
 import 'package:flutter/material.dart';
 
+import '../../io/logger.dart';
+import '../common.dart';
 import '../theme/theme.dart';
 
-class ToggleableTextField extends StatefulWidget{
-  const ToggleableTextField({super.key, required this.onFinished, required this.parser, required this.initialValue});
+class ToggleableTextField<T> extends StatefulWidget{
+  const ToggleableTextField({super.key, required this.onFinished, required this.parser, required this.initialValue, required this.width});
 
-  final Function onFinished;
-  final Function parser; // int.tryParse, double.tryParse etc
-  final String initialValue;
+  final void Function(T) onFinished;
+  final T? Function(String) parser;
+  final T initialValue;
+  final double width;
 
   @override
-  State<ToggleableTextField> createState() => _ToggleableTextFieldState();
+  State<ToggleableTextField> createState() => _ToggleableTextFieldState<T>();
 }
 
-class _ToggleableTextFieldState extends State<ToggleableTextField> {
+class _ToggleableTextFieldState<T> extends State<ToggleableTextField<T>> {
   bool selected = false;
   late String value;
   final TextEditingController _controller = TextEditingController();
 
   @override
   void initState(){
-    value = widget.initialValue;
+    value = widget.initialValue.toString();
     super.initState();
+  }
+
+  void _onPressed(){
+    final T? parsedValue = widget.parser(_controller.text);
+    if(parsedValue == null){
+      showError(context, "Invalid value $parsedValue");
+      return;
+    }
+    value = parsedValue.toString();
+    selected = false;
+    try{
+      widget.onFinished(parsedValue);
+    }catch(exc){
+      localLogger.error("Exception when passing parsed value ${exc.toString()}");
+    }
+    setState((){});
   }
 
   @override
   Widget build(BuildContext context) {
     if(!selected){
-      return TextButton(
-        onPressed: (){
-          selected = true;
-        },
-        child: Text(value, style: TextStyle(color: StyleManager.globalStyle.primaryColor))
+      return SizedBox(
+        width: widget.width,
+        child: TextButton(
+          onPressed: (){
+            selected = true;
+            setState(() {});
+          },
+          child: Text(value, style: TextStyle(color: StyleManager.globalStyle.primaryColor))
+        ),
       );
     }
     else{
       return Row(
         children: [
-          TextFormField(
-            controller: _controller
+          SizedBox(
+            width: widget.width,
+            child: TextFormField(
+              controller: _controller,
+              decoration: InputDecoration(hintText: value),
+              onFieldSubmitted: (value) {
+                _onPressed();
+              },
+            ),
           ),
-          IconButton(
-            onPressed: (){
-              final dynamic parsedValue = widget.parser(_controller.text);
-              if(parsedValue == null){
-                // TODO showerror
-                return;
-              }
-              value = parsedValue.toString();
-              selected = false;
-              widget.onFinished(parsedValue);
-              setState((){});
-            },
-            icon: Icon(Icons.check, color: StyleManager.globalStyle.primaryColor),
-            splashRadius: 20
-          )
         ],
       );
     }

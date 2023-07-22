@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/theme.dart';
 
 class ButtonWithTwoText extends StatefulWidget{
-  const ButtonWithTwoText({super.key, required this.onPressed, required this.isActive, required this.textWhenActive, required this.textWhenInactive});
+  const ButtonWithTwoText({super.key, required this.onPressed, required this.isInitiallyActive, required this.textWhenActive, required this.textWhenInactive});
 
-  final Function onPressed;
-  final bool isActive;
+  final void Function(bool) onPressed;
+  final bool isInitiallyActive;
   final String textWhenActive;
   final String textWhenInactive;
 
@@ -15,12 +15,26 @@ class ButtonWithTwoText extends StatefulWidget{
 }
 
 class _ButtonWithTwoTextState extends State<ButtonWithTwoText> {
+  bool active = false;
+
+  @override
+  void initState() {
+    active = widget.isInitiallyActive;
+    super.initState();
+  }
+
+  void _onPressed(){
+    active = !active;
+    widget.onPressed(active);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    if(widget.isActive){
-      return TextButton(onPressed: () => widget.onPressed(), child: Text(widget.textWhenActive, style: TextStyle(color: StyleManager.globalStyle.primaryColor)));
+    if(active){
+      return TextButton(onPressed: _onPressed, child: Text(widget.textWhenActive, style: TextStyle(color: StyleManager.globalStyle.primaryColor)));
     }
-    return TextButton(onPressed: () => widget.onPressed(), child: Text(widget.textWhenInactive, style: TextStyle(color: StyleManager.globalStyle.primaryColor)));
+    return TextButton(onPressed: _onPressed, child: Text(widget.textWhenInactive, style: TextStyle(color: StyleManager.globalStyle.primaryColor)));
   }
 }
 

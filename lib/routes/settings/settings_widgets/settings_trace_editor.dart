@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
 import '../../../ui/input_widgets/buttons.dart';
+import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/window/window_titlebar.dart';
 import '../../startup.dart';
@@ -40,24 +41,55 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               border: Border(left: BorderSide(color: StyleManager.globalStyle.primaryColor, width: 1))
             ),
           ),
-          // Displayname
+          ToggleableTextField<String>(
+            initialValue: widget.traceSetting.displayName,
+            parser: (p0) => p0,
+            onFinished: (p0) {
+              widget.traceSetting.displayName = p0;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(displayName: p0);
+            },
+            width: 200,
+          ),
           SizedBox(
             width: 90,
             child: ButtonWithTwoText(
-              isActive: widget.traceSetting.isVisible,
+              isInitiallyActive: widget.traceSetting.isVisible,
               textWhenActive: "Visible",
               textWhenInactive: "Invisible",
-              onPressed: (){
-                widget.traceSetting.isVisible = !widget.traceSetting.isVisible;
-                TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).isVisible = widget.traceSetting.isVisible;
-                setState(() {});
+              onPressed: (p0){
+                widget.traceSetting.isVisible = p0;
+                TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(isVisible: p0);
               },
             ),
           ),
-          // Color picker
-          // Scaling group
-          // Span
-          // Offset
+          // TODO Color picker
+          ToggleableTextField<int>(
+            initialValue: widget.traceSetting.scalingGroup,
+            parser: (p0) => int.tryParse(p0),
+            onFinished: (p0) {
+              widget.traceSetting.scalingGroup = p0;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(scalingGroup: p0);
+            },
+            width: 50,
+          ),
+          ToggleableTextField<num>(
+            initialValue: widget.traceSetting.span,
+            parser: (p0) => double.tryParse(p0),
+            onFinished: (p0) {
+              widget.traceSetting.span = p0;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(span: p0);
+            },
+            width: 100,
+          ),
+          ToggleableTextField<num>(
+            initialValue: widget.traceSetting.offset,
+            parser: (p0) => double.tryParse(p0),
+            onFinished: (p0) {
+              widget.traceSetting.offset = p0;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(offset: p0);
+            },
+            width: 100,
+          ),
         ],
       ),
     );
@@ -81,6 +113,10 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
   }
 
   void update() => setState(() {});
+
+  void _sendToApp(){
+    // TODO
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +150,18 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
               })
             ),
           ),
-          const SettingsBottomBar()
+          SettingsBottomBar(
+            onCancel: (){
+              shutdown();
+            },
+            onApply: (){
+              _sendToApp();
+            },
+            onApplyAndClose: (){
+              _sendToApp();
+              shutdown();
+            },
+          )
         ],
       ),
     );

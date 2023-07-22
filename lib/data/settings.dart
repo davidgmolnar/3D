@@ -35,8 +35,8 @@ abstract class SettingsProvider{
 abstract class TraceSettingsProvider{
   static UpdateableValueNotifier<Map<String, List<TraceSetting>>> traceSettingNotifier = UpdateableValueNotifier<Map<String, List<TraceSetting>>>({});
 
-  static int _maxScalingGroup = -1;
-  static int _newColorIndex = -1;
+  static int _maxScalingGroup = 0;
+  static int _newColorIndex = 0;
 
   static List<Color> colorBank = [
     Colors.red,
@@ -87,7 +87,7 @@ abstract class TraceSettingsProvider{
   static int get _nextScalingGroup => _maxScalingGroup++;
 
   static Color get _nextColor {
-    _newColorIndex = _newColorIndex >= colorBank.length - 1 ? 0 : _newColorIndex + 1;
+    _newColorIndex = _newColorIndex >= colorBank.length - 2 ? 0 : _newColorIndex++;
     return colorBank[_newColorIndex];
   }
 
