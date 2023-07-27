@@ -104,12 +104,12 @@ Future<bool> tryStartup(List<String> args) async {
     if(args.isEmpty){
       localSocketPort = masterSocketPort;
       windowType = WindowType.MAIN_WINDOW;
-      localLogger = Logger(mainLogPath, "MASTER Logger");
+      localLogger = Logger(mainLogPath, "MASTER");
     }
     else{
       localSocketPort = int.parse(args[1]);
       windowType = windowType.tryParse(args[0])!;
-      localLogger = Logger(mainLogPath, "${windowType.name} Logger @$localSocketPort");
+      localLogger = Logger(mainLogPath, "${windowType.name} @$localSocketPort");
       windowSetup = WindowSetupInfo.fromJson(await FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: true));
     }
   }
