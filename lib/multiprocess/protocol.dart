@@ -35,10 +35,11 @@ abstract class Protocol{
       final List<Uint8List> messages = [];
       int fragmentID = 0;
       int offset = 0;
+      int messageID = _getNextMessageId;
       for(; offset < data.length - _fragmentLength; offset += _fragmentLength){
         Uint8List header = Uint8List(4);
         ByteData headerByteData = header.buffer.asByteData();
-        headerByteData.setUint8(0, 128 + _getNextMessageId);
+        headerByteData.setUint8(0, 128 + messageID);
         headerByteData.setUint8(1, (fragmentID >> 16) & 0xFF);
         headerByteData.setUint16(2, fragmentID & 0xFFFF);
         fragmentID++;
@@ -46,7 +47,7 @@ abstract class Protocol{
       }
       Uint8List header = Uint8List(4);
       ByteData headerByteData = header.buffer.asByteData();
-      headerByteData.setUint8(0, 128 + _getNextMessageId);
+      headerByteData.setUint8(0, messageID);
       headerByteData.setUint8(1, (fragmentID >> 16) & 0xFF);
       headerByteData.setUint16(2, fragmentID & 0xFFFF);
       messages.add(Uint8List.fromList(header.toList()..addAll(data.sublist(offset))));
