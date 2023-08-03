@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
+import '../../../multiprocess/childprocess.dart';
+import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/input_widgets/buttons.dart';
 import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/theme/theme.dart';
@@ -31,7 +33,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(
-            width: 200,
+            width: 250,
             child: Text(widget.traceSetting.signal)
           ),
           Container(
@@ -48,7 +50,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               widget.traceSetting.displayName = p0;
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(displayName: p0);
             },
-            width: 200,
+            width: 250,
           ),
           SizedBox(
             width: 90,
@@ -115,7 +117,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
   void update() => setState(() {});
 
   void _sendToApp(){
-    // TODO
+    ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, {"type": ResponseFinishableType.TRACE_EDITOR_DATA.index, "data": TraceSettingsProvider.toJsonFormattable}));
   }
 
   @override
@@ -140,7 +142,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
             ),
           ),
           SizedBox(
-            height: MediaQuery.of(context).size.height - settingsBottomBarHeight - 50 - titlebarHeight,
+            height: MediaQuery.of(context).size.height - settingsBottomBarHeight - 50 - titlebarHeight - 3,
             child: ListView.builder(
               scrollDirection: Axis.vertical,
               itemCount: TraceSettingsProvider.itemCount(shownMeasurement),

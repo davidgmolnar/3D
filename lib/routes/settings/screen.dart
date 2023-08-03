@@ -45,15 +45,9 @@ class SettingScreen extends StatelessWidget{
     return Scaffold(
       body: SafeArea(
         child: Column(
-          children: [
-            const CustomWindowTitleBar(),
-            Expanded(
-              child: ListView(
-                children: const [
-                  SettingsContainer()
-                ],
-              ),
-            ),
+          children: const [
+            CustomWindowTitleBar(),
+            SettingsContainer(),
           ],
         ),
       ),

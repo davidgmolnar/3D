@@ -10,7 +10,9 @@ import '../io/logger.dart';
 import '../io/serializer.dart';
 import '../routes/startup.dart';
 import '../routes/window_type.dart';
+import '../ui/charts/chart_logic/chart_controller.dart';
 import 'childprocess_api.dart';
+import 'protocol.dart';
 
 const int resendIntervalMS = 200;
 const int maxSendAttempt = 10;
@@ -23,6 +25,8 @@ abstract class ChildProcessController{
   static final Map<Command,int> _backlog = {};
   static Timer? _dispatcher;
 
+  static final Uint8List _killSignal = Protocol.encode(Command(localSocketPort, CommandType.KILL, {}).encode()).first;
+
   static Future<void> start() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
     _init();
@@ -32,7 +36,7 @@ abstract class ChildProcessController{
     localLogger.info("ChildProcessController started listening");
     _sock!.listen((udp) {
       if (udp == RawSocketEvent.read) {
-        Uint8List? udpPayload = _sock?.receive()?.data;
+        Uint8List? udpPayload = Protocol.decode(_sock?.receive()?.data);
         if (udpPayload != null && udpPayload.isNotEmpty) {
           try{
             Response response = Response.decode(udpPayload);
@@ -95,6 +99,10 @@ abstract class ChildProcessController{
           TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
         }
         break;
+      case ResponseFinishableType.TRACE_EDITOR_DATA:
+        TraceSettingsProvider.reload(finishedTask.data);
+        ChartController.shownDurationNotifier.value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;
+        break;
       default:
         localLogger.error("Finished task ${finishedTask.type.name} handling not implemented");
     }
@@ -122,9 +130,12 @@ abstract class ChildProcessController{
     return port;
   }
 
-  static void sendTo(Command command){
+  static void sendTo(Command command) async {
     if(_activeChildProcesses.containsKey(command.childProcessPort)){
-      _sock?.send(command.encode(), InternetAddress.loopbackIPv4, command.childProcessPort);
+      for(Uint8List fragment in Protocol.encode(command.encode())){
+        await Future.delayed(const Duration(milliseconds: 10));
+        _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+      }
     }
     else if(_newConnections.containsKey(command.childProcessPort)){
       _backlog[command] = 0;
@@ -137,12 +148,15 @@ abstract class ChildProcessController{
     }
   }
 
-  static void _flush(){
+  static void _flush() async {
     if(_backlog.isNotEmpty){
       List<Command> toRemove = [];
       for(Command command in _backlog.keys){
         if(_activeChildProcesses.containsKey(command.childProcessPort)){
-          _sock?.send(command.encode(), InternetAddress.loopbackIPv4, command.childProcessPort);
+          for(Uint8List fragment in Protocol.encode(command.encode())){
+            await Future.delayed(const Duration(milliseconds: 10));
+            _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+          }
           toRemove.add(command);
         }
         else{
@@ -172,11 +186,11 @@ abstract class ChildProcessController{
         _dispatcher = null;
     }
     for(int childProcessPort in _activeChildProcesses.keys){
-      _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
+      _sock?.send(_killSignal, InternetAddress.loopbackIPv4, childProcessPort);
     }
     _activeChildProcesses.clear();
     for(int childProcessPort in _newConnections.keys){
-      _sock?.send(Command(childProcessPort, CommandType.KILL, {}).encode(), InternetAddress.loopbackIPv4, childProcessPort);
+      _sock?.send(_killSignal, InternetAddress.loopbackIPv4, childProcessPort);
     }
     _newConnections.clear();
     _sock?.close();

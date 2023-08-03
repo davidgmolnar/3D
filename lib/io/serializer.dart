@@ -72,7 +72,7 @@ abstract class Serializer {
   static Future<LoadContext> _csvLoader(File file) async {
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [LogEntry.info("Started loading csv ${file.absolute.path}")];
-    List<String> lines = safeUTF8Decode(await file.readAsBytes()).split('\n');
+    List<String> lines = safeUTF8Decode((await file.readAsBytes()).toList()).split('\n');
     if(lines.length < 3){
       context.add(LogEntry.warning("File ${file.absolute.path} has less than 3 lines, cant have meaningful data, skipping"));
     }

@@ -107,7 +107,8 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         if(dataSeen[measurement]!.containsKey(signal)){
           final ScalingInfo actualScalingInfo = ChartController.scalingFor(measurement, signal);
           if(dataSeen[measurement]![signal]!.scalingInfo.timeDataChanged(actualScalingInfo)){
-            dataSeen[measurement]![signal]!.signalContainer.updateSignalContainer(actualScalingInfo.timedata, dataSeen[measurement]![signal]!.scalingInfo.timedata);
+            //dataSeen[measurement]![signal]!.signalContainer.updateSignalContainer(actualScalingInfo.timedata, dataSeen[measurement]![signal]!.scalingInfo.timedata, measurement);
+            dataSeen[measurement]![signal]!.signalContainer = SignalContainer.create(ChartController.shownDurationNotifier.value, signal, TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).displayName, measurement);
             // calc points from actualScalingInfo and chart area size
             dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo;
             dataSeen[measurement]![signal]!.hadChange = true;
@@ -122,9 +123,9 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         else{
           dataSeen[measurement]![signal] = _PlotContext(
             scalingInfo: ChartController.scalingFor(measurement, signal),
-            signalContainer: SignalContainer.create(ChartController.shownDurationNotifier.value),
+            signalContainer: SignalContainer.create(ChartController.shownDurationNotifier.value, signal, TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).displayName, measurement),
             hadChange: true,
-            scaledChartLine: [],
+            scaledChartLine: [], // TODO
             color: TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).color
           );
         }

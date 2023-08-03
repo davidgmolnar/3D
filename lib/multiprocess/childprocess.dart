@@ -6,10 +6,14 @@ import '../routes/log/log_logic/log_window_action_type.dart';
 import '../routes/settings/settings_logic/settings_window_type.dart';
 import '../routes/window_type.dart';
 import 'childprocess_api.dart';
+import 'protocol.dart';
 
 // DONT inherit/extend
 abstract class ChildProcess{
   static RawDatagramSocket? _sock;
+
+  static final Uint8List _stopSignal = Protocol.encode(Response(localSocketPort, ResponseType.STOPPING, {}).encode()).first;
+  static final Uint8List _readySignal = Protocol.encode(Response(localSocketPort, ResponseType.INIT_READY, {}).encode()).first;
 
   static Future<void> start() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
@@ -21,7 +25,7 @@ abstract class ChildProcess{
     localLogger.info("ChildProcess started listening");
     _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
-        Uint8List? udpPayload = _sock?.receive()?.data;
+        Uint8List? udpPayload = Protocol.decode(_sock?.receive()?.data);
         if (udpPayload != null && udpPayload.isNotEmpty) {
           try{
             Command command = Command.decode(udpPayload);
@@ -63,16 +67,19 @@ abstract class ChildProcess{
     }
   }
 
-  static void send(Response response){
-    _sock?.send(response.encode(), InternetAddress.loopbackIPv4, masterSocketPort);
+  static void send(Response response) async {
+    for(Uint8List fragment in Protocol.encode(response.encode())){
+      await Future.delayed(const Duration(milliseconds: 10));
+      _sock?.send(fragment, InternetAddress.loopbackIPv4, masterSocketPort);
+    }
   }
 
   static void signalReady(){
-    _sock?.send(Response(localSocketPort, ResponseType.INIT_READY, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
+    _sock?.send(_readySignal, InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
   static void signalStop(){
-    _sock?.send(Response(localSocketPort, ResponseType.STOPPING, {}).encode(), InternetAddress.loopbackIPv4, masterSocketPort);
+    _sock?.send(_stopSignal, InternetAddress.loopbackIPv4, masterSocketPort);
     _sock?.close();
   }
 

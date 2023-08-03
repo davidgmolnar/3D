@@ -12,7 +12,7 @@ void rebuildAllChildren(BuildContext context) {
   (context as Element).visitChildren(rebuild);
 }
 
-ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(context, message){
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(BuildContext context, String message){
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message, style: StyleManager.subTitleStyle,),
@@ -21,7 +21,7 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(context, mes
   );
 }
 
-ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showInfo(context, message){
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showInfo(BuildContext context, String message){
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(message, style: StyleManager.subTitleStyle,),

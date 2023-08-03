@@ -63,6 +63,8 @@ enum ResponseFinishableType{
   // ignore: constant_identifier_names
   SETTING,
   // ignore: constant_identifier_names
+  TRACE_EDITOR_DATA,
+  // ignore: constant_identifier_names
   CALCULATION
 }
 

@@ -4,6 +4,7 @@ import 'package:log_analyser/extensions.dart';
 
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
+import '../../../ui/common.dart';
 import '../../../ui/theme/theme.dart';
 import '../log_logic/log_io_controller.dart';
 import 'log_container.dart';
@@ -108,8 +109,15 @@ class _LogImportState extends State<LogImport> {
                     ),
                     TextButton(
                       onPressed: (){
+                        if(importStarted){
+                          return;
+                        }
                         importStarted = true;
-                        LogIOInfoController.loadFiles();
+                        try{
+                          LogIOInfoController.loadFiles();
+                        }catch(exc){
+                          showError(context, "Error when importing: ${exc.toString()}");
+                        }
                         setState(() {});
                       },
                       child: Text("Preprocess", style: StyleManager.textStyle,),

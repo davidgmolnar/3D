@@ -1,4 +1,5 @@
 import '../ui/charts/chart_logic/chart_controller.dart';
+import 'data.dart';
 
 class Measurement{
   final num value;
@@ -46,12 +47,18 @@ class SignalContainer{
     );
   }
 
-  void updateSignalContainer(ChartShowDuration duration, ChartShowDuration oldDuration){
-    // ...
-    return;
+  void updateSignalContainer(ChartShowDuration duration, ChartShowDuration oldDuration, String measurement){
+    /*final int startDifference = duration.timeOffset - oldDuration.timeOffset;
+    final int endDifference = duration.timeOffset - oldDuration.timeOffset + duration.timeDuration + oldDuration.timeDuration;
+    values.removeWhere((element) => element.timeStamp < duration.timeOffset);
+    values.removeWhere((element) => element.timeStamp > duration.timeOffset + duration.timeDuration);
+    List<Measurement> left = */
+    // return;
   }
 
-  static SignalContainer create(ChartShowDuration duration) {
-    return SignalContainer(dbcName: "", values: [], displayName: "");
+  static SignalContainer create(ChartShowDuration duration, String dbcName, String displayName, String measurement) {
+    List<Measurement> values = signalData[measurement]![dbcName]!.values.skipWhile((meas) => meas.timeStamp < duration.timeOffset).toList();
+    values = values.takeWhile((meas) => meas.timeStamp < duration.timeOffset + duration.timeDuration).toList();
+    return SignalContainer(dbcName: dbcName, values: values, displayName: displayName);
   }
 } 

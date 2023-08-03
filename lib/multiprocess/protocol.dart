@@ -11,6 +11,8 @@ class _FragmentBuffer{
   _FragmentBuffer(this.nextBufferId, this.buffer);
 }
 
+// TODO külön msg_id tartomány kell a külön processeknek, mert ütközés lehet
+
 /// Header
 /// [Fragment Flag 0][Message ID 1-7]
 /// [Fragment ID 0-7]
@@ -55,19 +57,23 @@ abstract class Protocol{
     }
   }
 
-  static Uint8List? decode(Uint8List data){
+  static Uint8List? decode(Uint8List? data){
+    if(data == null){
+      return null;
+    }
     ByteData byteData = data.buffer.asByteData();
     int byte0 = byteData.getUint8(0);
     int messageID = byte0 & 0x7F;
     if(byte0 < 128){
       if(_fragmentBuffer.containsKey(messageID)){
-        List<int> fullMessage = _fragmentBuffer[messageID]!.buffer.fold<List<int>>([], (previousValue, element) => previousValue..addAll(element));
+        List<int> fullMessage = _fragmentBuffer[messageID]!.buffer.fold<List<int>>([], (previousValue, element) {return previousValue..addAll(element);});
+        fullMessage.addAll(data.sublist(4));
         _fragmentBuffer.remove(messageID);
         return Uint8List.fromList(fullMessage);
       }
       return data.sublist(4);
     }
-    int fragmentID = byteData.getUint8(1) << 16 + byteData.getUint16(2);
+    int fragmentID = (byteData.getUint8(1) << 16) + byteData.getUint16(2);
     if(_fragmentBuffer.containsKey(messageID)){
       if(_fragmentBuffer[messageID]!.nextBufferId == fragmentID){
         _fragmentBuffer[messageID]!.buffer.add(data.sublist(4));

@@ -119,6 +119,22 @@ abstract class TraceSettingsProvider{
     return tmp;
   }
 
+  static int get firstVisibleTimestamp {
+    int tmp = -1;
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(TraceSetting traceSetting in traceSettingNotifier.value[measurement]!){
+        final int first = signalData[measurement]![traceSetting.signal]!.values.first.timeStamp;
+        if(tmp == -1){
+          tmp = first;
+        }
+        else if(first < tmp){
+          tmp = first;
+        }
+      }
+    }
+    return tmp;
+  }
+
   static void dragScalingGroup(int group, double delta){
     traceSettingNotifier.update((traceSetting) {
       for(String measurement in traceSetting.keys){
