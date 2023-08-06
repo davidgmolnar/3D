@@ -67,12 +67,12 @@ class ScalingInfo{
     }
     
     if(measCount == -1){
-      startIndex = 0;
+      measCount = 0;
     }
   }
 
-  bool timeDataChanged(ScalingInfo other) => other.timeDuration != timeDuration || other.timeOffset != timeOffset;
-  bool valueDataChanged(ScalingInfo other) => other.valueRange != valueRange || other.valueOffset != valueOffset;
+  bool timeDataChanged(ScalingInfo other) => other.timeDuration != timeDuration || other.timeOffset != timeOffset || other.timeScale != timeScale;
+  bool valueDataChanged(ScalingInfo other) => other.valueRange != valueRange || other.valueOffset != valueOffset || other.valueScale != valueScale;
   ChartShowDuration get timedata => ChartShowDuration(timeDuration: timeDuration, timeOffset: timeOffset);
 }
 
@@ -102,11 +102,11 @@ class _PlotContext{
     scaledChartLine = signalData[measurement]![signal]!.values.map((meas) => meas.toPlotPoint(scalingInfo)).toList();
   }
 
-  void reScalePoints(ScalingInfo old){
+  void reScalePoints(ScalingInfo newInfo, ScalingInfo oldInfo){
     // TODO https://pub.dev/packages/ml_linalg
     for(int i = 0; i < scaledChartLine.length; i++){
-      scaledChartLine[i].x = (scaledChartLine[i].x / old.timeScale + old.timeOffset - scalingInfo.timeOffset) * scalingInfo.timeScale;
-      scaledChartLine[i].y = (scaledChartLine[i].y / old.valueScale + old.valueOffset - scalingInfo.valueOffset) * scalingInfo.valueScale;
+      scaledChartLine[i].x = (scaledChartLine[i].x / oldInfo.timeScale + oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
+      scaledChartLine[i].y = (scaledChartLine[i].y / oldInfo.valueScale + oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
     }
   }
 }
@@ -188,17 +188,19 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       dataSeen[measurement] ??= {};
       for(String signal in visibleSignals[measurement]!){
         if(dataSeen[measurement]!.containsKey(signal)){
-          final ScalingInfo actualScalingInfo = ChartController.scalingFor(measurement, signal);
           final ScalingInfo oldScalingInfo = dataSeen[measurement]![signal]!.scalingInfo;
+          final ScalingInfo actualScalingInfo = ChartController.scalingFor(measurement, signal);
           if(oldScalingInfo.timeDataChanged(actualScalingInfo)){
             actualScalingInfo.fillIndexes(oldScalingInfo, measurement, signal);
             dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo;
             dataSeen[measurement]![signal]!.hadChange = true;
           }
-          else if(oldScalingInfo.valueDataChanged(actualScalingInfo)){
-            dataSeen[measurement]![signal]!.reScalePoints(oldScalingInfo);
-            dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo..startIndex = oldScalingInfo.startIndex..measCount = oldScalingInfo.measCount;
-            dataSeen[measurement]![signal]!.hadChange = true;
+          if(oldScalingInfo.valueDataChanged(actualScalingInfo)){
+            dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
+            if(dataSeen[measurement]![signal]!.hadChange != true){
+              dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo..startIndex = oldScalingInfo.startIndex..measCount = oldScalingInfo.measCount;
+              dataSeen[measurement]![signal]!.hadChange = true;
+            }
           }
           dataSeen[measurement]![signal]!.color = TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).color;
         }
@@ -272,14 +274,16 @@ class _ChartLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // TODO origo bal fent van xd, meg kell nézni a telemetria chart kódot h ott hogy lett megcsinálva. A transzformáció lehető legnagyobb részét PlotContext.reScalePoints és initialScaledPointsban kéne csinálni
-    // TODO screen resizeot fel kéne kötni az updatere
     Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
     final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount - 1;
+    print(plotContext.scalingInfo.measCount);
+    print(plotContext.scalingInfo.startIndex);
     for(int i = plotContext.scalingInfo.startIndex; i < end; i++){
       if(i == 0){
         canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+        canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
+        canvas.translate(-plotContext.scalingInfo.timeScale * -plotContext.scalingInfo.timeOffset, size.height + plotContext.scalingInfo.valueScale * plotContext.scalingInfo.valueOffset);
         path.moveTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].x);
         continue;
       }
@@ -290,6 +294,6 @@ class _ChartLinePainter extends CustomPainter {
   
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return plotContext.hadChange;
+    return true;
   }
 }

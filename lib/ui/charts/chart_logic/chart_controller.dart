@@ -16,8 +16,14 @@ class ChartShowDuration{
 abstract class ChartController{
   static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 0, timeDuration: 1000));
 
-  static double chartAreaWidth = 0;
-  static double chartAreaHeight = 0;
+  static double _chartAreaWidth = 0;
+  static double _chartAreaHeight = 0;
+
+  static void setScreenSize(double newWidth, double newHeight){
+    shownDurationNotifier.update((value) {});
+    _chartAreaHeight = newHeight;
+    _chartAreaWidth = newWidth;
+  }
 
   static set zoomInTime(double pointerSignalScrollDelta){
     final int delta = (shownDurationNotifier.value.timeDuration * 0.01 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
@@ -43,10 +49,10 @@ abstract class ChartController{
   static ScalingInfo scalingFor(String measurement, String signal){
     final TraceSetting traceSetting = TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal);
     return ScalingInfo(
-      timeScale: chartAreaWidth / shownDurationNotifier.value.timeDuration,
+      timeScale: _chartAreaWidth / shownDurationNotifier.value.timeDuration,
       timeDuration: shownDurationNotifier.value.timeDuration,
       timeOffset:  shownDurationNotifier.value.timeOffset,
-      valueScale: chartAreaHeight / traceSetting.span.toDouble(),
+      valueScale: _chartAreaHeight / traceSetting.span.toDouble(),
       valueRange: traceSetting.span.toDouble(),
       valueOffset: traceSetting.offset.toDouble(),
       startIndex: -1,
