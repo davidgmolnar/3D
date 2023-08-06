@@ -1,3 +1,4 @@
+import '../../../data/settings_classes.dart';
 import '../../../data/updateable_valuenotifier.dart';
 import '../chart_area.dart';
 import '../../../data/settings.dart';
@@ -15,6 +16,9 @@ class ChartShowDuration{
 abstract class ChartController{
   static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 0, timeDuration: 1000));
 
+  static double chartAreaWidth = 0;
+  static double chartAreaHeight = 0;
+
   static set zoomInTime(double pointerSignalScrollDelta){
     final int delta = (shownDurationNotifier.value.timeDuration * 0.01 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
     shownDurationNotifier.update((shown) {
@@ -29,12 +33,24 @@ abstract class ChartController{
     });
   }
 
+  static double durationToScale<T>(double screenDimension, T duration){
+    if(duration is num){
+      return screenDimension / duration;
+    }
+    throw Exception("Duration was not num in ChartController.durationToScale");
+  }
+
   static ScalingInfo scalingFor(String measurement, String signal){
+    final TraceSetting traceSetting = TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal);
     return ScalingInfo(
+      timeScale: chartAreaWidth / shownDurationNotifier.value.timeDuration,
       timeDuration: shownDurationNotifier.value.timeDuration,
       timeOffset:  shownDurationNotifier.value.timeOffset,
-      valueRange: TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).span.toDouble(),
-      valueOffset: TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).offset.toDouble()
+      valueScale: chartAreaHeight / traceSetting.span.toDouble(),
+      valueRange: traceSetting.span.toDouble(),
+      valueOffset: traceSetting.offset.toDouble(),
+      startIndex: -1,
+      measCount: -1
     );
   }
 }
