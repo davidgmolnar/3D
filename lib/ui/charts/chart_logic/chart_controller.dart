@@ -14,7 +14,7 @@ class ChartShowDuration{
 }
 
 abstract class ChartController{
-  static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 0, timeDuration: 1000));
+  static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 500000, timeDuration: 700000));
 
   static double _chartAreaWidth = 0;
   static double _chartAreaHeight = 0;

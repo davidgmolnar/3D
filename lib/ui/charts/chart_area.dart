@@ -36,7 +36,7 @@ class ScalingInfo{
         startIndex = signalData[measurement]![signal]!.values.length;
       }
       // measCount = signalData[measurement]![signal]!.values.skip(startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= timeOffset + timeDuration);
-      measCount = signalData[measurement]![signal]!.values.skip(startIndex).takeWhile((meas) => meas.timeStamp >= timeOffset + timeDuration).length;
+      measCount = signalData[measurement]![signal]!.values.skip(startIndex).takeWhile((meas) => meas.timeStamp <= timeOffset + timeDuration).length;
       return;
     }
     final int len = signalData[measurement]![signal]!.values.length;
@@ -49,17 +49,23 @@ class ScalingInfo{
       startIndex = signalData[measurement]![signal]!.values.reversed.skip(len - old.startIndex).toList(growable: false).reversed.toList(growable: false)
         .indexWhere((meas) => meas.timeStamp >= timeOffset);
     }
+    else{
+      startIndex = old.startIndex;
+    }
 
     final int oldEnd = old.timeOffset + old.timeDuration;
     final int end = timeOffset + timeDuration;
 
     if(oldEnd < end){
       // measCount = signalData[measurement]![signal]!.values.skip(old.startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= end);
-      measCount = signalData[measurement]![signal]!.values.skip(old.startIndex).takeWhile((meas) => meas.timeStamp >= end).length;
+      measCount = signalData[measurement]![signal]!.values.skip(old.startIndex).takeWhile((meas) => meas.timeStamp <= end).length;
     }
     else if(oldEnd > end){
       measCount = signalData[measurement]![signal]!.values.reversed.skip(len - old.startIndex).toList(growable: false).reversed.toList(growable: false)
         .indexWhere((meas) => meas.timeStamp >= end);
+    }
+    else{
+      measCount = old.measCount;
     }
     
     if(startIndex == -1){
@@ -223,7 +229,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
           print('onPointerSignal ${event.scrollDelta.dy}');
-          ChartController.zoomInTime = event.scrollDelta.dy;
+          ChartController.zoomInTime = event.scrollDelta.dy.floorToDouble();
         }
       },
       behavior: HitTestBehavior.opaque,
@@ -276,18 +282,21 @@ class _ChartLinePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
-    final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount - 1;
-    print(plotContext.scalingInfo.measCount);
+    final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;
+    print("cnt ${plotContext.scalingInfo.measCount}");
     print(plotContext.scalingInfo.startIndex);
+    if(plotContext.scalingInfo.measCount != 0){
+      //print(plotContext.scaledChartLine.sublist(plotContext.scalingInfo.startIndex, end).map((e) => e.x).toList());
+    }
     for(int i = plotContext.scalingInfo.startIndex; i < end; i++){
       if(i == 0){
-        canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+        //canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
         canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
-        canvas.translate(-plotContext.scalingInfo.timeScale * -plotContext.scalingInfo.timeOffset, size.height + plotContext.scalingInfo.valueScale * plotContext.scalingInfo.valueOffset);
-        path.moveTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].x);
+        canvas.translate(0, -size.height);
+        path.moveTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
         continue;
       }
-      path.lineTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].x);
+      path.lineTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
     }
     canvas.drawPath(path, paint);
   }

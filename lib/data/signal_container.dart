@@ -13,7 +13,7 @@ class Measurement{
   };
 
   PlotPoint toPlotPoint(ScalingInfo scaling){
-    return PlotPoint(x: (value - scaling.valueOffset) * scaling.valueScale, y: (timeStamp - scaling.timeOffset) * scaling.timeScale);
+    return PlotPoint(y: (value - scaling.valueOffset) * scaling.valueScale, x: (timeStamp - scaling.timeOffset) * scaling.timeScale);
   }
 
   static Measurement fromJson(Map<String, num> map){

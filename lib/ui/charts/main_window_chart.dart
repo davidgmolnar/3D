@@ -16,7 +16,7 @@ class ChartContainer extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double height = MediaQuery.of(context).size.height - toolbarItemSize - titlebarHeight - 2 * 1;
-        ChartController.setScreenSize(constraints.maxWidth, height);
+        ChartController.setScreenSize(constraints.maxWidth - 100, height - chartBottomOverviewHeight - cursorDisplayHeight);  // chartscaler, - bottom - cursor
         return Container(
           height: height,
           width: constraints.maxWidth,
