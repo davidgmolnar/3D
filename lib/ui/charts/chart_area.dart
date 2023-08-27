@@ -30,20 +30,20 @@ class ScalingInfo{
   });
 
   void fillIndexes(ScalingInfo? old, String measurement, String signal){
-    if(old == null){
-      startIndex = signalData[measurement]![signal]!.values.indexWhere((meas) => meas.timeStamp >= timeOffset);
-      if(startIndex == -1){
-        startIndex = signalData[measurement]![signal]!.values.length;
-      }
-      // measCount = signalData[measurement]![signal]!.values.skip(startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= timeOffset + timeDuration);
-      measCount = signalData[measurement]![signal]!.values.skip(startIndex).takeWhile((meas) => meas.timeStamp <= timeOffset + timeDuration).length;
-      return;
+    //if(old == null){
+    startIndex = signalData[measurement]![signal]!.values.indexWhere((meas) => meas.timeStamp >= timeOffset);
+    if(startIndex == -1){
+      startIndex = signalData[measurement]![signal]!.values.length;
     }
+    // measCount = signalData[measurement]![signal]!.values.skip(startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= timeOffset + timeDuration);
+    measCount = signalData[measurement]![signal]!.values.skip(startIndex).takeWhile((meas) => meas.timeStamp <= timeOffset + timeDuration).length;
+    return;
+    /*} // TODO ez azért kéne
     final int len = signalData[measurement]![signal]!.values.length;
 
     if(old.timeOffset < timeOffset){
       // startIndex = signalData[measurement]![signal]!.values.skip(old.startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= timeOffset) + old.startIndex;
-      startIndex = signalData[measurement]![signal]!.values.skip(old.startIndex).takeWhile((meas) => meas.timeStamp >= timeOffset).length + old.startIndex;
+      startIndex = signalData[measurement]![signal]!.values.skip(old.startIndex).takeWhile((meas) => meas.timeStamp <= timeOffset).length + old.startIndex;
     }
     else if(old.timeOffset > timeOffset){
       startIndex = signalData[measurement]![signal]!.values.reversed.skip(len - old.startIndex).toList(growable: false).reversed.toList(growable: false)
@@ -58,11 +58,11 @@ class ScalingInfo{
 
     if(oldEnd < end){
       // measCount = signalData[measurement]![signal]!.values.skip(old.startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= end);
-      measCount = signalData[measurement]![signal]!.values.skip(old.startIndex).takeWhile((meas) => meas.timeStamp <= end).length;
+      measCount = signalData[measurement]![signal]!.values.skip(old.startIndex + old.measCount).takeWhile((meas) => meas.timeStamp <= end).length + old.measCount - startIndex;
     }
     else if(oldEnd > end){
-      measCount = signalData[measurement]![signal]!.values.reversed.skip(len - old.startIndex).toList(growable: false).reversed.toList(growable: false)
-        .indexWhere((meas) => meas.timeStamp >= end);
+      measCount = signalData[measurement]![signal]!.values.reversed.skip(len - old.startIndex + old.measCount).toList(growable: false).reversed.toList(growable: false)
+        .indexWhere((meas) => meas.timeStamp >= end) + old.measCount - startIndex;
     }
     else{
       measCount = old.measCount;
@@ -74,7 +74,7 @@ class ScalingInfo{
     
     if(measCount == -1){
       measCount = 0;
-    }
+    }*/
   }
 
   bool timeDataChanged(ScalingInfo other) => other.timeDuration != timeDuration || other.timeOffset != timeOffset || other.timeScale != timeScale;
@@ -110,9 +110,14 @@ class _PlotContext{
 
   void reScalePoints(ScalingInfo newInfo, ScalingInfo oldInfo){
     // TODO https://pub.dev/packages/ml_linalg
+    // TODO offset cache
     for(int i = 0; i < scaledChartLine.length; i++){
-      scaledChartLine[i].x = (scaledChartLine[i].x / oldInfo.timeScale + oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
-      scaledChartLine[i].y = (scaledChartLine[i].y / oldInfo.valueScale + oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
+      if(newInfo.timeDataChanged(oldInfo)){
+        scaledChartLine[i].x = (scaledChartLine[i].x / oldInfo.timeScale + oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
+      }
+      if(newInfo.valueDataChanged(oldInfo)){
+        scaledChartLine[i].y = (scaledChartLine[i].y / oldInfo.valueScale + oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
+      }
     }
   }
 }
@@ -198,12 +203,14 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
           final ScalingInfo actualScalingInfo = ChartController.scalingFor(measurement, signal);
           if(oldScalingInfo.timeDataChanged(actualScalingInfo)){
             actualScalingInfo.fillIndexes(oldScalingInfo, measurement, signal);
+            dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
             dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo;
             dataSeen[measurement]![signal]!.hadChange = true;
           }
           if(oldScalingInfo.valueDataChanged(actualScalingInfo)){
             dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
             if(dataSeen[measurement]![signal]!.hadChange != true){
+              dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
               dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo..startIndex = oldScalingInfo.startIndex..measCount = oldScalingInfo.measCount;
               dataSeen[measurement]![signal]!.hadChange = true;
             }
@@ -289,7 +296,7 @@ class _ChartLinePainter extends CustomPainter {
       //print(plotContext.scaledChartLine.sublist(plotContext.scalingInfo.startIndex, end).map((e) => e.x).toList());
     }
     for(int i = plotContext.scalingInfo.startIndex; i < end; i++){
-      if(i == 0){
+      if(i == plotContext.scalingInfo.startIndex){
         //canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
         canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
         canvas.translate(0, -size.height);

@@ -3,8 +3,8 @@ import '../../../data/updateable_valuenotifier.dart';
 import '../chart_area.dart';
 import '../../../data/settings.dart';
 
-const int _scrollMultiplierHorizontal = 1; // setting
-const int _dragMultiplierHorizontal = 1; // setting
+const int _scrollMultiplierHorizontal = 10; // setting
+const int _dragMultiplierHorizontal = 100; // setting
 
 class ChartShowDuration{
   int timeOffset;
@@ -14,7 +14,7 @@ class ChartShowDuration{
 }
 
 abstract class ChartController{
-  static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 500000, timeDuration: 700000));
+  static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 500000, timeDuration: 200000));
 
   static double _chartAreaWidth = 0;
   static double _chartAreaHeight = 0;
@@ -26,7 +26,8 @@ abstract class ChartController{
   }
 
   static set zoomInTime(double pointerSignalScrollDelta){
-    final int delta = (shownDurationNotifier.value.timeDuration * 0.01 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
+    final int delta = (shownDurationNotifier.value.timeDuration * 1e-5 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
+    print(delta);
     shownDurationNotifier.update((shown) {
       shown.timeOffset -= delta;
       shown.timeDuration += delta * 2;
