@@ -208,7 +208,6 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
             dataSeen[measurement]![signal]!.hadChange = true;
           }
           if(oldScalingInfo.valueDataChanged(actualScalingInfo)){
-            dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
             if(dataSeen[measurement]![signal]!.hadChange != true){
               dataSeen[measurement]![signal]!.reScalePoints(actualScalingInfo, oldScalingInfo);
               dataSeen[measurement]![signal]!.scalingInfo = actualScalingInfo..startIndex = oldScalingInfo.startIndex..measCount = oldScalingInfo.measCount;
@@ -235,18 +234,15 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
     return Listener(
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
-          print('onPointerSignal ${event.scrollDelta.dy}');
           ChartController.zoomInTime = event.scrollDelta.dy.floorToDouble();
         }
       },
       behavior: HitTestBehavior.opaque,
       child: GestureDetector(
         onHorizontalDragUpdate: (details) {
-          print('onHorizontalDragUpdate ${details.primaryDelta}');
           ChartController.moveInTime = details.primaryDelta ?? 0;
         },
         onSecondaryTapDown: (details) {
-          print('onSecondaryTapDown ${details.localPosition.dx}');
           cursorInfoNotifier.update((cursorInfo) {
             // position to timestamp calc
             cursorInfo.timeStamps.add(details.localPosition.dx.toInt());
@@ -290,14 +286,9 @@ class _ChartLinePainter extends CustomPainter {
     Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
     final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;
-    print("cnt ${plotContext.scalingInfo.measCount}");
-    print(plotContext.scalingInfo.startIndex);
-    if(plotContext.scalingInfo.measCount != 0){
-      //print(plotContext.scaledChartLine.sublist(plotContext.scalingInfo.startIndex, end).map((e) => e.x).toList());
-    }
     for(int i = plotContext.scalingInfo.startIndex; i < end; i++){
       if(i == plotContext.scalingInfo.startIndex){
-        //canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+        canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
         canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
         canvas.translate(0, -size.height);
         path.moveTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);

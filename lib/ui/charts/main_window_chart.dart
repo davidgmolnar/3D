@@ -15,10 +15,10 @@ class ChartContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double height = MediaQuery.of(context).size.height - toolbarItemSize - titlebarHeight - 2 * 1;
+        final double height = MediaQuery.of(context).size.height - toolbarItemSize - titlebarHeight - 4 * 1;
         ChartController.setScreenSize(constraints.maxWidth - 100, height - chartBottomOverviewHeight - cursorDisplayHeight);  // chartscaler, - bottom - cursor
         return Container(
-          height: height,
+          height: height + 2,
           width: constraints.maxWidth,
           decoration: BoxDecoration(
             border: Border.symmetric(horizontal: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor)),
