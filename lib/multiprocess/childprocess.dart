@@ -38,8 +38,8 @@ abstract class ChildProcess{
                 localLogger.info("Controller killed this childprocess, stopping");
                 await localLogger.stop();
                 exit(0);
-              case CommandType.HIGHLIGHT_TIMESTAMP:
-                // ...
+              case CommandType.PERIODIC_UPDATE:
+                _handlePeriodicUpdate(command.data);
                 break;
 
               default:
@@ -64,6 +64,16 @@ abstract class ChildProcess{
         break;
       default:
         localLogger.error("Data interpretation not implemented for WindowType.${windowType.name}");
+    }
+  }
+
+  static void _handlePeriodicUpdate(Map data){
+    switch (windowType) {
+      case WindowType.LOG:
+        logHandlePeriodicUpdateReceived(data);
+        break;
+      default:
+        localLogger.error("Periodic update interpretation not implemented for WindowType.${windowType.name}");
     }
   }
 

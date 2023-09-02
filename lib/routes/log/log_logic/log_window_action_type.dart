@@ -1,5 +1,7 @@
 import '../../../io/logger.dart';
+import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/theme/theme.dart';
+import 'log_io_controller.dart';
 
 enum LogWindowType{
   // ignore: constant_identifier_names
@@ -33,6 +35,32 @@ void logHandleDataReceived(Map data){
       logWindowType = LogWindowType.values[data['type']];
       localLogger.info("LogWindowType changed to ${logWindowType.name}");
       StyleManager.updater();
+      break;
+    default:
+      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}");
+  }
+}
+
+void logHandlePeriodicUpdateReceived(Map data){
+  localLogger.info("Periodic update received from master");
+  switch (PeriodicUpdateType.values[data['type']]) {
+    case PeriodicUpdateType.IO_LINE_PERCENTAGE:
+      try{
+        if(logWindowType != LogWindowType.IMPORT && logWindowType != LogWindowType.EXPORT){
+          localLogger.warning("PeriodicUpdateType.IO_LINE_PERCENTAGE was received but this window was neither a LogWindowType.IMPORT or LogWindowType.EXPORT");
+          return;
+        }
+        final double linePercentage = data['value'];
+        final dynamic entry = data['status'];
+        if(linePercentage != 0){
+          LogIOInfoController.setLinePercentage(linePercentage);
+        }
+        if(entry.runtimeType == String){
+          LogIOInfoController.addToContext(entry);
+        }
+      }catch(exc){
+        localLogger.error("PeriodicUpdateType.IO_LINE_PERCENTAGE exception $exc");
+      }
       break;
     default:
       localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}");

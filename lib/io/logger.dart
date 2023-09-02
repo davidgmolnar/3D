@@ -37,6 +37,8 @@ class LogEntry{
   static LogEntry critical(String message){
     return LogEntry(message, LogLevel.CRITICAL, DateTime.now());
   }
+
+  String asString(String loggerName) => "[$timeStamp] [$loggerName - ${level.name.toUpperCase()}] $message";
 }
 
 class Logger{
@@ -125,6 +127,6 @@ class Logger{
   }
 
   List<String> contentsToStringList(){
-    return _buffer.map((entry) => "[${entry.timeStamp}] [$loggerName - ${entry.level.name.toUpperCase()}] ${entry.message}").toList();
+    return _buffer.map((entry) => entry.asString(loggerName)).toList();
   }
 }

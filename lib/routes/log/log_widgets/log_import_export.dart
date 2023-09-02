@@ -2,8 +2,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
-import '../../../multiprocess/childprocess.dart';
-import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/common.dart';
 import '../../../ui/theme/theme.dart';
 import '../log_logic/log_io_controller.dart';
@@ -19,7 +17,6 @@ class LogImport extends StatefulWidget {
 }
 
 class _LogImportState extends State<LogImport> {
-  bool importStarted = false;
 
   @override
   void initState() {
@@ -109,18 +106,23 @@ class _LogImportState extends State<LogImport> {
                     ),
                     TextButton(
                       onPressed: (){
-                        if(importStarted){
+                        if(LogIOInfoController.logIOInfoNotifier.value.processing){
                           return;
                         }
-                        importStarted = true;
+                        if(LogIOInfoController.logIOInfoNotifier.value.selectedPaths.isEmpty){
+                          showError(context, "Nothing was selected");
+                          return;
+                        }
+                        LogIOInfoController.logIOInfoNotifier.value.processing = true;
                         try{
-                          LogIOInfoController.loadFiles();
+                          LogIOInfoController.sendFilesToMaster();
                         }catch(exc){
                           showError(context, "Error when importing: ${exc.toString()}");
                         }
                         setState(() {});
+                        LogIOInfoController.logIOInfoNotifier.update((value) {});
                       },
-                      child: Text("Preprocess", style: StyleManager.textStyle,),
+                      child: Text("Import", style: StyleManager.textStyle,),
                     ),
                   ],
                 ),
@@ -137,9 +139,7 @@ class _LogImportState extends State<LogImport> {
             child: ListView.builder(
               itemCount: LogIOInfoController.logIOInfoNotifier.value.context.length,
               itemBuilder: (BuildContext context, int index) {
-                return Text("[${LogIOInfoController.logIOInfoNotifier.value.context[index].timeStamp}] [${
-                  LogIOInfoController.logIOInfoNotifier.value.context[index].level.name.toUpperCase()}] ${
-                  LogIOInfoController.logIOInfoNotifier.value.context[index].message}", maxLines: 5,);
+                return Text(LogIOInfoController.logIOInfoNotifier.value.context[index], maxLines: 5,);
               },
             ),
           )
@@ -156,12 +156,13 @@ class _LogImportState extends State<LogImport> {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: LogIOInfoController.logIOInfoNotifier.value.progressPercentage / 100,),
+                      child: LinearProgressIndicator(value: LogIOInfoController.logIOInfoNotifier.value.linePercentage,),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: Text(LogIOInfoController.logIOInfoNotifier.value.processingFile ?? "Processing finished"),
-                    )
+                      child: LinearProgressIndicator(value: LogIOInfoController.logIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
+                        LogIOInfoController.logIOInfoNotifier.value.filesLoaded / LogIOInfoController.logIOInfoNotifier.value.selectedPaths.length: 0),
+                    ),
                   ],
                 ),
               ),
@@ -176,27 +177,13 @@ class _LogImportState extends State<LogImport> {
                   Container(
                     width: 250,
                     padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text("Successfully processed ${LogIOInfoController.logIOInfoNotifier.value.successfulLoads} files"),
+                    child: Text("Processed ${LogIOInfoController.logIOInfoNotifier.value.filesLoaded} files"),
                   ),
                   Container(
                     width: 100,
                     padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text(!importStarted ? "" : !LogIOInfoController.logIOInfoNotifier.value.ready ? "Processing" : !LogIOInfoController.logIOInfoNotifier.value.sendingToController ? "Ready" : "Sending"),
+                    child: Text(LogIOInfoController.logIOInfoNotifier.value.processing ? "Processing" : "Idle"),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      if(!LogIOInfoController.logIOInfoNotifier.value.ready || LogIOInfoController.logIOInfoNotifier.value.sendingToController){
-                        return;
-                      }
-                      LogIOInfoController.logIOInfoNotifier.update((value) {
-                        value.sendingToController = true;
-                      });
-
-                      ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, ResponseFinishable(ResponseFinishableType.IMPORT_LOG, LogIOInfoController.logIOInfoNotifier.value.resultJsonEncodeable).asJson));
-                      LogIOInfoController.reset();
-                    },
-                    child: const Text("Import"),
-                  )
                 ],
               )
             ],

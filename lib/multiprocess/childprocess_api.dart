@@ -12,9 +12,18 @@ enum CommandType{
   // ignore: constant_identifier_names
   DATA,
   // ignore: constant_identifier_names
-  HIGHLIGHT_TIMESTAMP,
+  PERIODIC_UPDATE,
   // ignore: constant_identifier_names
   KILL
+}
+
+enum PeriodicUpdateType{
+  // ignore: constant_identifier_names
+  IO_LINE_PERCENTAGE,
+  // ignore: constant_identifier_names
+  ERROR,
+  // ignore: constant_identifier_names
+  HIGHLIGHT_TIMESTAMP,
 }
 
 // MainWindow -> SubWindow

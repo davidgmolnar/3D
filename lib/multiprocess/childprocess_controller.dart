@@ -94,11 +94,20 @@ abstract class ChildProcessController{
       case ResponseFinishableType.IMPORT_LOG:
         for(String id in finishedTask.data.keys){
           final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
-          LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]));
+          LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]),
+            lineProgressIndication: (final double linePercentage, final String? entry) {
+              sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
+                "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
+                "value": linePercentage,
+                "status": entry ?? 0
+              }));
+            }, indicationCount: 200
+          );
           signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
           TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+          localLogger.addAll(result.context);
         }
-        break;
+        return; // no kill
       case ResponseFinishableType.TRACE_EDITOR_DATA:
         TraceSettingsProvider.reload(finishedTask.data);
         ChartController.shownDurationNotifier.value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;

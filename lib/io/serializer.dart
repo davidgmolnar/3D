@@ -47,13 +47,13 @@ abstract class Serializer {
     return utf8Decoder.convert(bytes);
   }
   
-  static Future<LoadContext> loadLogFile(File file) async {
+  static Future<LoadContext> loadLogFile(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
     try{
       String extension = file.path.split('.').last;
       if(await file.exists()){
         switch (extension) {
           case "csv":
-            return await _csvLoader(file);
+            return await _csvLoader(file, lineProgressIndication: lineProgressIndication, indicationCount: indicationCount);
           case "bin":
             return await _binaryLoader(file);
           //case "txt":
@@ -69,27 +69,64 @@ abstract class Serializer {
     }
   }
 
-  static Future<LoadContext> _csvLoader(File file) async {
+  static Future<LoadContext> _csvLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
     Map<String, SignalContainer> storage = {};
-    List<LogEntry> context = [LogEntry.info("Started loading csv ${file.absolute.path}")];
-    List<String> lines = safeUTF8Decode((await file.readAsBytes()).toList()).split('\n');
-    if(lines.length < 3){
-      context.add(LogEntry.warning("File ${file.absolute.path} has less than 3 lines, cant have meaningful data, skipping"));
+    List<LogEntry> context = [];
+    final bool doIndication = lineProgressIndication != null && indicationCount != null;
+    {
+      final LogEntry entry = LogEntry.info("Started loading csv ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
     }
-    //else if(!lines[0].startsWith('Time,')){
-    //  context.add(LogEntry.warning("File ${file.absolute.path} does not start with 'Time' channel declaration, skipping"));
-    //}
+    {
+      final LogEntry entry = LogEntry.info("Reading file ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    }
+    await Future.delayed(const Duration(milliseconds: 10));
+    List<String> lines = safeUTF8Decode((await file.readAsBytes()).toList()).split('\n');
+    {
+      final LogEntry entry = LogEntry.info("File read ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    } 
+    await Future.delayed(const Duration(milliseconds: 10));
+    if(lines.length < 3){
+      final LogEntry entry = LogEntry.error("File ${file.absolute.path} has less than 3 lines, cant have meaningful data, skipping file");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    }
     else{
+      late final int indicationStep;
+      if(doIndication){
+        indicationStep = lines.length ~/ indicationCount;
+      }
       List<String> signals = lines[0].trim().split(',');
       List<String> units = lines[1].trim().split(',');
       if(!signals.contains('Time')){
-        context.add(LogEntry.warning("File ${file.absolute.path} does not have 'Time' channel declaration, skipping"));
+        final LogEntry entry = LogEntry.error("File ${file.absolute.path} does not have 'Time' channel declaration, skipping file");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+        }
         return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
       }
       int timeIndex = signals.indexOf('Time');
       double? timeToMsMultiplier = timeUnitToMsMultiplier[units[signals.indexOf('Time')]];
       if(timeToMsMultiplier == null){
-        context.add(LogEntry.warning("File ${file.absolute.path} has undefined 'Time' channel unit, skipping"));
+        final LogEntry entry = LogEntry.error("File ${file.absolute.path} has undefined 'Time' channel unit, skipping file");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+        }
         return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
       }
       for(int i = 0; i < signals.length; i++){
@@ -102,6 +139,11 @@ abstract class Serializer {
         for(String line in lines.sublist(2)){
           List<String> tokens = line.trim().split(',');
           if(tokens.length != signals.length){
+            final LogEntry entry = LogEntry.warning("File ${file.absolute.path} had less values than signal declarations in line $lineCnt skipping line");
+            context.add(entry);
+            if(doIndication){
+              lineProgressIndication(0, entry.asString(localLogger.loggerName));
+            }
             continue;
           }
           int timeStamp = (double.parse(tokens[timeIndex]) * timeToMsMultiplier).toInt();
@@ -111,14 +153,29 @@ abstract class Serializer {
             }
           }
           lineCnt++;
+          if(doIndication && lineCnt % indicationStep == 0){
+            lineProgressIndication(lineCnt / lines.length, null);
+            await Future.delayed(const Duration(milliseconds: 10));
+          }
+        }
+        if(doIndication){
+          lineProgressIndication(1, null);
         }
       }
       catch (exc){
-        context.add(LogEntry.warning("Double.parse() exception when loading file ${file.absolute.path} on line $lineCnt"));
+        final LogEntry entry = LogEntry.error("Double.parse() exception when loading file ${file.absolute.path} on line $lineCnt skipping file");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+        }
         return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
     }
-    context.add(LogEntry.info("Successfully loaded csv ${file.absolute.path}"));
+    final LogEntry entry = LogEntry.info("Successfully loaded csv ${file.absolute.path}");
+    context.add(entry);
+    if(doIndication){
+      lineProgressIndication(0, entry.asString(localLogger.loggerName));
+    }
     return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }
 
