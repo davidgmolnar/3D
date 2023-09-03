@@ -127,6 +127,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // TODO Search bar with contains/startswith (Telemetry alert search) in a row with DropdownButton
           Container(
             height: 50,
             padding: EdgeInsets.only(left: StyleManager.globalStyle.padding * 2),
@@ -141,6 +142,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
               },
             ),
           ),
+          // TODO first show visible then invis in separate HideableListview
           SizedBox(
             height: MediaQuery.of(context).size.height - settingsBottomBarHeight - 50 - titlebarHeight - 3,
             child: ListView.builder(
