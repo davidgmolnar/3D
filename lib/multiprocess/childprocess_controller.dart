@@ -101,7 +101,7 @@ abstract class ChildProcessController{
                 "value": linePercentage,
                 "status": entry ?? 0
               }));
-            }, indicationCount: 200
+            }, indicationCount: 100
           );
           signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
           TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());

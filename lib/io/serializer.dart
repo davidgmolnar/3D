@@ -158,15 +158,12 @@ abstract class Serializer {
             await Future.delayed(const Duration(milliseconds: 10));
           }
         }
-        if(doIndication){
-          lineProgressIndication(1, null);
-        }
       }
       catch (exc){
         final LogEntry entry = LogEntry.error("Double.parse() exception when loading file ${file.absolute.path} on line $lineCnt skipping file");
         context.add(entry);
         if(doIndication){
-          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+          lineProgressIndication(1, entry.asString(localLogger.loggerName));
         }
         return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
@@ -174,7 +171,7 @@ abstract class Serializer {
     final LogEntry entry = LogEntry.info("Successfully loaded csv ${file.absolute.path}");
     context.add(entry);
     if(doIndication){
-      lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      lineProgressIndication(1, entry.asString(localLogger.loggerName));
     }
     return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }

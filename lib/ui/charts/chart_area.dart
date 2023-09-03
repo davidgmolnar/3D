@@ -185,12 +185,12 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
     }
 
     for(String meas in measToRemove){
-      visibleSignals.remove(meas);
+      dataSeen.remove(meas);
     }
 
     for(String meas in measSignalsToRemove.keys){
       for(String signal in measSignalsToRemove[meas]!){
-        visibleSignals[meas]!.remove(signal);
+        dataSeen[meas]!.remove(signal);
       }
     }
 
@@ -231,6 +231,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
 
   @override
   Widget build(BuildContext context) {
+    //print(dataSeen['test']!.keys.toList());
     return Listener(
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
