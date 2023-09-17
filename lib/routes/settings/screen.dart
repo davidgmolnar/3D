@@ -47,7 +47,7 @@ class SettingScreen extends StatelessWidget{
         child: Column(
           children: const [
             CustomWindowTitleBar(),
-            SettingsContainer(),
+            Expanded(child: SettingsContainer()),
           ],
         ),
       ),

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
+import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/input_widgets/buttons.dart';
+import '../../../ui/input_widgets/sliders.dart';
 import '../../../ui/input_widgets/text_fields.dart';
+import '../../../ui/structures/hideable_listview.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/window/window_titlebar.dart';
 import '../../startup.dart';
@@ -13,10 +16,11 @@ import 'settings_bottom_bar.dart';
 import 'settings_container.dart';
 
 class TraceSettingWidget extends StatefulWidget{
-  const TraceSettingWidget({super.key, required this.traceSetting, required this.measurement});
+  const TraceSettingWidget({super.key, required this.traceSetting, required this.measurement, required this.onVisibilityChanged});
 
   final TraceSetting traceSetting;
   final String measurement;
+  final Function(bool, String) onVisibilityChanged;
 
   @override
   State<TraceSettingWidget> createState() => _TraceSettingWidgetState();
@@ -26,6 +30,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      key: UniqueKey(),
       height: 50,
       width: windowSetup?.size.width,
       child: Row(
@@ -58,9 +63,10 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               isInitiallyActive: widget.traceSetting.isVisible,
               textWhenActive: "Visible",
               textWhenInactive: "Invisible",
-              onPressed: (p0){
+              onPressed: (p0) {
                 widget.traceSetting.isVisible = p0;
                 TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(isVisible: p0);
+                widget.onVisibilityChanged(p0, widget.traceSetting.signal);
               },
             ),
           ),
@@ -107,6 +113,12 @@ class SettingsTraceEditor extends StatefulWidget{
 
 class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
   String shownMeasurement = "Select Measurement";
+  String filter = "";
+  SortLogic sortLogic = SortLogic.STARTSWITH;
+  List<TraceSettingWidget> allTraceSettings = [];
+  List<TraceSettingWidget> visibleFiltered = [];
+  List<TraceSettingWidget> hiddenFiltered = [];
+  final TextEditingController _textEditingController = TextEditingController();
   
   @override
   void initState() {
@@ -120,54 +132,173 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
     ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, {"type": ResponseFinishableType.TRACE_EDITOR_DATA.index, "data": TraceSettingsProvider.toJsonFormattable}));
   }
 
+  void _moveTraceSetting(final bool vis, final String signal){
+    if(vis){
+      final idx = hiddenFiltered.indexWhere((element) => element.traceSetting.signal == signal);
+      visibleFiltered.add(hiddenFiltered[idx]);
+      hiddenFiltered.removeAt(idx);
+    }
+    else{
+      final idx = visibleFiltered.indexWhere((element) => element.traceSetting.signal == signal);
+      hiddenFiltered.add(visibleFiltered[idx]);
+      visibleFiltered.removeAt(idx);
+    }
+    setState(() {});
+  }
+
+  void _loadList(){
+    if(shownMeasurement != "Select Measurement"){
+      allTraceSettings = TraceSettingsProvider.traceSettingNotifier.value[shownMeasurement]!.map(
+        (e) => TraceSettingWidget(traceSetting: e, measurement: shownMeasurement, onVisibilityChanged: _moveTraceSetting,)).toList();
+    }
+    else{
+      allTraceSettings = [];
+    }
+  }
+
+  void _refreshList(){
+    if(shownMeasurement != "Select Measurement"){
+      if(sortLogic == SortLogic.STARTSWITH){
+        visibleFiltered = allTraceSettings.where(
+          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.startsWith(filter))
+        ).toList();
+        hiddenFiltered = allTraceSettings.where(
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.startsWith(filter))
+        ).toList();
+      }
+      else if(sortLogic == SortLogic.CONTAINS){
+        visibleFiltered = allTraceSettings.where(
+          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.contains(filter))
+        ).toList();
+        hiddenFiltered = allTraceSettings.where(
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.contains(filter))
+        ).toList();
+      }
+    }
+    else{
+      visibleFiltered = [];
+      hiddenFiltered = [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // TODO Search bar with contains/startswith (Telemetry alert search) in a row with DropdownButton
-          Container(
-            height: 50,
-            padding: EdgeInsets.only(left: StyleManager.globalStyle.padding * 2),
-            child: DropdownButton<String>(
-              value: shownMeasurement,
-              items: ["Select Measurement", ...TraceSettingsProvider.traceSettingNotifier.value.keys].map((e) => DropdownMenuItem<String>(value: e, child: Text(e),)).toList(),
-              onChanged: (value) {
-                if(value != null){
-                  shownMeasurement = value;
-                  setState(() {});
-                }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        localLogger.info("Obs h ${constraints.maxHeight}");
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 50,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    height: 50,
+                    padding: EdgeInsets.only(left: StyleManager.globalStyle.padding * 2),
+                    child: DropdownButton<String>(
+                      value: shownMeasurement,
+                      items: ["Select Measurement", ...TraceSettingsProvider.traceSettingNotifier.value.keys].map((e) => DropdownMenuItem<String>(value: e, child: Text(e),)).toList(),
+                      onChanged: (value) {
+                        if(value != null){
+                          shownMeasurement = value;
+                          filter = "";
+                          _textEditingController.text = "";
+                          _loadList();
+                          _refreshList();
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                    height: 50,
+                    width: constraints.maxWidth - 500,
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        hintText: "Signal",
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                      controller: _textEditingController,
+                      onChanged:(value) {
+                        filter = value;
+                        _refreshList();
+                        setState(() {});
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                    child: SlidingSwitch(
+                      labels: const ["Startswith", "Contains"],
+                      active: "Startswith",
+                      onChanged: (selected) {
+                        sortLogic = selected == "Startswith" ? SortLogic.STARTSWITH : SortLogic.CONTAINS;
+                        _refreshList();
+                        setState(() {});
+                      },
+                      elementWidth: 100,
+                    ),
+                  )
+                ],
+              ),
+            ),
+            SizedBox(
+              height: constraints.maxHeight - settingsBottomBarHeight - 50,
+              width: constraints.maxWidth,
+              child: ListView(
+                children: [
+                  HideableListview<TraceSettingWidget>(
+                    title: "Visible signals",
+                    listElements: visibleFiltered,
+                    initiallyOpened: true,
+                    style: HideableListviewStyle(
+                      defaultTitleBoxColor: StyleManager.globalStyle.bgColor,
+                      hoverTitleBoxColor: StyleManager.globalStyle.secondaryColor,
+                      titleBarHeight: 50,
+                      titleBarStyle: StyleManager.subTitleStyle,
+                      elementHeight: 50,
+                      padding: StyleManager.globalStyle.padding,
+                      borderColor: StyleManager.globalStyle.secondaryColor,
+                      borderWidth: 1
+                    ),
+                  ),
+                  HideableListview<TraceSettingWidget>(
+                    title: "Hidden signals",
+                    initiallyOpened: true,
+                    listElements: hiddenFiltered,
+                    style: HideableListviewStyle(
+                      defaultTitleBoxColor: StyleManager.globalStyle.bgColor,
+                      hoverTitleBoxColor: StyleManager.globalStyle.secondaryColor,
+                      titleBarHeight: 50,
+                      titleBarStyle: StyleManager.subTitleStyle,
+                      elementHeight: 50,
+                      padding: StyleManager.globalStyle.padding,
+                      borderColor: StyleManager.globalStyle.secondaryColor,
+                      borderWidth: 1
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SettingsBottomBar(
+              onCancel: (){
+                shutdown();
               },
-            ),
-          ),
-          // TODO first show visible then invis in separate HideableListview
-          SizedBox(
-            height: MediaQuery.of(context).size.height - settingsBottomBarHeight - 50 - titlebarHeight - 3,
-            child: ListView.builder(
-              scrollDirection: Axis.vertical,
-              itemCount: TraceSettingsProvider.itemCount(shownMeasurement),
-              itemExtent: 50,
-              itemBuilder: ((context, index) {
-                return TraceSettingWidget(traceSetting: TraceSettingsProvider.traceSettingNotifier.value[shownMeasurement]![index], measurement: shownMeasurement,);
-              })
-            ),
-          ),
-          SettingsBottomBar(
-            onCancel: (){
-              shutdown();
-            },
-            onApply: (){
-              _sendToApp();
-            },
-            onApplyAndClose: (){
-              _sendToApp();
-              shutdown();
-            },
-          )
-        ],
-      ),
+              onApply: (){
+                _sendToApp();
+              },
+              onApplyAndClose: (){
+                _sendToApp();
+                shutdown();
+              },
+            )
+          ],
+        );
+      }
     );
   }
 

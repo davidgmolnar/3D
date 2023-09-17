@@ -1,5 +1,12 @@
 import 'dart:ui';
 
+enum SortLogic{
+  // ignore: constant_identifier_names
+  STARTSWITH,
+  // ignore: constant_identifier_names
+  CONTAINS
+}
+
 enum SettingType{
   // ignore: constant_identifier_names
   BOOL,

@@ -38,13 +38,11 @@ class HideableListview<T> extends StatefulWidget {
     super.key,
     required this.listElements,
     required this.title,
-    required this.elementView,
     required this.initiallyOpened,
     required this.style,    
   });
 
-  final List<T> listElements;
-  final Widget Function(T) elementView;
+  final List<Widget> listElements;
   final String title;
   final bool initiallyOpened;
   final HideableListviewStyle style;
@@ -121,14 +119,17 @@ class _HideableListviewState<T> extends State<HideableListview<T>> {
                 border: Border(left: BorderSide(width: widget.style.borderWidth, color: widget.style.borderColor))
               ),
               child: status.isOpened ?
-                Column(
-                  children: [
-                    for(T element in widget.listElements)
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: widget.style.padding),
-                        child: widget.elementView(element)
-                      )
-                  ],
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.listElements.length,
+                  itemExtent: widget.style.elementHeight,
+                  cacheExtent: widget.style.elementHeight * 10,
+                  itemBuilder:(context, index) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(horizontal: widget.style.padding),
+                      child: widget.listElements[index]
+                    );
+                  },
                 )
               :
               SizedBox(width: constraints.maxWidth,)
