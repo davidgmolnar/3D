@@ -80,7 +80,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
             },
             width: 50,
           ),
-          ToggleableTextField<num>(
+          /*ToggleableTextField<num>(
             initialValue: widget.traceSetting.span,
             parser: (p0) => double.tryParse(p0),
             onFinished: (p0) {
@@ -97,7 +97,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(offset: p0);
             },
             width: 100,
-          ),
+          ),*/
         ],
       ),
     );
@@ -163,7 +163,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
           (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.startsWith(filter))
         ).toList();
         hiddenFiltered = allTraceSettings.where(
-          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.startsWith(filter))
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isNotEmpty && traceSettingWidget.traceSetting.signal.startsWith(filter))
         ).toList();
       }
       else if(sortLogic == SortLogic.CONTAINS){
@@ -171,7 +171,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
           (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.contains(filter))
         ).toList();
         hiddenFiltered = allTraceSettings.where(
-          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.contains(filter))
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isNotEmpty && traceSettingWidget.traceSetting.signal.contains(filter))
         ).toList();
       }
     }
@@ -185,7 +185,6 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        localLogger.info("Obs h ${constraints.maxHeight}");
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -216,10 +215,10 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
                   Container(
                     padding: EdgeInsets.all(StyleManager.globalStyle.padding),
                     height: 50,
-                    width: constraints.maxWidth - 500,
+                    width: constraints.maxWidth - 600,
                     child: TextFormField(
                       decoration: const InputDecoration(
-                        hintText: "Signal",
+                        hintText: "Select a signal",
                         hintStyle: TextStyle(color: Colors.grey),
                       ),
                       controller: _textEditingController,

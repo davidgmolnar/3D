@@ -4,7 +4,7 @@ import '../../../ui/theme/theme.dart';
 import '../settings_logic/settings_window_type.dart';
 import 'settings_trace_editor.dart';
 
-const double settingsBottomBarHeight = 100;
+const double settingsBottomBarHeight = 50;
 
 class SettingsContainer extends StatelessWidget {
   const SettingsContainer({super.key});
