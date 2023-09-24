@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
-import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/input_widgets/buttons.dart';
@@ -10,7 +9,6 @@ import '../../../ui/input_widgets/sliders.dart';
 import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/structures/hideable_listview.dart';
 import '../../../ui/theme/theme.dart';
-import '../../../ui/window/window_titlebar.dart';
 import '../../startup.dart';
 import 'settings_bottom_bar.dart';
 import 'settings_container.dart';
@@ -250,7 +248,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
               width: constraints.maxWidth,
               child: ListView(
                 children: [
-                  HideableListview<TraceSettingWidget>(
+                  HideableListview(
                     title: "Visible signals",
                     listElements: visibleFiltered,
                     initiallyOpened: true,
@@ -265,7 +263,7 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
                       borderWidth: 1
                     ),
                   ),
-                  HideableListview<TraceSettingWidget>(
+                  HideableListview(
                     title: "Hidden signals",
                     initiallyOpened: true,
                     listElements: hiddenFiltered,

@@ -33,7 +33,7 @@ class HideableListviewStyle{
   });
 }
 
-class HideableListview<T> extends StatefulWidget {
+class HideableListview extends StatefulWidget {
   const HideableListview({
     super.key,
     required this.listElements,
@@ -48,10 +48,10 @@ class HideableListview<T> extends StatefulWidget {
   final HideableListviewStyle style;
 
   @override
-  State<HideableListview<T>> createState() => _HideableListviewState<T>();
+  State<HideableListview> createState() => _HideableListviewState();
 }
 
-class _HideableListviewState<T> extends State<HideableListview<T>> {
+class _HideableListviewState extends State<HideableListview> {
   late final _HideableListviewStatus status;
 
   @override

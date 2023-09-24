@@ -110,7 +110,9 @@ abstract class ChildProcessController{
         return; // no kill
       case ResponseFinishableType.TRACE_EDITOR_DATA:
         TraceSettingsProvider.reload(finishedTask.data);
-        ChartController.shownDurationNotifier.value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;
+        ChartController.shownDurationNotifier.update((value) {
+          value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;
+        });
         break;
       default:
         localLogger.error("Finished task ${finishedTask.type.name} handling not implemented");

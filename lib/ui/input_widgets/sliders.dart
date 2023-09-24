@@ -44,6 +44,7 @@ class _SlidingSwitchState extends State<SlidingSwitch> {
           AnimatedPositioned(
             left: _activeIdx * widget.elementWidth,
             duration: const Duration(milliseconds: 200), 
+            curve: Curves.easeInOutCubic,
             child: Container(
               width: widget.elementWidth,
               height: 30 - 2 * 1,

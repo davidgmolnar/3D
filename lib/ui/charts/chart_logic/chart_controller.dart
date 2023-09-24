@@ -39,6 +39,10 @@ abstract class ChartController{
     });
   }
 
+  static int moveInCursonTime(double horizontalDragUpdateDelta){
+    return (horizontalDragUpdateDelta / _chartAreaWidth * shownDurationNotifier.value.timeDuration).toInt();
+  }
+
   static ScalingInfo scalingFor(String measurement, String signal){
     final TraceSetting traceSetting = TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal);
     return ScalingInfo(
@@ -51,5 +55,16 @@ abstract class ChartController{
       startIndex: -1,
       measCount: -1
     );
+  }
+
+  static double? timeStampToPosition(final int timestamp) {
+    if(timestamp > shownDurationNotifier.value.timeOffset && timestamp < shownDurationNotifier.value.timeDuration + shownDurationNotifier.value.timeOffset){
+      return (timestamp - shownDurationNotifier.value.timeOffset) / shownDurationNotifier.value.timeDuration * _chartAreaWidth;
+    }
+    return null;
+  }
+
+  static int positionToTimeStamp(final double position){
+    return (position / _chartAreaWidth * shownDurationNotifier.value.timeDuration).toInt() + shownDurationNotifier.value.timeOffset;
   }
 }

@@ -246,7 +246,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         onSecondaryTapDown: (details) {
           cursorInfoNotifier.update((cursorInfo) {
             // position to timestamp calc
-            cursorInfo.timeStamps.add(details.localPosition.dx.toInt());
+            cursorInfo.timeStamps.add(ChartController.positionToTimeStamp(details.localPosition.dx));
           });
         },
         behavior: HitTestBehavior.opaque,
