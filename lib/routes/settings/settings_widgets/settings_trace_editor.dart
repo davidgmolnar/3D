@@ -68,7 +68,6 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               },
             ),
           ),
-          // TODO Color picker
           ToggleableTextField<int>(
             initialValue: widget.traceSetting.scalingGroup,
             parser: (p0) => int.tryParse(p0),

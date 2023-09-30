@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
 import '../routes/window_type.dart';
+import '../ui/charts/chart_logic/chart_controller.dart';
 import '../ui/theme/theme.dart';
 import 'data.dart';
 import 'settings_classes.dart';
@@ -106,6 +107,29 @@ abstract class TraceSettingsProvider{
     return tmp;
   }
 
+  static Set<int> get scalingGroupSet {
+    Set<int> tmp = {};
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].isVisible){
+          tmp.add(traceSettingNotifier.value[measurement]![i].scalingGroup);
+        }
+      }
+    }
+    return tmp;
+  }
+
+  static Color colorOfScalingGroup(final int group) {
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].scalingGroup == group){
+          return traceSettingNotifier.value[measurement]![i].color;
+        }
+      }
+    }
+    return Colors.grey;
+  }
+
   static Map<String, List<String>> get visibleSignals {
     Map<String, List<String>> tmp = {};
     for(String measurement in traceSettingNotifier.value.keys){
@@ -140,7 +164,7 @@ abstract class TraceSettingsProvider{
       for(String measurement in traceSetting.keys){
         for(int i = 0; i < traceSetting[measurement]!.length; i++){
           if(traceSetting[measurement]![i].scalingGroup == group){
-            traceSetting[measurement]![i].offset -= delta.toInt() * _dragMultiplierVertical;
+            traceSetting[measurement]![i].offset += ChartController.verticalDragDelta(delta, traceSetting[measurement]![i].span.toDouble()) * _dragMultiplierVertical;
           }
         }
       }

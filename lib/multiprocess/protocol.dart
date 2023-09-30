@@ -11,7 +11,8 @@ class _FragmentBuffer{
   _FragmentBuffer(this.nextBufferId, this.buffer);
 }
 
-// TODO külön msg_id tartomány kell a külön processeknek, mert ütközés lehet
+// TODO ki lehet venni a fragment id-t, az ütközés ellen be lehet venni a sender portot, ehhez a datagramot ki kell menteni
+// TODO tesztelni kéne hogy a childprocesst bezárom miközben egy periodic updatet kap. A kérdés hogy a central app utána tud új processeket nyitni, vagy lerohad a central socket
 
 /// Header
 /// [Fragment Flag 0][Message ID 1-7]

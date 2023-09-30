@@ -39,6 +39,10 @@ abstract class ChartController{
     });
   }
 
+  static double verticalDragDelta(double delta, double range){
+    return delta / _chartAreaHeight * range;
+  }
+
   static int moveInCursonTime(double horizontalDragUpdateDelta){
     return (horizontalDragUpdateDelta / _chartAreaWidth * shownDurationNotifier.value.timeDuration).toInt();
   }

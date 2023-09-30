@@ -40,7 +40,7 @@ class Chart extends StatelessWidget {
         Expanded(
           child: Row(
             children: const [
-              ChartScaler(),
+              ChartScalerContainer(),
               Expanded(child: ChartArea()),
             ],
           ),
