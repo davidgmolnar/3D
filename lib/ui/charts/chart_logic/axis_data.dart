@@ -11,15 +11,6 @@ double _roundToDecimalPlaces(double value, int places){
    return (value * mod).roundToDouble() / mod; 
 }
 
-bool _safeModulo(final num left,final num right){
-  return _roundToDecimalPlaces(left / right, 3) is int;
-}
-
-num _roundToSameDecimalPlacesOf(final num toRound, final num ref){ // TODO Ez szar
-  final int decimalPlaces = ref.toString().split('.').last.length;
-  return num.parse(toRound.toStringAsFixed(decimalPlaces));
-}
-
 class ValueAxisData{
   final List<double> tickPositions;
   final List<double> majorTickPositions;
@@ -29,7 +20,7 @@ class ValueAxisData{
   const ValueAxisData(this.tickPositions, this.majorTickPositions, this.majorTickValues, this.unit);
 
   static ValueAxisData from(final num startValue, final num range, final double axisLength, final String? unit){
-    final num trueIntervalCount = max(axisLength * ((_majorTickCount + 1) / 100), 1);
+    final num trueIntervalCount = max(_majorTickCount + 1, 1);
     num niceInterval = range / trueIntervalCount; 
     final num minimumInterval = niceInterval == 0
         ? 0
@@ -45,15 +36,11 @@ class ValueAxisData{
     }
     
     final List<num> majorTickValues = [];
-    num i = _roundToSameDecimalPlacesOf(startValue, minimumInterval);
-    while(i < startValue + range - niceInterval - minimumInterval){
-      if (_safeModulo(i, niceInterval)){
-        i += niceInterval;
-        majorTickValues.add(_roundToDecimalPlaces(i as double, decimalPrec));
-      }
-      else{
-        i += minimumInterval;
-      }
+    num i = (startValue ~/ niceInterval + 1) * niceInterval;
+    final num tickOffset = (i - startValue - niceInterval) / range * axisLength;
+    while(i < startValue + range){
+      majorTickValues.add(_roundToDecimalPlaces(i as double, decimalPrec));
+      i += niceInterval;
     }    
 
     final List<double> majorTickPositions = List.generate(majorTickValues.length, ((index) {
@@ -72,13 +59,14 @@ class ValueAxisData{
     }
     
     final List<double> tickPositions = List.generate(axisLength ~/ tickPosDelta - 1, ((index) {
-      return _roundToDecimalPlaces((index + 1) * tickPosDelta, decimalPrec);
+      return _roundToDecimalPlaces((index + 1) * tickPosDelta + tickOffset, decimalPrec);
     }));
     
     final num baseLine = pow(10, -decimalPrec + 1);
     tickPositions.removeWhere((tick) => majorTickPositions.any((majorTick) => 
       (majorTick - tick).abs() <= baseLine
     ));
+    // TODO ahány axisLength túllépés van annyit kell előre rakni és viszont
 
     return ValueAxisData(tickPositions, majorTickPositions, majorTickValues, unit);
   }
