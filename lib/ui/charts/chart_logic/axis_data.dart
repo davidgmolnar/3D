@@ -1,12 +1,24 @@
 import 'dart:math';
 
+const double log10 = 2.302585092994046;
+const int decimalPrec = 10;
+const List<num> _intervalDivisions = <num>[10, 5, 2, 1];
+const int _majorTickCount = 4;
+const int _tickPerMajorTick = 3;
+
 double _roundToDecimalPlaces(double value, int places){ 
    num mod = pow(10, places); 
-   return (value * mod).round().toDouble() / mod; 
+   return (value * mod).roundToDouble() / mod; 
 }
 
-const int _majorTickCount = 5;
-const int _tickPerMajorTick = 4;
+bool _safeModulo(final num left,final num right){
+  return _roundToDecimalPlaces(left / right, 3) is int;
+}
+
+num _roundToSameDecimalPlacesOf(final num toRound, final num ref){ // TODO Ez szar
+  final int decimalPlaces = ref.toString().split('.').last.length;
+  return num.parse(toRound.toStringAsFixed(decimalPlaces));
+}
 
 class ValueAxisData{
   final List<double> tickPositions;
@@ -17,20 +29,56 @@ class ValueAxisData{
   const ValueAxisData(this.tickPositions, this.majorTickPositions, this.majorTickValues, this.unit);
 
   static ValueAxisData from(final num startValue, final num range, final double axisLength, final String? unit){
-    final List<num> majorTickValues = List.generate(_majorTickCount, ((index) {
-      return (range / (_majorTickCount + 1) * (index + 1) + startValue);
+    final num trueIntervalCount = max(axisLength * ((_majorTickCount + 1) / 100), 1);
+    num niceInterval = range / trueIntervalCount; 
+    final num minimumInterval = niceInterval == 0
+        ? 0
+        : pow(10, (log(niceInterval) / log10).floor());
+    
+   for (int i = 0; i < _intervalDivisions.length; i++) {
+      final num interval = _intervalDivisions[i];
+      final num currentInterval = minimumInterval * interval;
+      if (trueIntervalCount < (range / currentInterval)) {
+        break;
+      }
+      niceInterval = currentInterval;
+    }
+    
+    final List<num> majorTickValues = [];
+    num i = _roundToSameDecimalPlacesOf(startValue, minimumInterval);
+    while(i < startValue + range - niceInterval - minimumInterval){
+      if (_safeModulo(i, niceInterval)){
+        i += niceInterval;
+        majorTickValues.add(_roundToDecimalPlaces(i as double, decimalPrec));
+      }
+      else{
+        i += minimumInterval;
+      }
+    }    
+
+    final List<double> majorTickPositions = List.generate(majorTickValues.length, ((index) {
+      return _roundToDecimalPlaces((majorTickValues[index] - startValue) / range * axisLength, decimalPrec);
     }));
 
-    final List<double> majorTickPositions = List.generate(_majorTickCount, ((index) {
-      return _roundToDecimalPlaces(majorTickValues[index] / range * axisLength, 3);
+    late final double tickPosDelta;
+    if(majorTickPositions.length >= 2){
+      tickPosDelta = (majorTickPositions[1] - majorTickPositions[0]) / (_tickPerMajorTick + 1);
+    }
+    else if(majorTickPositions.length == 1){
+      tickPosDelta = majorTickPositions[0] / (_tickPerMajorTick + 1);
+    }
+    else{
+      tickPosDelta = range / (_tickPerMajorTick + 1);
+    }
+    
+    final List<double> tickPositions = List.generate(axisLength ~/ tickPosDelta - 1, ((index) {
+      return _roundToDecimalPlaces((index + 1) * tickPosDelta, decimalPrec);
     }));
-
-    const initialTickCount = (_majorTickCount + 1) * _tickPerMajorTick;
-    final List<double> tickPositions = List.generate(initialTickCount, ((index) {
-      return _roundToDecimalPlaces(index * axisLength/initialTickCount, 3);
-    }));
-
-    tickPositions.removeWhere((element) => majorTickPositions.contains(element));
+    
+    final num baseLine = pow(10, -decimalPrec + 1);
+    tickPositions.removeWhere((tick) => majorTickPositions.any((majorTick) => 
+      (majorTick - tick).abs() <= baseLine
+    ));
 
     return ValueAxisData(tickPositions, majorTickPositions, majorTickValues, unit);
   }
