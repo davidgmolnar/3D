@@ -36,7 +36,15 @@ class ValueAxisData{
     }
     
     final List<num> majorTickValues = [];
-    num i = (startValue ~/ niceInterval + 1) * niceInterval;
+
+    num i;
+    if(startValue <= 0){
+      i = (startValue ~/ niceInterval) * niceInterval;
+    }
+    else{
+      i = (startValue ~/ niceInterval + 1) * niceInterval;
+    }
+
     final num tickOffset = (i - startValue - niceInterval) / range * axisLength;
     while(i < startValue + range){
       majorTickValues.add(_roundToDecimalPlaces(i.toDouble(), decimalPrec));

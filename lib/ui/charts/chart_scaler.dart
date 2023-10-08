@@ -6,6 +6,7 @@ import '../theme/theme.dart';
 import 'chart_logic/axis_data.dart';
 
 const double _chartScalerWidth = 20;
+const tickLenght = 3;
 
 class ChartScalerContainer extends StatefulWidget {
   const ChartScalerContainer({super.key});
@@ -128,6 +129,7 @@ class ChartScalerPainter extends CustomPainter{
     canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
     canvas.rotate(1.5 * 3.14159265359);
     canvas.translate(-size.height, 0);
+
     final TextPainter textPainterBase = TextPainter(
       text: TextSpan(
         text: "DEFAULT TEXT",
@@ -135,7 +137,6 @@ class ChartScalerPainter extends CustomPainter{
       ),
       textDirection: TextDirection.ltr,
     );
-
     final Paint paintBase = Paint()..color = color;
     
     int i = 0;
@@ -149,11 +150,12 @@ class ChartScalerPainter extends CustomPainter{
       tp.paint(canvas, majorPos.translate(-tp.width / 2, -1));
       i++;
 
-      canvas.drawLine(majorPos.translate(0, size.width), majorPos.translate(0, size.width - 3), paintBase);
+      canvas.drawLine(majorPos.translate(0, size.width), majorPos.translate(0, size.width - tickLenght), paintBase);
     }
 
     for(final double tickPos in valueAxisData.tickPositions){
-
+      final Offset pos = Offset(tickPos - StyleManager.globalStyle.padding, 0);
+      canvas.drawLine(pos.translate(0, size.width), pos.translate(0, size.width - tickLenght), paintBase);
     }
   }
 

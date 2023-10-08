@@ -6,7 +6,7 @@ import '../../../data/settings.dart';
 const int _scrollMultiplierHorizontal = 1; // setting
 const int _dragMultiplierHorizontal = 1; // setting
 
-class ChartShowDuration{
+class ChartShowDuration{ // TODO lehet mégiscsak double kéne ez legyen
   int timeOffset;
   int timeDuration;
 
@@ -17,7 +17,9 @@ abstract class ChartController{
   static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 500000, timeDuration: 200000));
 
   static double _chartAreaWidth = 0;
+  static double get chartWidth => _chartAreaWidth;
   static double _chartAreaHeight = 0;
+  static double get chartHeigth => _chartAreaHeight;
 
   static void setScreenSize(double newWidth, double newHeight){
     shownDurationNotifier.update((value) {});
@@ -26,7 +28,14 @@ abstract class ChartController{
   }
 
   static set zoomInTime(double pointerSignalScrollDelta){
-    final int delta = (shownDurationNotifier.value.timeDuration * 1e-3 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
+    int delta = (shownDurationNotifier.value.timeDuration * 1e-3 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
+    if(shownDurationNotifier.value.timeDuration <= 150 && pointerSignalScrollDelta > 0){
+      return;
+    }
+    if(shownDurationNotifier.value.timeDuration <= 150 && pointerSignalScrollDelta < 0){
+      delta = -1;
+    }
+
     shownDurationNotifier.update((shown) {
       shown.timeOffset += delta;
       shown.timeDuration -= delta * 2;
@@ -35,7 +44,8 @@ abstract class ChartController{
 
   static set moveInTime(double horizontalDragUpdateDelta){
     shownDurationNotifier.update((shown) {
-      shown.timeOffset -= (horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal).toInt();
+      final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
+      shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
     });
   }
 
@@ -44,7 +54,8 @@ abstract class ChartController{
   }
 
   static int moveInCursonTime(double horizontalDragUpdateDelta){
-    return (horizontalDragUpdateDelta / _chartAreaWidth * shownDurationNotifier.value.timeDuration).toInt();
+    final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shownDurationNotifier.value.timeDuration * _dragMultiplierHorizontal;
+    return delta > 0 ? delta.ceil() : delta.floor();
   }
 
   static ScalingInfo scalingFor(String measurement, String signal){

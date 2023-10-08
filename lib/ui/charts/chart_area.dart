@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
 import '../../data/settings.dart';
+import '../theme/theme.dart';
+import 'chart_logic/axis_data.dart';
 import 'chart_logic/chart_controller.dart';
 import 'chart_scaler.dart';
 import 'cursor_displays.dart';
@@ -159,12 +161,19 @@ class _ChartGestureArea extends StatefulWidget {
 
 class __ChartGestureAreaState extends State<_ChartGestureArea> {
   Map<String, Map<String, _PlotContext>> dataSeen = {};
+  late ValueAxisData valueAxisData;
   
   @override
   void initState() {
+    valueAxisData = ValueAxisData.from(ChartController.shownDurationNotifier.value.timeOffset, ChartController.shownDurationNotifier.value.timeDuration, ChartController.chartWidth, null);
     ChartController.shownDurationNotifier.addListener(update);
+    ChartController.shownDurationNotifier.addListener(updateTimeAxis);
     TraceSettingsProvider.traceSettingNotifier.addListener(update);
     super.initState();
+  }
+
+  void updateTimeAxis(){
+    valueAxisData = ValueAxisData.from(ChartController.shownDurationNotifier.value.timeOffset, ChartController.shownDurationNotifier.value.timeDuration, ChartController.chartWidth, null);
   }
 
   void update(){
@@ -239,7 +248,6 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
 
   @override
   Widget build(BuildContext context) {
-    //print(dataSeen['test']!.keys.toList());
     return Listener(
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
@@ -264,7 +272,14 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
             for(String meas in dataSeen.keys)
               for(String signal in dataSeen[meas]!.keys)
                 CustomPaint(painter: _ChartLinePainter(plotContext: dataSeen[meas]![signal]!),),
-            // time axis
+            Transform.translate(
+              offset: Offset(0, ChartController.chartHeigth - 20),
+              child: Container(
+                height: 20,
+                decoration: BoxDecoration(border: Border(top: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))),
+                child: CustomPaint(painter: TimeAxisPainter(valueAxisData: valueAxisData),)
+              ),
+            ),
             const CursorOverlay()
           ],
         ),
@@ -275,6 +290,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
   @override
   void dispose() {
     ChartController.shownDurationNotifier.removeListener(update);
+    ChartController.shownDurationNotifier.removeListener(updateTimeAxis);
     TraceSettingsProvider.traceSettingNotifier.removeListener(update);
     super.dispose();
   }
@@ -312,4 +328,49 @@ class _ChartLinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return true;
   }
+}
+
+class TimeAxisPainter extends CustomPainter{
+
+  final ValueAxisData valueAxisData;
+
+  TimeAxisPainter({required this.valueAxisData});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    //canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
+    final TextPainter textPainterBase = TextPainter(
+      text: TextSpan(
+        text: "DEFAULT TEXT",
+        style: StyleManager.textStyle,
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    final Paint paintBase = Paint()..color = StyleManager.globalStyle.primaryColor;
+
+    int i = 0;
+    for(final num label in valueAxisData.majorTickValues){
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: label.toString(),
+        style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(valueAxisData.majorTickPositions[i] - StyleManager.globalStyle.padding, 0);
+      tp.paint(canvas, majorPos.translate(-tp.width / 2, 0));
+      i++;
+
+      canvas.drawLine(majorPos, majorPos.translate(0, tickLenght.toDouble()), paintBase);
+    }
+
+    for(final double tickPos in valueAxisData.tickPositions){
+      final Offset pos = Offset(tickPos - StyleManager.globalStyle.padding, 0);
+      canvas.drawLine(pos, pos.translate(0, tickLenght.toDouble()), paintBase);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+
 }
