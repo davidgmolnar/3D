@@ -21,8 +21,8 @@ class ValueAxisData{
 
   static ValueAxisData from(final num startValue, final num range, final double axisLength, final String? unit){
     final num trueIntervalCount = max(_majorTickCount + 1, 1);
-    num niceInterval = range / trueIntervalCount; 
-    final num minimumInterval = niceInterval == 0
+    num niceInterval = range / trueIntervalCount;
+    final num minimumInterval = niceInterval <= 0
         ? 0
         : pow(10, (log(niceInterval) / log10).floor());
     
@@ -39,7 +39,7 @@ class ValueAxisData{
     num i = (startValue ~/ niceInterval + 1) * niceInterval;
     final num tickOffset = (i - startValue - niceInterval) / range * axisLength;
     while(i < startValue + range){
-      majorTickValues.add(_roundToDecimalPlaces(i as double, decimalPrec));
+      majorTickValues.add(_roundToDecimalPlaces(i.toDouble(), decimalPrec));
       i += niceInterval;
     }    
 
@@ -62,12 +62,21 @@ class ValueAxisData{
       return _roundToDecimalPlaces((index + 1) * tickPosDelta + tickOffset, decimalPrec);
     }));
     
+    while(tickPositions[0] <= 1){
+      tickPositions.removeAt(0);
+      tickPositions.add(_roundToDecimalPlaces(tickPositions.last + tickPosDelta, decimalPrec));
+    }
+    
+    i = tickPositions.length - 1;
+    while(tickPositions[i as int] > axisLength){
+      tickPositions.removeAt(i);
+      tickPositions.insert(0, _roundToDecimalPlaces(tickPositions.first - tickPosDelta, decimalPrec));
+    }
+    
     final num baseLine = pow(10, -decimalPrec + 1);
     tickPositions.removeWhere((tick) => majorTickPositions.any((majorTick) => 
       (majorTick - tick).abs() <= baseLine
     ));
-    // TODO ahány axisLength túllépés van annyit kell előre rakni és viszont
-
     return ValueAxisData(tickPositions, majorTickPositions, majorTickValues, unit);
   }
 }

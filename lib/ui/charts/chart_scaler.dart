@@ -18,6 +18,12 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
   Set<int> visibleGroups = {};
 
   @override
+  void dispose() {
+    TraceSettingsProvider.traceSettingNotifier.removeListener(handleTraceSettingUpdate);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     TraceSettingsProvider.traceSettingNotifier.addListener(handleTraceSettingUpdate);
     visibleGroups = TraceSettingsProvider.scalingGroupSet;
@@ -33,31 +39,30 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
 
   @override
   Widget build(BuildContext context) {
-    // minden groupra egy child egy közös rowban yoffset és yscale állítás a tracesettingproviderben a handleDrag/handleZoommal, és setstate a childon belül
-    return Container(
-      padding: EdgeInsets.all(StyleManager.globalStyle.padding),
-      width: 150,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: visibleGroups.length,
-        itemBuilder: ((context, index) {
-          return ChartScaler(scalingGroup: visibleGroups.toList()[index]);
-        })
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+          width: 150,
+          height: constraints.maxHeight,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: visibleGroups.length,
+            itemBuilder: ((context, index) {
+              return ChartScaler(scalingGroup: visibleGroups.toList()[index], axisHeight: constraints.maxHeight,);
+            })
+          ),
+        );
+      },
     );
-  }
-
-  @override
-  void dispose() {
-    TraceSettingsProvider.traceSettingNotifier.removeListener(handleTraceSettingUpdate);
-    super.dispose();
   }
 }
 
 class ChartScaler extends StatefulWidget {
-  const ChartScaler({super.key, required this.scalingGroup});
+  const ChartScaler({super.key, required this.scalingGroup, required this.axisHeight});
 
+  final double axisHeight;
   final int scalingGroup;
 
   @override
@@ -69,21 +74,22 @@ class _ChartScalerState extends State<ChartScaler> {
 
   @override
   void initState() {
-    //valueAxisData = ValueAxisData.from(startValue, range, axisLength, unit)
-    // TODO fel kell iratkozni a ChartControllerre a magasság miatt, de csak akkor update ha magasság változott, az időbeliség ide nem kell
-    // Nem kell feliratkozni a TraceSettingsProviderre
+    final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
     super.initState();
   }
 
-  void handleDrag(int group, double delta){
-    TraceSettingsProvider.dragScalingGroup(group, delta);
-    //valueAxisData = ValueAxisData.from(startValue, range, axisLength, unit)
+  void handleDrag(double delta){
+    TraceSettingsProvider.dragScalingGroup(widget.scalingGroup, delta);
+    final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
     setState(() {});
   }
 
-  void handleZoom(int group, double delta){
-    TraceSettingsProvider.zoomScalingGroup(group, delta);
-    //valueAxisData = ValueAxisData.from(startValue, range, axisLength, unit)
+  void handleZoom(double delta){
+    TraceSettingsProvider.zoomScalingGroup(widget.scalingGroup, delta);
+    final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
     setState(() {});
   }
 
@@ -92,18 +98,18 @@ class _ChartScalerState extends State<ChartScaler> {
     return Listener(
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){
-          handleZoom(widget.scalingGroup, event.scrollDelta.dy);
+          handleZoom(event.scrollDelta.dy);
         }
       },
       child: GestureDetector(
         onVerticalDragUpdate: (details) {
-          handleDrag(widget.scalingGroup, details.primaryDelta ?? 0);
+          handleDrag(details.primaryDelta ?? 0);
         },
         child: Container(
           width: _chartScalerWidth,
           decoration: BoxDecoration(
             border: Border(right: BorderSide(width: 1, color: TraceSettingsProvider.colorOfScalingGroup(widget.scalingGroup)))),
-          //child: CustomPaint(painter: ChartScalerPainter(valueAxisData: valueAxisData)),
+          child: CustomPaint(painter: ChartScalerPainter(valueAxisData: valueAxisData, color: TraceSettingsProvider.colorOfScalingGroup(widget.scalingGroup))),
         ),
       ),
     );
@@ -111,14 +117,43 @@ class _ChartScalerState extends State<ChartScaler> {
 }
 
 class ChartScalerPainter extends CustomPainter{
+  ChartScalerPainter({required this.valueAxisData, required this.color});
 
+  final Color color;
   final ValueAxisData valueAxisData;
-
-  ChartScalerPainter({required this.valueAxisData});
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
+    canvas.rotate(1.5 * 3.14159265359);
+    canvas.translate(-size.height, 0);
+    final TextPainter textPainterBase = TextPainter(
+      text: TextSpan(
+        text: "DEFAULT TEXT",
+        style: StyleManager.textStyle,
+      ),
+      textDirection: TextDirection.ltr,
+    );
+
+    final Paint paintBase = Paint()..color = color;
     
+    int i = 0;
+    for(final num label in valueAxisData.majorTickValues){
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: label.toString(),
+        style: StyleManager.textStyle.copyWith(color: color),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(valueAxisData.majorTickPositions[i], 0);
+      tp.paint(canvas, majorPos.translate(-tp.width / 2, 0));
+      i++;
+
+      canvas.drawLine(majorPos.translate(0, 3), majorPos, paintBase);
+    }
+
+    for(final double tickPos in valueAxisData.tickPositions){
+
+    }
   }
 
   @override

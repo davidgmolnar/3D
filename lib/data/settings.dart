@@ -34,6 +34,7 @@ abstract class SettingsProvider{
 }
 
 abstract class TraceSettingsProvider{
+  // TODO legyen egy map a group to measurementsre és egy group to signalidxre, hogy ne keresni kelljen hanem csak indexelni
   static UpdateableValueNotifier<Map<String, List<TraceSetting>>> traceSettingNotifier = UpdateableValueNotifier<Map<String, List<TraceSetting>>>({});
 
   static int _maxScalingGroup = 0;
@@ -79,6 +80,7 @@ abstract class TraceSettingsProvider{
         }
       ).toList();
     });
+    _postUpdate(measurement);
   }
 
   static int itemCount(String measurement){
@@ -176,13 +178,31 @@ abstract class TraceSettingsProvider{
       for(String measurement in traceSetting.keys){
         for(int i = 0; i < traceSetting[measurement]!.length; i++){
           if(traceSetting[measurement]![i].scalingGroup == group){
-            final int diff = (traceSetting[measurement]![i].span * 0.01 * delta * _scrollMultiplierVertical).toInt();
+            double diff = (traceSetting[measurement]![i].span * 0.01 * delta * _scrollMultiplierVertical);
+            if(diff == 0){
+              diff = delta.sign * traceSetting[measurement]![i].span * 0.01;
+            }
             traceSetting[measurement]![i].offset -= diff;
             traceSetting[measurement]![i].span += diff * 2;
           }
         }
       }
     });
+  }
+
+  static Map<String, dynamic> getValueAxisDataForGroup(int group){
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].scalingGroup == group){
+          return {
+            "span": traceSettingNotifier.value[measurement]![i].span,
+            "offset": traceSettingNotifier.value[measurement]![i].offset,
+            "unit": signalData[measurement]![traceSettingNotifier.value[measurement]![i].signal]?.unit
+          };
+        }
+      }
+    }
+    return {};
   }
 
 }
