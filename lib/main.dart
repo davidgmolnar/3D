@@ -16,6 +16,7 @@ void main(List<String> args) async {
   signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
   TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
   TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
+  TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_ECU_Heartbeat";}).isVisible = true;
 
   runSelectedApp();
 }

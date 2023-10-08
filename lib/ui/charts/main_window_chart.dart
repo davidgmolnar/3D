@@ -6,7 +6,6 @@ import '../window/window_titlebar.dart';
 import 'chart_area.dart';
 import 'chart_bottom_overview.dart';
 import 'chart_logic/chart_controller.dart';
-import 'chart_scaler.dart';
 
 class ChartContainer extends StatelessWidget {
   const ChartContainer({super.key});
@@ -36,16 +35,9 @@ class Chart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        Expanded(
-          child: Row(
-            children: const [
-              ChartScalerContainer(),
-              Expanded(child: ChartArea()),
-            ],
-          ),
-        ),
-        const ChartBottomOverview()
+      children: const [
+        Expanded(child: ChartArea(),),
+        ChartBottomOverview()
       ],
     );
   }

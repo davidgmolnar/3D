@@ -90,7 +90,7 @@ abstract class TraceSettingsProvider{
   static int get _nextScalingGroup => _maxScalingGroup++;
 
   static Color get _nextColor {
-    _newColorIndex = _newColorIndex >= colorBank.length - 2 ? 0 : _newColorIndex++;
+    _newColorIndex = _newColorIndex >= colorBank.length - 2 ? 0 : _newColorIndex + 1;
     return colorBank[_newColorIndex];
   }
 

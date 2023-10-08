@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../data/data.dart';
 import '../../data/settings.dart';
 import 'chart_logic/chart_controller.dart';
+import 'chart_scaler.dart';
 import 'cursor_displays.dart';
 
 const double cursorDisplayHeight = 25;
@@ -134,9 +135,16 @@ class _ChartAreaState extends State<ChartArea> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: const [
-        CursorDisplay(),
-        Expanded(child: _ChartGestureArea()),
+      children: [
+        const CursorDisplay(),
+        Expanded(
+          child: Row(
+            children: const [
+              ChartScalerContainer(),
+              Expanded(child: _ChartGestureArea()),
+            ],
+          ),
+        ),
       ],
     );
   }

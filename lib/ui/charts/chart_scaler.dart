@@ -43,8 +43,9 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
       builder: (context, constraints) {
         return Container(
           padding: EdgeInsets.all(StyleManager.globalStyle.padding),
-          width: 150,
+          width: visibleGroups.length * _chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1,
           height: constraints.maxHeight,
+          decoration: BoxDecoration(border: Border(right: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const NeverScrollableScrollPhysics(),
@@ -144,11 +145,11 @@ class ChartScalerPainter extends CustomPainter{
         style: StyleManager.textStyle.copyWith(color: color),
       );
       tp.layout();
-      final Offset majorPos = Offset(valueAxisData.majorTickPositions[i], 0);
-      tp.paint(canvas, majorPos.translate(-tp.width / 2, 0));
+      final Offset majorPos = Offset(valueAxisData.majorTickPositions[i] - StyleManager.globalStyle.padding, 0);
+      tp.paint(canvas, majorPos.translate(-tp.width / 2, -1));
       i++;
 
-      canvas.drawLine(majorPos.translate(0, 3), majorPos, paintBase);
+      canvas.drawLine(majorPos.translate(0, size.width), majorPos.translate(0, size.width - 3), paintBase);
     }
 
     for(final double tickPos in valueAxisData.tickPositions){
