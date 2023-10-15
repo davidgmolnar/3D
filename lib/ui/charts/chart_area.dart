@@ -242,7 +242,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         }
       }
     }
-
+    cursorInfoNotifier.value.visibility = dataSeen.map((key, value) => MapEntry(key, value.keys.toList()));
     setState(() {});
   }
 
@@ -259,10 +259,12 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         onHorizontalDragUpdate: (details) {
           ChartController.moveInTime = details.primaryDelta ?? 0;
         },
-        onSecondaryTapDown: (details) {
+        onSecondaryTapDown: (details) async {
+          final Map<String, List<String>> visibility = dataSeen.map((key, value) => MapEntry(key, value.keys.toList()));
+          final int timeStamp = ChartController.positionToTimeStamp(details.localPosition.dx);
+          final Map<String, Map<String, num>> values = cursorDataAtTimeStamp(timeStamp, visibility);
           cursorInfoNotifier.update((cursorInfo) {
-            // position to timestamp calc
-            cursorInfo.timeStamps.add(ChartController.positionToTimeStamp(details.localPosition.dx));
+            cursorInfo.cursors.add(CursorData.fromCurrent(timeStamp, values));
           });
         },
         behavior: HitTestBehavior.opaque,
@@ -338,7 +340,7 @@ class TimeAxisPainter extends CustomPainter{
 
   @override
   void paint(Canvas canvas, Size size) {
-    //canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
+    canvas.clipRect(Rect.fromLTRB(0, 0, size.width, size.height));
     final TextPainter textPainterBase = TextPainter(
       text: TextSpan(
         text: "DEFAULT TEXT",
