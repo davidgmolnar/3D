@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
+import '../../data/settings.dart';
 import '../../data/updateable_valuenotifier.dart';
 import '../input_widgets/buttons.dart';
 import '../theme/theme.dart';
-import 'chart_area.dart';
 import 'chart_logic/chart_controller.dart';
 
 const double cursorHorizontalDragBuffer = 2; // setting,
+
+enum DeltaDisplayType{
+  // ignore: constant_identifier_names
+  ABSDIFF,
+  // ignore: constant_identifier_names
+  DERIVATE,
+  // ignore: constant_identifier_names
+  INTEGRAL
+}
+
+const Map<DeltaDisplayType, String> deltaDisplayTypeNames = {
+  DeltaDisplayType.ABSDIFF: "Abs diff",
+  DeltaDisplayType.DERIVATE: "Derivate",
+  DeltaDisplayType.INTEGRAL: "Integral",
+};
 
 class CursorData{
   int timeStamp;
   Map<String, Map<String, num>> values;
   bool isDelta;
   int? deltaTarget;
+  DeltaDisplayType deltaType = DeltaDisplayType.ABSDIFF;
 
   CursorData({
     required this.timeStamp,
@@ -34,99 +50,110 @@ class CursorInfo{
   int get countDeltas => cursors.fold(0, (previousValue, cursor) => previousValue + (cursor.isDelta ? 1 : 0));
 
   int get countAbsolutes => cursors.fold(0, (previousValue, cursor) => previousValue + (cursor.isDelta ? 0 : 1));
+
+  List<int> get allAbsolutes {
+    final List<int> absolutes = [];
+    for(int i = 0; i < cursors.length; i++){
+      if(!cursors[i].isDelta){
+        absolutes.add(i);
+      }
+    }
+    return absolutes;
+  }
+
+  Map<String, Map<String, num>> calcDelta(final int index){
+    // TODO ez vmiért újraszámolódik akkor is ha a chartshownduration notifyol
+    final Map<String, Map<String, num>> ret = {};
+    final int absIdx = cursors[index].deltaTarget!;
+    for(String meas in cursors[absIdx].values.keys){
+      ret[meas] = {};
+      for(String signal in cursors[absIdx].values[meas]!.keys){
+        if(cursors[index].deltaType == DeltaDisplayType.ABSDIFF){
+          ret[meas]![signal] = cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!;
+        }
+        else if(cursors[index].deltaType == DeltaDisplayType.DERIVATE){
+          ret[meas]![signal] = (cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!) / (cursors[index].timeStamp - cursors[absIdx].timeStamp) * 1000; // 1/ms to 1/s
+        }
+        else if(cursors[index].deltaType == DeltaDisplayType.INTEGRAL){
+          ret[meas]![signal] = signalIntegral(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp);
+        }
+      }
+    }
+    return ret;
+  }
+
+  int dt(final int index){
+    if(!cursors[index].isDelta){
+      return 0;
+    }
+    final int absIdx = cursors[index].deltaTarget!;
+    return cursors[index].timeStamp - cursors[absIdx].timeStamp;
+  }
 }
 
 final UpdateableValueNotifier<CursorInfo> cursorInfoNotifier = UpdateableValueNotifier<CursorInfo>(CursorInfo());
 
-
-class CursorDisplay extends StatefulWidget {
-  const CursorDisplay({super.key});
-
-
-  @override
-  State<CursorDisplay> createState() => _CursorDisplayState();
-}
-
-class _CursorDisplayState extends State<CursorDisplay> {
-
-  @override
-  void initState() {
-    cursorInfoNotifier.addListener(update);
-    super.initState();
-  }
-
-  void update(){
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // Global cursor data + cursor functions (Peak search/Next Peak etc)
-    return Container(height: cursorDisplayHeight, color: Colors.grey,);
-  }
-
-  @override
-  void dispose() {
-    cursorInfoNotifier.removeListener(update);
-    super.dispose();
-  }
-}
-
-
-class CursorTooltip extends StatefulWidget {
+class CursorTooltip extends StatelessWidget {
   const CursorTooltip({super.key, required this.cursorIndex, required this.pos});
 
   final int cursorIndex;
   final double? pos;
 
   @override
-  State<CursorTooltip> createState() => _CursorTooltipState();
-}
-
-class _CursorTooltipState extends State<CursorTooltip> {
-  @override
   Widget build(BuildContext context) {
-    // értékek, ha nem delta, egyébként érték különbségek mindenkire,
-    // x gomb delete cursor
-    if(widget.pos == null){
+    if(pos == null){
       return const SizedBox();
     }
     return Positioned(
-      left: widget.pos! + cursorHorizontalDragBuffer,
+      left: pos! + cursorHorizontalDragBuffer,
       child: Container(
-        width: 200,
+        width: 250,
         color: StyleManager.globalStyle.secondaryColor.withOpacity(0.6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("${cursorInfoNotifier.value.cursors[widget.cursorIndex].isDelta ? "D" : "M"}${widget.cursorIndex}"),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                  child: Text("${cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? "D" : "M"}$cursorIndex"),
+                ),
                 ButtonWithTwoText(
                   key: UniqueKey(),
-                  isInitiallyActive: cursorInfoNotifier.value.cursors[widget.cursorIndex].isDelta,
+                  isInitiallyActive: cursorInfoNotifier.value.cursors[cursorIndex].isDelta,
                   textWhenActive: "Delta Marker",
                   textWhenInactive: "Abs Marker",
                   onPressed: (p0) {
                     cursorInfoNotifier.update((value) {
-                      if(cursorInfoNotifier.value.cursors[widget.cursorIndex].isDelta){
-                        value.cursors[widget.cursorIndex].isDelta = !value.cursors[widget.cursorIndex].isDelta;
+                      if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta){
+                        value.cursors[cursorIndex].isDelta = false;
                       }
                       else{
                         final bool wouldBeTheLast = cursorInfoNotifier.value.countAbsolutes == 1;
                         if(!wouldBeTheLast){
-                          value.cursors[widget.cursorIndex].isDelta = !value.cursors[widget.cursorIndex].isDelta;
+                          value.cursors[cursorIndex].isDelta = !value.cursors[cursorIndex].isDelta;
+                          value.cursors[cursorIndex].deltaTarget = value.cursors.indexWhere((cursorData) => !cursorData.isDelta);
                         }
                       }
                     });
                   },
                 ),
+                if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
+                  ButtonWithRotatingText<int>(
+                    states: cursorInfoNotifier.value.allAbsolutes,
+                    initialState: cursorInfoNotifier.value.cursors[cursorIndex].deltaTarget!,
+                    onPressed: (selected) {
+                      cursorInfoNotifier.update((value) {
+                        value.cursors[cursorIndex].deltaTarget = selected;
+                      });
+                    }
+                  ),
                 IconButton(
                   onPressed: (){
                     cursorInfoNotifier.update((value) {
-                      final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !value.cursors[widget.cursorIndex].isDelta && value.cursors.length > 1;
-                      value.cursors.removeAt(widget.cursorIndex);
+                      final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !value.cursors[cursorIndex].isDelta && value.cursors.length > 1;
+                      value.cursors.removeAt(cursorIndex);
                       if(flipOneDelta){
                         value.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
                       }
@@ -137,11 +164,68 @@ class _CursorTooltipState extends State<CursorTooltip> {
                 )
               ],
             ),
-            Text(cursorInfoNotifier.value.cursors[widget.cursorIndex].values.toString())
-            // TODO ha egy meas van akkor nincs, de egyébként ilyen meas headerek alatt legyenek a signalok
-            // TODO Textcolor legyen a scalinggroup color
+            if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
+              ButtonWithRotatingText<String>(
+                states: deltaDisplayTypeNames.values.toList(growable: false),
+                initialState: deltaDisplayTypeNames[cursorInfoNotifier.value.cursors[cursorIndex].deltaType]!,
+                onPressed: (p0) {
+                  cursorInfoNotifier.update((value) {
+                    value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == p0);
+                  });
+                },
+              ),
+            cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
+              CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex))
+              :
+              CursorDataDisplay(values: cursorInfoNotifier.value.cursors[cursorIndex].values)
           ]
         ),
+      )
+    );
+  }
+}
+
+class CursorDataDisplay extends StatelessWidget {
+  const CursorDataDisplay({super.key, required this.values});
+
+  final Map<String, Map<String, num>> values;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 210,
+      child: ListView(
+        children: [
+          for(String meas in values.keys)
+            Column(
+              children: [
+                Container(
+                  height: 30,
+                  padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                  color: StyleManager.globalStyle.primaryColor.withOpacity(0.2),
+                  alignment: Alignment.centerLeft,
+                  child: Text(meas, style: StyleManager.subTitleStyle,),
+                ),
+                for(String signal in values[meas]!.keys)
+                  SizedBox(
+                    height: 30,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
+                          child: Text(signal, style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                          child: Text(representNumber(values[meas]![signal].toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                        )
+                      ],
+                    )
+                  )
+              ],
+            )
+        ],
       )
     );
   }
@@ -211,9 +295,9 @@ class _CursorOverlayState extends State<CursorOverlay> {
       fit: StackFit.expand,
       children: [
         for(int i = 0; i < cursorInfoNotifier.value.cursors.length; i++)
-          Cursor(cursorIndex: i, pos: ChartController.timeStampToPosition(cursorInfoNotifier.value.cursors[i].timeStamp),),
-        for(int i = 0; i < cursorInfoNotifier.value.cursors.length; i++)
           CursorTooltip(cursorIndex: i, pos: ChartController.timeStampToPosition(cursorInfoNotifier.value.cursors[i].timeStamp),),
+        for(int i = 0; i < cursorInfoNotifier.value.cursors.length; i++)
+          Cursor(cursorIndex: i, pos: ChartController.timeStampToPosition(cursorInfoNotifier.value.cursors[i].timeStamp),),
       ]);
   }
 

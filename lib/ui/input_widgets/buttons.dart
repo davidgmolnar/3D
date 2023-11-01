@@ -38,27 +38,35 @@ class _ButtonWithTwoTextState extends State<ButtonWithTwoText> {
   }
 }
 
-class ButtonWithRotatingText extends StatefulWidget{
-  const ButtonWithRotatingText({super.key, required this.states, required this.onPressed});
+class ButtonWithRotatingText<T> extends StatefulWidget{
+  const ButtonWithRotatingText({super.key, required this.states, required this.onPressed, required this.initialState});
 
-  final List<String> states;
+  final List<T> states;
   final Function onPressed;
+  final T initialState;
 
   @override
   State<ButtonWithRotatingText> createState() => _ButtonWithRotatingTextState();
 }
 
 class _ButtonWithRotatingTextState extends State<ButtonWithRotatingText> {
-  int idx = 0;
+  int __idx = 0;
+
+  @override
+  void initState() {
+    __idx = widget.states.indexWhere((element) => element == widget.initialState);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: (){
-        idx++;
-        widget.onPressed(idx);
+        __idx++;
+        __idx %= widget.states.length;
+        widget.onPressed(widget.states[__idx]);
       },
-      child: Text(widget.states[idx], style: TextStyle(color: StyleManager.globalStyle.primaryColor))
+      child: Text(widget.states[__idx].toString(), style: TextStyle(color: StyleManager.globalStyle.primaryColor))
     );
   }
 }

@@ -6,6 +6,7 @@ import '../window/window_titlebar.dart';
 import 'chart_area.dart';
 import 'chart_bottom_overview.dart';
 import 'chart_logic/chart_controller.dart';
+import 'top_cursor_panel.dart';
 
 class ChartContainer extends StatelessWidget {
   const ChartContainer({super.key});

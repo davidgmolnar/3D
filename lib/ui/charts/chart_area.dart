@@ -8,8 +8,7 @@ import 'chart_logic/axis_data.dart';
 import 'chart_logic/chart_controller.dart';
 import 'chart_scaler.dart';
 import 'cursor_displays.dart';
-
-const double cursorDisplayHeight = 25;
+import 'top_cursor_panel.dart';
 
 class ScalingInfo{
   final double timeScale;
@@ -138,7 +137,7 @@ class _ChartAreaState extends State<ChartArea> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const CursorDisplay(),
+        const TopCursorDisplay(),
         Expanded(
           child: Row(
             children: const [

@@ -132,6 +132,17 @@ abstract class TraceSettingsProvider{
     return Colors.grey;
   }
 
+  static Color colorOfSignal(final String signal) {
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].signal == signal){
+          return traceSettingNotifier.value[measurement]![i].color;
+        }
+      }
+    }
+    return Colors.grey;
+  }
+
   static Map<String, List<String>> get visibleSignals {
     Map<String, List<String>> tmp = {};
     for(String measurement in traceSettingNotifier.value.keys){
