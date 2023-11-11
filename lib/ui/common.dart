@@ -21,6 +21,15 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showError(BuildContext
   );
 }
 
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showErrorWithoutContext(String message){
+  return snackbarKey.currentState!.showSnackBar(
+    SnackBar(
+      content: Text(message, style: StyleManager.subTitleStyle,),
+      backgroundColor: Colors.red,
+    )
+  );
+}
+
 ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showInfo(BuildContext context, String message){
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(

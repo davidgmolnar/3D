@@ -89,6 +89,24 @@ int? _binarySearchIndexAtTimeStamp(final List<Measurement> list, final int timeS
   return searchIndex;
 }
 
+int timestampAtMax(final String meas, final String signal, final int start, final int stop){
+  return signalData[meas]![signal]!.values.skipWhile((value) => value.timeStamp < start).takeWhile((value) => value.timeStamp < stop).fold(Measurement(double.negativeInfinity, 0), (previousValue, element){
+    if(previousValue.value < element.value){
+      return element;
+    }
+    return previousValue;
+  }).timeStamp;
+}
+
+int timestampAtMin(final String meas, final String signal, final int start, final int stop){
+  return signalData[meas]![signal]!.values.skipWhile((value) => value.timeStamp < start).takeWhile((value) => value.timeStamp < stop).fold(Measurement(double.infinity, 0), (previousValue, element){
+    if(previousValue.value > element.value){
+      return element;
+    }
+    return previousValue;
+  }).timeStamp;
+}
+
 String representNumber(String ret, {int maxDigit = 10}){
   if(ret.length > maxDigit){
     ret = ret.substring(0, maxDigit);

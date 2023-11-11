@@ -19,7 +19,7 @@ enum DeltaDisplayType{
 }
 
 const Map<DeltaDisplayType, String> deltaDisplayTypeNames = {
-  DeltaDisplayType.ABSDIFF: "Abs diff",
+  DeltaDisplayType.ABSDIFF: "Y Diff",
   DeltaDisplayType.DERIVATE: "Derivate",
   DeltaDisplayType.INTEGRAL: "Integral",
 };
@@ -88,6 +88,14 @@ class CursorInfo{
     }
     final int absIdx = cursors[index].deltaTarget!;
     return cursors[index].timeStamp - cursors[absIdx].timeStamp;
+  }
+
+  List<String> getCursorValuesDescription(int index){
+    final List<String> desc = [];
+    for(String meas in visibility.keys){
+      desc.addAll(visibility[meas]!.map((signal) => "$meas|$signal"));
+    }
+    return desc;
   }
 }
 

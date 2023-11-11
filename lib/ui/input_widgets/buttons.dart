@@ -60,13 +60,25 @@ class _ButtonWithRotatingTextState extends State<ButtonWithRotatingText> {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: (){
-        __idx++;
-        __idx %= widget.states.length;
-        widget.onPressed(widget.states[__idx]);
-      },
-      child: Text(widget.states[__idx].toString(), style: TextStyle(color: StyleManager.globalStyle.primaryColor))
-    );
+    try{
+      return TextButton(
+        onPressed: (){
+          __idx++;
+          __idx %= widget.states.length;
+          widget.onPressed(widget.states[__idx]);
+        },
+        child: Text(widget.states[__idx].toString(), style: TextStyle(color: StyleManager.globalStyle.primaryColor))
+      );
+    }catch(ex){
+      __idx = 0;
+      return TextButton(
+        onPressed: (){
+          __idx++;
+          __idx %= widget.states.length;
+          widget.onPressed(widget.states[__idx]);
+        },
+        child: Text(widget.states[__idx].toString(), style: TextStyle(color: StyleManager.globalStyle.primaryColor))
+      );
+    }
   }
 }

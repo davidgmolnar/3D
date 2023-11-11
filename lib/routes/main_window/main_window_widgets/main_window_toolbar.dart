@@ -41,11 +41,11 @@ class MainWindowToolbar extends StatelessWidget {
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
       ToolbarDropdownItem(onPressed: _importCALWindow, text: "Import Calfile"),
       ToolbarDropdownItem(onPressed: _importUIWindow, text: "Import UI file"),
-    ],),
+    ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
     ToolbarItem(iconData: Icons.calculate, onPressed: _calfileRunnerWindow),
     ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
-    ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [],),
+    ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
     ToolbarItem(iconData: Icons.settings, onPressed: _settingsWindow),
     ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
@@ -83,7 +83,7 @@ class MainWindowToolbar extends StatelessWidget {
               [
               for(i = 0; i < (constraints.maxWidth - 50) ~/ 50; i++)
                 _mainWindowToolbarItems[i],
-              ToolbarItemWithDropdown(iconData: Icons.more_horiz, dropdownItems: _mainWindowToolbarItemsHidden.skip(_mainWindowToolbarItemsHiddenSkip(i)).toList(),)
+              ToolbarItemWithDropdown(iconData: Icons.more_horiz, dropdownItems: _mainWindowToolbarItemsHidden.skip(_mainWindowToolbarItemsHiddenSkip(i)).toList(), iconHeight: toolbarItemSize, invertColors: false,)
               ]
           ),
         );

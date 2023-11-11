@@ -5,10 +5,12 @@ import '../theme/theme.dart';
 const double toolbarItemSize = 50;
 
 class ToolbarItemWithDropdown extends StatefulWidget {
-  const ToolbarItemWithDropdown({super.key, required this.iconData, required this.dropdownItems});
+  const ToolbarItemWithDropdown({super.key, required this.iconData, required this.dropdownItems, required this.iconHeight, required this.invertColors});
 
   final IconData iconData;
   final List<ToolbarDropdownItem> dropdownItems;
+  final double iconHeight;
+  final bool invertColors;
 
   @override
   State<ToolbarItemWithDropdown> createState() => ToolbarItemWithDropdownState();
@@ -65,9 +67,9 @@ class ToolbarItemWithDropdownState extends State<ToolbarItemWithDropdown> {
         child: Container(
           key: itemKey,
           width: toolbarItemSize,
-          height: toolbarItemSize,
-          color: isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
-          child: Icon(widget.iconData, size: toolbarItemSize - 2 * StyleManager.globalStyle.padding,),
+          height: widget.iconHeight,
+          color: widget.invertColors ? isHover ? StyleManager.globalStyle.bgColor : StyleManager.globalStyle.secondaryColor : isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
+          child: Icon(widget.iconData, size: widget.iconHeight - 2 * StyleManager.globalStyle.padding * (widget.invertColors ? 0 : 1)),
         ),
       ),
     );
@@ -105,6 +107,42 @@ class ToolbarItemState extends State<ToolbarItem> {
           height: toolbarItemSize,
           color: isHover ? StyleManager.globalStyle.secondaryColor : StyleManager.globalStyle.bgColor,
           child: Icon(widget.iconData, size: toolbarItemSize - 2 * StyleManager.globalStyle.padding,),
+        ),
+      ),
+    );
+  }
+}
+
+class ToolbarTextItem extends StatefulWidget {
+  const ToolbarTextItem({super.key, required this.text, required this.onPressed});
+
+  final String text;
+  final Function onPressed;
+
+  @override
+  State<ToolbarTextItem> createState() => ToolbarTextItemState();
+}
+
+class ToolbarTextItemState extends State<ToolbarTextItem> {
+  bool isHover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (event) {
+        isHover = true;
+        setState(() {});
+      },
+      onExit: (event) {
+        isHover = false;
+        setState(() {});
+      },
+      child: GestureDetector(
+        onTap: () => widget.onPressed(),
+        child: Container(
+          width: 100,
+          color: isHover ? Theme.of(context).hoverColor : StyleManager.globalStyle.secondaryColor,
+          child: Center(child: Text(widget.text)),
         ),
       ),
     );
