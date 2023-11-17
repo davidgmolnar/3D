@@ -1,4 +1,5 @@
 import '../ui/charts/chart_area.dart';
+import 'calibration/unit.dart';
 
 class Measurement{
   final num value;
@@ -24,7 +25,7 @@ class Measurement{
 class SignalContainer{
   final List<Measurement> values;
   final String dbcName;
-  final String? unit;
+  final Unit? unit;
   String displayName;
 
   SignalContainer({

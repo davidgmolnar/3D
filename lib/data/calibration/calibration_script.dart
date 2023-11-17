@@ -1,6 +1,6 @@
-import '../io/logger.dart';
-import 'data.dart';
-import 'signal_container.dart';
+import '../../io/logger.dart';
+import '../data.dart';
+import '../signal_container.dart';
 
 // ignore: constant_identifier_names
 const String ERR_SIGNAL_UNAVAILABLE = "ERR_SIGNAL_UNAVAILABLE";

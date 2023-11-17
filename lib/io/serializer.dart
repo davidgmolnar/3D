@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../data/calibration_script.dart';
+import '../data/calibration/calibration_script.dart';
+import '../data/calibration/unit.dart';
 import '../data/signal_container.dart';
 import 'logger.dart';
 
@@ -131,7 +132,7 @@ abstract class Serializer {
       }
       for(int i = 0; i < signals.length; i++){
         if(i != timeIndex){
-          storage[signals[i]] = SignalContainer(dbcName: signals[i], values: [], displayName: signals[i], unit: units[i].isEmpty ? null : units[i]);
+          storage[signals[i]] = SignalContainer(dbcName: signals[i], values: [], displayName: signals[i], unit: Unit.tryParse(units[i]));
         }
       }
       int lineCnt = 3;
@@ -216,7 +217,7 @@ abstract class Serializer {
 
     CalibrationScript script = CalibrationScript(lines.split('\n').map((line) => ScriptInstruction(line)).toList(), file.absolute.path);
     script.instructions.removeWhere((instruction) => instruction.line.isEmpty);
-    context.add(LogEntry.info("Finished loading Calfile with ${script.instructions.length} instructions"));
+    context.add(LogEntry.info("Finished loading Calfile with ${script.instructions.length} lines"));
 
     return LoadContext(storage: script, context: context, filePath: file.absolute.path);
   }
