@@ -22,7 +22,7 @@ enum Units{
   rad // TODO ki kéne találni vmi kultúráltat a °, °C és a %-ra és akkor minden fasza
 }
 
-const Map<Units, List<Map<Units, int>>> convertTable = {
+const Map<Units, List<Map<Units, int>>> convertTable = {  // TODO ezt fájlból
   Units.J: [{Units.N: 1, Units.m: 1}, {Units.W: 1, Units.s: 1}],
   Units.W: [{Units.J: 1, Units.s: -1}, {Units.V: 1, Units.A: 1}]
 };
@@ -32,7 +32,7 @@ class Unit{
 
   const Unit({required this.components});
 
-  factory Unit.fromSI(Units unit){
+  factory Unit.fromUnit(Units unit){
     return Unit(components: {unit: 1});
   }
 
@@ -42,15 +42,20 @@ class Unit{
     bool reachedDenominator = false;
     int i = 0;
     while(i < str.length){
-      if(str[i] == '/'){
-        i++;
-        reachedDenominator = true;
-        continue;
+      if(!reachedDenominator){
+        if(str[i] == '/'){
+          i++;
+          reachedDenominator = true;
+        }
+        else if(i + 1 < str.length && str.substring(i, i + 1) == '1/'){
+          i += 2;
+          reachedDenominator = true;
+        }
       }
 
       Units? matched;
       for(Units unit in Units.values){
-        if(i + unit.name.length < str.length){
+        if(i + unit.name.length - 1 < str.length){
           if(str.substring(i, i + unit.name.length) == unit.name){
             if(matched == null){
               matched = unit;
@@ -93,20 +98,10 @@ class Unit{
         bool convertable = true;
 
         for(Units convertUnit in convertOption.keys){
-
-          if(convertOption[convertUnit]! > 0){
-            if(copy[convertUnit]! < convertOption[convertUnit]!){
-              convertable = false;
-              break;
-            }
+          if(copy[convertUnit]!.abs() < convertOption[convertUnit]!.abs()){
+            convertable = false;
+            break;
           }
-          else{
-            if(copy[convertUnit]! > convertOption[convertUnit]!){
-              convertable = false;
-              break;
-            }
-          }
-
         }
 
         if(convertable){
@@ -156,10 +151,12 @@ class Unit{
       }
     }
 
-    text.add(TextSpan(
-      text: '/',
-      style: style
-    ));
+    if(denominator.keys.isNotEmpty){
+      text.add(TextSpan(
+        text: '/',
+        style: style
+      ));
+    }
     if(denominator.keys.length > 1){
       text.add(TextSpan(
         text: '(',
@@ -173,7 +170,7 @@ class Unit{
         style: style
       ));
 
-      if(denominator[unit]! > 1){
+      if(denominator[unit]! < -1){
         text.add(TextSpan(
           text: (-denominator[unit]!).toString(),
           style: style.copyWith(fontFeatures: [const FontFeature.superscripts()]),
@@ -199,7 +196,7 @@ class Unit{
     final Map<Units, int> copy = components;
     for(Units unit in other.components.keys){
       if(copy.containsKey(unit)){
-        copy[unit] = other.components[unit]! + copy[unit]!;
+        copy[unit] = copy[unit]! + other.components[unit]!;
         if(copy[unit] == 0){
           copy.remove(unit);
         }
@@ -215,7 +212,7 @@ class Unit{
     final Map<Units, int> copy = components;
     for(Units unit in other.components.keys){
       if(copy.containsKey(unit)){
-        copy[unit] = other.components[unit]! - copy[unit]!;
+        copy[unit] = copy[unit]! - other.components[unit]!;
         if(copy[unit] == 0){
           copy.remove(unit);
         }
