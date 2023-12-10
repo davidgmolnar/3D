@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../data/calibration/calibration_script.dart';
+import '../data/calibration/calibration_script_parsing.dart';
 import '../data/calibration/unit.dart';
 import '../data/signal_container.dart';
 import 'logger.dart';
@@ -184,7 +184,7 @@ abstract class Serializer {
     // return data;
   }
 
-  static Future<LoadContext> loadCalfile(File file) async {
+  /*static Future<LoadContext> loadCalfile(File file) async {
     try{
       String extension = file.path.split('.').last;
       if(await file.exists()){
@@ -202,25 +202,12 @@ abstract class Serializer {
     catch (exc){
       return LoadContext(storage: null, context: [LogEntry.error("Unknown error when loading ${file.absolute.path}, ${exc.toString()}")], filePath: file.absolute.path);
     }
-  }
+  }*/
 
   // ignore: non_constant_identifier_names
-  static Future<LoadContext> _CALLoader(File file) async {
-    List<int> bytes = await file.readAsBytes().then((value) => value.toList());
-    int originalLength = bytes.length;
-    String lines = safeUTF8Decode(bytes);
-    List<LogEntry> context = [LogEntry.info("Started loading Calfile ${file.absolute.path}")];
-
-    if(lines.length != originalLength){
-      context.add(LogEntry.warning("Removed ${originalLength - lines.length} non UTF-8 decodeable characters when loading ${file.absolute.path}"));
-    }
-
-    CalibrationScript script = CalibrationScript(lines.split('\n').map((line) => ScriptInstruction(line)).toList(), file.absolute.path);
-    script.instructions.removeWhere((instruction) => instruction.line.isEmpty);
-    context.add(LogEntry.info("Finished loading Calfile with ${script.instructions.length} lines"));
-
-    return LoadContext(storage: script, context: context, filePath: file.absolute.path);
-  }
+  /*static Future<LoadContext> _CALLoader(File file) async {
+      
+  }*/
 
   // Future<vmi> loadUIfile(File file) async {}
 }
