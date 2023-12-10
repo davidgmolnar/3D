@@ -4,6 +4,7 @@ import '../../data/data.dart';
 import '../../data/settings.dart';
 import '../../data/updateable_valuenotifier.dart';
 import '../input_widgets/buttons.dart';
+import '../input_widgets/sliders.dart';
 import '../theme/theme.dart';
 import 'chart_logic/chart_controller.dart';
 
@@ -173,14 +174,15 @@ class CursorTooltip extends StatelessWidget {
               ],
             ),
             if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
-              ButtonWithRotatingText<String>(
-                states: deltaDisplayTypeNames.values.toList(growable: false),
-                initialState: deltaDisplayTypeNames[cursorInfoNotifier.value.cursors[cursorIndex].deltaType]!,
-                onPressed: (p0) {
+              SlidingSwitch(
+                labels: deltaDisplayTypeNames.values.toList(growable: false),
+                active: deltaDisplayTypeNames[cursorInfoNotifier.value.cursors[cursorIndex].deltaType]!,
+                onChanged: (selected) {
                   cursorInfoNotifier.update((value) {
-                    value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == p0);
+                    value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
                   });
                 },
+                elementWidth: 80,
               ),
             cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
               CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex))

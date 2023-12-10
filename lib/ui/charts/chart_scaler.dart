@@ -77,21 +77,21 @@ class _ChartScalerState extends State<ChartScaler> {
   @override
   void initState() {
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
-    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
     super.initState();
   }
 
   void handleDrag(double delta){
     TraceSettingsProvider.dragScalingGroup(widget.scalingGroup, delta);
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
-    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
     setState(() {});
   }
 
   void handleZoom(double delta){
     TraceSettingsProvider.zoomScalingGroup(widget.scalingGroup, delta);
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
-    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit']);
+    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
     setState(() {});
   }
 
