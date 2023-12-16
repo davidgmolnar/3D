@@ -100,20 +100,24 @@ void runSelectedApp() async {
 }
 
 Future<bool> tryStartup(List<String> args) async {
+  await FileSystem.getCurrentDirectory;
   try{
     if(args.isEmpty){
       localSocketPort = masterSocketPort;
       windowType = WindowType.MAIN_WINDOW;
       localLogger = Logger(mainLogPath, "MASTER");
+      localLogger.start();
     }
     else{
       localSocketPort = int.parse(args[1]);
       windowType = windowType.tryParse(args[0])!;
       localLogger = Logger(mainLogPath, "${windowType.name} @$localSocketPort");
-      windowSetup = WindowSetupInfo.fromJson(await FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: true));
+      localLogger.start();
+      windowSetup = WindowSetupInfo.fromJson(FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: true));
     }
   }
   catch (exc){
+    localLogger.stop();
     return false;
   }
   return true;

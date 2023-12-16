@@ -34,7 +34,7 @@ abstract class FileSystem{
     }
   }
 
-  static Future<void> trySaveMapToLocalAsync(String path, String filename, Map jsonEncodeable) async {
+  static Future<void> trySaveMapToLocalAsync(final String path, final String filename, Map jsonEncodeable) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory");
       return;
@@ -45,8 +45,8 @@ abstract class FileSystem{
     await access.close();
   }
 
-  static Future<void> trySaveMapToLocalSync(String path, String filename, Map jsonEncodeable) async {
-    if(await getCurrentDirectory == null){
+  static void trySaveMapToLocalSync(final String path, final String filename, Map jsonEncodeable){
+    if(_currentDirectory == null){
       localLogger.error("Cant determine current directory");
       return;
     }
@@ -56,12 +56,15 @@ abstract class FileSystem{
     access.closeSync();
   }
 
-  static Future<Map> tryLoadMapFromLocalAsync(String path, String filename, {bool deleteWhenDone = false}) async {
+  static Future<Map> tryLoadMapFromLocalAsync(final String path, final String filename, {bool deleteWhenDone = false}) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory");
       return {};
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
+    if(!(await file.exists())){
+      return {};
+    }
     final RandomAccessFile access = await file.open(mode: FileMode.read);
     List<int> buffer = [];
     await access.readInto(buffer);
@@ -72,16 +75,78 @@ abstract class FileSystem{
     return Serializer.jsonFromBytes(buffer);
   }
 
-  static Future<Map> tryLoadMapFromLocalSync(String path, String filename, {bool deleteWhenDone = false}) async {
-    if(await getCurrentDirectory == null){
+  static Map tryLoadMapFromLocalSync(final String path, final String filename, {bool deleteWhenDone = false}){
+    if(_currentDirectory == null){
       localLogger.error("Cant determine current directory");
       return {};
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
-    List<int> buffer = await file.readAsBytes();
+    if(!file.existsSync()){
+      return {};
+    }
+    List<int> buffer = file.readAsBytesSync();
     if(deleteWhenDone){
       file.deleteSync();
     }
     return Serializer.jsonFromBytes(buffer);
+  }
+
+  static Future<void> tryDeleteFromLocalAsync(final String path, final String filename) async {
+    if(await getCurrentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return;
+    }
+    final File file = File("${_currentDirectory}Local/$path$filename");
+    if(await file.exists()){
+      await file.delete();
+      localLogger.info("File ${file.absolute} was successfully removed");
+    }
+    else{
+      localLogger.warning("File ${file.absolute} cannot be removed as it doesnt exist");
+    }
+  }
+
+  static void tryDeleteFromLocalSync(final String path, final String filename){
+    if(_currentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return;
+    }
+    final File file = File("${_currentDirectory}Local/$path$filename");
+    if(file.existsSync()){
+      file.deleteSync();
+      localLogger.info("File ${file.absolute} was successfully removed");
+    }
+    else{
+      localLogger.warning("File ${file.absolute} cannot be removed as it doesnt exist");
+    }
+  }
+
+  static Future<List<FileSystemEntity>> tryListElementsInLocalAsync(final String path) async {
+    if(await getCurrentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return [];
+    }
+    Directory("${_currentDirectory}Local/$path");
+    final Directory dir = Directory("${_currentDirectory}Local/$path");
+    if(await dir.exists()){
+      return dir.list().toList();
+    }
+    else{
+      return [];
+    }
+  }
+
+  static List<FileSystemEntity> tryListElementsInLocalSync(final String path){
+    if(_currentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return [];
+    }
+    final Directory dir = Directory("${_currentDirectory}Local/$path");
+    if(dir.existsSync()){
+      return dir.listSync();
+    }
+    else{
+      return [];
+    }
   }
 }

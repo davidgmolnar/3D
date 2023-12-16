@@ -124,6 +124,59 @@ extension FromString on Operation{
         return null;
     }
   }
+
+  int requiredParams(){
+    switch (this) {
+      case Operation.ADD:
+        return 2;
+      case Operation.SUB:
+        return 2;
+      case Operation.MULT:
+        return 2;
+      case Operation.DIV:
+        return 2;
+      case Operation.DERIVATE:
+        return 1;
+      case Operation.AND:
+        return 2;
+      case Operation.NAND:
+        return 2;
+      case Operation.OR:
+        return 2;
+      case Operation.NOR:
+        return 2;
+      case Operation.XOR:
+        return 2;
+      case Operation.NOT:
+        return 1;
+      case Operation.ABS:
+        return 1;
+      case Operation.SHIFT:
+        return 2;
+      case Operation.F:
+        return 2;
+      case Operation.NOP:
+        return 0;
+      case Operation.SKIPIF:
+        return 1;
+      case Operation.SET:
+        return 1;
+      case Operation.DELETE:
+        return 1;
+      case Operation.MIN:
+        return 2;
+      case Operation.IF:
+        return 5;
+      case Operation.INTEGRATE:
+        return 1;
+      case Operation.RCLP:
+        return 2;
+      case Operation.CONST:
+        return 2;
+      default:
+        return 0;
+    }
+  }
 }
 
 class Instruction{
@@ -139,19 +192,31 @@ class Instruction{
     opBuffer = "";
   }
 
-  FreezedInstruction get freeze => FreezedInstruction(result: result, operands: operands, op: op);
+  FrozenInstruction get freeze => FrozenInstruction(result: result, operands: operands, op: op);
 }
 
-class FreezedInstruction{
+class FrozenInstruction{
   final String result;
   final List<String> operands;
   final Operation op;
 
-  FreezedInstruction({
+  FrozenInstruction({
     required this.result,
     required this.operands,
     required this.op
   });
+
+  Map<String, dynamic> toJson(){
+    return {
+      "result": result,
+      "operands": operands,
+      "op": op.index,
+    };
+  }
+
+  static FrozenInstruction fromJson(Map data){
+    return FrozenInstruction(result: data["result"], operands: data["operands"], op: Operation.values[data["op"]]);
+  }
 }
 
 class CompiledCalibration{
@@ -159,7 +224,7 @@ class CompiledCalibration{
   final DateTime fileLastModified;
   final List<String> requiredChannels;
   final List<String> resultChannels;
-  final List<List<FreezedInstruction>> instructions;
+  final List<List<FrozenInstruction>> instructions;
   final List<LogEntry> context;
 
   CompiledCalibration({
@@ -170,6 +235,32 @@ class CompiledCalibration{
     required this.instructions,
     required this.context,
   });
+
+  Map<String, dynamic> toJson(){
+    return {
+      "filename": filename,
+      "fileLastModified": fileLastModified.millisecondsSinceEpoch,
+      "requiredChannels": requiredChannels,
+      "resultChannels": resultChannels,
+      "instructions": instructions.map((block) => block.map((inst) => inst.toJson()))
+    };
+  }
+
+  static CompiledCalibration? fromJson(Map data){
+    try{
+      return CompiledCalibration(
+        filename: data["filename"],
+        fileLastModified: DateTime.fromMillisecondsSinceEpoch(data["fileLastModified"]),
+        requiredChannels: data["requiredChannels"],
+        resultChannels: data["resultChannels"],
+        instructions: data["instructions"].map((block) => block.map((inst) => FrozenInstruction.fromJson(inst))),
+        context: []
+      );
+    }
+    catch(err){
+      return null;
+    }
+  }
 }
 
 class CalibrationScriptParser{
@@ -186,15 +277,18 @@ class CalibrationScriptParser{
     final String str = Serializer.safeUTF8Decode(bytes);
     final decodedLength = str.length;
 
-    if(doIndication && originalLength != decodedLength){
+    if(originalLength != decodedLength){
       final LogEntry entry = LogEntry.error("${originalLength - decodedLength} non-UTF-8 characters were ignored in calibration file ${file.absolute.path}");
       context.add(entry);
-      lineProgressIndication(0, entry.asString("CALIBRATION"));
+      if(doIndication){
+        lineProgressIndication(0, entry.asString("CALIBRATION"));
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
     }
 
     final List<String> lines = str.split('\n');
 
-    final List<List<FreezedInstruction>> instructions = [];
+    final List<List<FrozenInstruction>> instructions = [];
     int lineNum = 0;
     late final int indicationStep;
     if(doIndication){
@@ -323,8 +417,8 @@ class CalibrationScriptParser{
     List<String> resultChannels = [];
     List<String> requiredChannels = [];
 
-    for(List<FreezedInstruction> blockInstructions in instructions){
-      for(FreezedInstruction inst in blockInstructions){
+    for(List<FrozenInstruction> blockInstructions in instructions){
+      for(FrozenInstruction inst in blockInstructions){
         for(String operand in inst.operands){
           if(operand.startsWith("#")){
             operand = operand.substring(1);
@@ -354,5 +448,28 @@ class CalibrationScriptParser{
       instructions: instructions,
       context: context
     );
+  }
+
+  static Future<bool> validate(CompiledCalibration script, {Function(double, String?)? lineProgressIndication}) async {
+    bool valid = true;
+    final bool doIndication = lineProgressIndication != null;
+
+    int blockNum = 0;
+    for(List<FrozenInstruction> blockInstructions in script.instructions){
+      for(FrozenInstruction inst in blockInstructions){
+        if(inst.op.requiredParams() != inst.operands.length){
+          final LogEntry entry = LogEntry.error("Operation ${inst.op.name} in block $blockNum requires ${inst.op.requiredParams()} operands, ${inst.operands.length} given");
+          script.context.add(entry);
+          if(doIndication){
+            lineProgressIndication(1, entry.asString("CALIBRATION"));
+            await Future.delayed(const Duration(milliseconds: 10));
+          }
+          valid = false;
+        }
+      }
+      blockNum++;
+    }
+    
+    return valid;
   }
 }

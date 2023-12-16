@@ -102,6 +102,10 @@ class Logger{
     _buffer.addAll(entries);
   }
 
+  void add(LogEntry entry){
+    _buffer.add(entry);
+  }
+
   Future<void> _flush() async {
     if(_buffer.isEmpty){
       return;
