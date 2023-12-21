@@ -416,13 +416,17 @@ class CalibrationScriptParser{
 
     List<String> resultChannels = [];
     List<String> requiredChannels = [];
+    List<String> optionalChannels = [];
 
     for(List<FrozenInstruction> blockInstructions in instructions){
       for(FrozenInstruction inst in blockInstructions){
+        if(inst.op == Operation.SKIPIF){
+          optionalChannels.add(inst.operands[0]);
+        }
         for(String operand in inst.operands){
           if(operand.startsWith("#")){
             operand = operand.substring(1);
-            if(!resultChannels.contains(operand) && !requiredChannels.contains(operand)){
+            if(!resultChannels.contains(operand) && !requiredChannels.contains(operand) && !optionalChannels.contains(operand)){
               requiredChannels.add(operand);
             }
           }

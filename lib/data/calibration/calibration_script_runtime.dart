@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../io/file_system.dart';
 import '../../io/logger.dart';
 import '../data.dart';
+import 'calibration_script_execution.dart';
 import 'calibration_script_parsing.dart';
 
 const String __calibPath = "Calibration/";
@@ -58,17 +59,13 @@ class CalibrationScriptRuntime{
 
   static Future<bool> __wasCompiled(final String filename, {Function(double, String?)? progressIndication}) async {
     final List<FileSystemEntity> elements = await FileSystem.tryListElementsInLocalAsync(__calibPath);
-    return elements.any((element) => element is File && "${element.uri.path.split('/').last}.comp" == filename);
+    return elements.any((element) => element is File && element.uri.path.split('/').last == "$filename.comp");
   }
 
-  static Future<void> exec(final List<List<FrozenInstruction>> script, {Function(double, String?)? progressIndication, int? indicationCount}) async {
-    // TODO szopóker van össze kell interpolálni a csatornákat koherens mintavételezésre.
-  }
-
-  static Future<void> run(final File file, final bool cleanRebuild, final String measurement, {Function(double, String?)? progressIndication, int? indicationCount}) async {
+  static Future<void> run(final File file, final CalibrationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
     final bool doIndication = progressIndication != null && indicationCount != null;
 
-    final CompiledCalibration? calibration = await runCompilationOnly(file, cleanRebuild, progressIndication: progressIndication);
+    final CompiledCalibration? calibration = await runCompilationOnly(file, options.cleanRebuild, progressIndication: progressIndication);
     if(calibration == null){
       return;
     }
@@ -78,11 +75,21 @@ class CalibrationScriptRuntime{
       await Future.delayed(const Duration(milliseconds: 10));
     }
 
-    if(!__canRun(calibration.requiredChannels, measurement, progressIndication: progressIndication)){
+    if(!__canRun(calibration.requiredChannels, options.measurement, progressIndication: progressIndication)){
       await __recommendRun(calibration.requiredChannels, progressIndication: progressIndication);
       return;
     }
-    await exec(calibration.instructions, progressIndication: progressIndication, indicationCount: indicationCount);
+    
+    try{
+      CalibrationScriptProcessor.exec(calibration.instructions, options, progressIndication: progressIndication, indicationCount: indicationCount);
+    }
+    catch(ex){
+      final LogEntry entry = LogEntry.error("Exception when running script: ${ex.toString()}");
+      localLogger.add(entry);
+      if(doIndication){
+        progressIndication(1, entry.asString(localLogger.loggerName));
+      }
+    }
   }
 
   static Future<CompiledCalibration?> runCompilationOnly(final File file, final bool cleanRebuild, {Function(double, String?)? progressIndication}) async {

@@ -72,6 +72,7 @@ abstract class Serializer {
 
   static Future<LoadContext> _csvLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
     // TODO a nagyon nem változó részeken lehet valahogy spórolni kéne, pl bináris/int/double csatornákat külön lehetne kezelni, vagy egyéb módon memóriára optimalizálni
+    // TODO a nem változó részek közül az első és utolsó pontot lehet megtartani így a calibrációs interpolálásnál felfutó élek meg a jelleg megmarad
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [];
     final bool doIndication = lineProgressIndication != null && indicationCount != null;
