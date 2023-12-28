@@ -52,12 +52,14 @@ class CalibrationScriptProcessor{
         if(doIndication){
           if(entry != null){
             progressIndication((instNo.toDouble() / fullLen.toDouble()), entry.asString("CALIBRATION"));
+            lastIndicated = instNo;
+            await Future.delayed(const Duration(milliseconds: 10));
           }
           else if(lastIndicated + indicationStep < instNo){
             progressIndication((instNo.toDouble() / fullLen.toDouble()), null);
+            lastIndicated = instNo;
+            await Future.delayed(const Duration(milliseconds: 10));
           }
-          lastIndicated = instNo;
-          await Future.delayed(const Duration(milliseconds: 10));
         }
       }
     }

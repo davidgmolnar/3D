@@ -16,7 +16,7 @@ abstract class Const{
 
   static void loadParameters(Map<String, num> parameters){
     for(String key in parameters.keys){
-      __parameters[key] = parameters[key]!;
+      __parameters[key.toUpperCase()] = parameters[key]!;
     }
   }
 
@@ -51,7 +51,7 @@ abstract class Const{
 
   static num parse(final String str, Function(LogEntry) onError){
     if(str[0] == '@'){
-      final p = str.substring(1);
+      final p = str.substring(1).toUpperCase();
       if(__parameters.containsKey(p)){
         return __parameters[p]!;
       }
@@ -62,7 +62,7 @@ abstract class Const{
     }
 
     else if(str.startsWith("Parameters.")){
-      final p = str.substring(11);
+      final p = str.substring(11).toUpperCase();
       if(__parameters.containsKey(p)){
         return __parameters[p]!;
       }
