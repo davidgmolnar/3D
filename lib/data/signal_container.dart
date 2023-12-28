@@ -2,9 +2,9 @@ import '../ui/charts/chart_area.dart';
 import 'calibration/unit.dart';
 
 class Measurement{
-  final num value;
+  num value;
   /// Timestamp in ms
-  final int timeStamp;
+  int timeStamp;
 
   Measurement(this.value, this.timeStamp);
 

@@ -4,6 +4,7 @@ import 'package:characters/characters.dart';
 
 import '../../io/logger.dart';
 import '../../io/serializer.dart';
+import 'constants.dart';
 
 enum ParserState{
   // ignore: constant_identifier_names
@@ -205,6 +206,8 @@ class FrozenInstruction{
     required this.operands,
     required this.op
   });
+
+  int get numberOfChannelParameters => operands.fold(0, (previousValue, operand) => operand[0] == '#' ? previousValue + 1 : previousValue);
 
   Map<String, dynamic> toJson(){
     return {
@@ -469,6 +472,22 @@ class CalibrationScriptParser{
             await Future.delayed(const Duration(milliseconds: 10));
           }
           valid = false;
+        }
+
+        if(inst.numberOfChannelParameters != inst.operands.length){
+          for(final String operand in inst.operands){
+            if(operand[0] != '#'){
+              if(!Const.parsable(operand)){
+                final LogEntry entry = LogEntry.error("Constant expression '$operand' in block $blockNum cannot be parsed, if this is unexpected, notify 3D responsible");
+                script.context.add(entry);
+                if(doIndication){
+                  lineProgressIndication(1, entry.asString("CALIBRATION"));
+                  await Future.delayed(const Duration(milliseconds: 10));
+                }
+                valid = false;
+              }
+            }
+          }
         }
       }
       blockNum++;
