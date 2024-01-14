@@ -73,6 +73,9 @@ abstract class Serializer {
   static Future<LoadContext> _csvLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
     // TODO a nagyon nem változó részeken lehet valahogy spórolni kéne, pl bináris/int/double csatornákat külön lehetne kezelni, vagy egyéb módon memóriára optimalizálni
     // TODO a nem változó részek közül az első és utolsó pontot lehet megtartani így a calibrációs interpolálásnál felfutó élek meg a jelleg megmarad
+    // TODO ^^ de akkor a kurzor értékeket is interpolálni kell, most ez egy nearest measurement value
+
+    // TODO option interp import vagy zoh import, ezt signaldata[meas]-enként tárolni kell hogy mi volt mert akkor pl a kurzor értékek a kurzoridőhöz képesti legutóbbi értékek nem interp
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [];
     final bool doIndication = lineProgressIndication != null && indicationCount != null;

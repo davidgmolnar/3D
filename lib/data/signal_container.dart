@@ -13,8 +13,25 @@ class Measurement{
     "timeStamp": timeStamp
   };
 
-  PlotPoint toPlotPoint(ScalingInfo scaling){
+  PlotPoint toPlotPoint(final ScalingInfo scaling){
     return PlotPoint(x: (timeStamp - scaling.timeOffset) * scaling.timeScale, y: (value - scaling.valueOffset) * scaling.valueScale);
+  }
+
+  num interpAt(final Measurement other, final int ts){
+    if(timeStamp <= other.timeStamp){
+      if(ts == timeStamp){
+        return value;
+      }
+      else if(ts == other.timeStamp){
+        return other.value;
+      }
+      else{
+        return value + (other.value - value) / (other.timeStamp - timeStamp) * (ts - timeStamp);
+      }
+    }
+    else{
+      return other.interpAt(this, ts);
+    }
   }
 
   static Measurement fromJson(Map<String, num> map){

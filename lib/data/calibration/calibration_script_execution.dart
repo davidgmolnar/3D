@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../io/logger.dart';
 import '../data.dart';
 import '../signal_container.dart';
@@ -83,44 +85,48 @@ class CalibrationScriptProcessor{
 
     switch (inst.op) {
       case Operation.ADD:
-        return __add(inst, options);
-      /*case Operation.SUB:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => p0 + p1);
+      case Operation.SUB:
+        return __twoOperandBase(inst, options, (p0, p1) => p0 - p1);
       case Operation.MULT:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => p0 * p1);
       case Operation.DIV:
-        return 2;
-      case Operation.DERIVATE:
-        return 1;
+        return __twoOperandBase(inst, options, (p0, p1) => p0 / p1);
+      /*case Operation.DERIVATE:
+        return 1;*/
       case Operation.AND:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt());
       case Operation.NAND:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() & p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned nand
       case Operation.OR:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() | p1.toInt());
       case Operation.NOR:
-        return 2;
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() | p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned nor
       case Operation.XOR:
-        return 2;
-      case Operation.NOT:
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() ^ p1.toInt());
+      case Operation.XNOR:
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() ^ p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned xnor
+      /*case Operation.NOT:
         return 1;
       case Operation.ABS:
         return 1;
       case Operation.SHIFT:
         return 2;
       case Operation.F:
-        return 2;
+        return 2;*/
       case Operation.NOP:
-        return 0;
+        return null;
       case Operation.SKIPIF:
-        return 1;
-      case Operation.SET:
+        return null;
+      /*case Operation.SET:
         return 1;
       case Operation.DELETE:
-        return 1;
+        return 1;*/
       case Operation.MIN:
-        return 2;
-      case Operation.IF:
+        return __twoOperandBase(inst, options, (p0, p1) => min(p0, p1));
+      case Operation.MAX:
+        return __twoOperandBase(inst, options, (p0, p1) => max(p0, p1));
+      /*case Operation.IF:
         return 5;
       case Operation.INTEGRATE:
         return 1;
@@ -134,25 +140,25 @@ class CalibrationScriptProcessor{
   }
 
   static int __commonStartTime(final FrozenInstruction inst, final CalibrationOptions options){
-    int minTime = double.infinity.toInt();
-    for(final String ch in inst.operands){
-      final int chMinTime = signalData[options.measurement]![ch]!.values.first.timeStamp;
-      if(chMinTime < minTime){
-        minTime = chMinTime;
-      }
-    }
-    return minTime;
-  }
-
-  static int __commonEndTime(final FrozenInstruction inst, final CalibrationOptions options){
     int maxTime = double.negativeInfinity.toInt();
     for(final String ch in inst.operands){
-      final int chMaxTime = signalData[options.measurement]![ch]!.values.last.timeStamp;
-      if(chMaxTime > maxTime){
-        maxTime = chMaxTime;
+      final int chMinTime = signalData[options.measurement]![ch]!.values.first.timeStamp;
+      if(chMinTime > maxTime){
+        maxTime = chMinTime;
       }
     }
     return maxTime;
+  }
+
+  static int __commonEndTime(final FrozenInstruction inst, final CalibrationOptions options){
+    int minTime = double.infinity.toInt();
+    for(final String ch in inst.operands){
+      final int chMaxTime = signalData[options.measurement]![ch]!.values.last.timeStamp;
+      if(chMaxTime < minTime){
+        minTime = chMaxTime;
+      }
+    }
+    return minTime;
   }
 
   static void __commit(final String sig, final String meas, final List<Measurement> values){
@@ -160,11 +166,9 @@ class CalibrationScriptProcessor{
     signalData[meas]![sig]!.values.addAll(values);
   }
 
-  static LogEntry? __add(final FrozenInstruction inst, final CalibrationOptions options){
-    // ide kell egy közös idő starttól kezdve options.sampletime enkénti interp meas iterálás (nem resampled copy) a signalokra, ha csak egy akkor nem commit van hanem elementwise add konstanssal
-
+  static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num, num) op){
     if(inst.numberOfChannelParameters == 0){
-      return LogEntry.warning("Adding two constants via script is not recommended and not implemented");
+      return LogEntry.warning("Combining two constants via script is not recommended and therefore not implemented");
     }
     else if(inst.numberOfChannelParameters == 1){
       final String channelOperand = inst.operands.firstWhere((element) => element[0] == '#').substring(1);
@@ -182,19 +186,36 @@ class CalibrationScriptProcessor{
         signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
       }
       for(final Measurement point in signalData[options.measurement]![inst.result]!.values){
-        point.value += constantvalue;
+        point.value = op(point.value, constantvalue);
       }
       
     }
     else if(inst.numberOfChannelParameters == 2){
       final List<Measurement> values = [];
       int time = __commonStartTime(inst, options);
-      int endTime = __commonStartTime(inst, options);
+      int endTime = __commonEndTime(inst, options);
+      final String op0 = inst.operands[0].substring(1);
+      final String op1 = inst.operands[1].substring(1);
+      int p0Index = signalData[options.measurement]![op0]!.values.indexWhere((point) => point.timeStamp >= time);
+      int p1Index = signalData[options.measurement]![op1]!.values.indexWhere((point) => point.timeStamp >= time);
+
       for(; time < endTime; time += options.sampleTimeMs){
-        // interp ch1 value
-        // interp ch2 value
-        // values.add(Measurement(interp1+interp2, time))
+        while(signalData[options.measurement]![op0]!.values[p0Index].timeStamp < time){
+          p0Index++;
+        }
+        while(signalData[options.measurement]![op1]!.values[p1Index].timeStamp < time){
+          p1Index++;
+        }
+
+        final num p0 = signalData[options.measurement]![op0]!.values[p0Index - 1].interpAt(
+          signalData[options.measurement]![op0]!.values[p0Index], time
+        );
+        final num p1 = signalData[options.measurement]![op1]!.values[p1Index - 1].interpAt(
+          signalData[options.measurement]![op1]!.values[p1Index], time
+        );
+        values.add(Measurement(op(p0, p1), time));
       }
+
       __commit(inst.result, options.measurement, values);
     }
 

@@ -43,6 +43,8 @@ enum Operation{
   // ignore: constant_identifier_names
   XOR,
   // ignore: constant_identifier_names
+  XNOR,
+  // ignore: constant_identifier_names
   NOT,
   // ignore: constant_identifier_names
   ABS,
@@ -60,6 +62,8 @@ enum Operation{
   DELETE,
   // ignore: constant_identifier_names
   MIN,
+  // ignore: constant_identifier_names
+  MAX,
   // ignore: constant_identifier_names
   IF,
   // ignore: constant_identifier_names
@@ -93,6 +97,8 @@ extension FromString on Operation{
         return Operation.NOR;
       case "XOR":
         return Operation.XOR;
+      case "XNOR":
+        return Operation.XOR;
       case "NOT":
         return Operation.NOT;
       case "ABS":
@@ -113,6 +119,8 @@ extension FromString on Operation{
         return Operation.DELETE;
       case "MIN":
         return Operation.MIN;
+      case "MAX":
+        return Operation.MAX;
       case "IF":
         return Operation.IF;
       case "INTEGRATE":
@@ -148,6 +156,8 @@ extension FromString on Operation{
         return 2;
       case Operation.XOR:
         return 2;
+      case Operation.XNOR:
+        return 2;
       case Operation.NOT:
         return 1;
       case Operation.ABS:
@@ -165,6 +175,8 @@ extension FromString on Operation{
       case Operation.DELETE:
         return 1;
       case Operation.MIN:
+        return 2;
+      case Operation.MAX:
         return 2;
       case Operation.IF:
         return 5;
