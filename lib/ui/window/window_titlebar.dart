@@ -30,6 +30,7 @@ class _WindowButtonsState extends State<WindowButtons> {
   void maximizeOrRestore() {
     setState(() {
       appWindow.maximizeOrRestore();
+      // TODO meg kell próbálni ha ide rakok egy StyleManager.update()-t akkor a maximizeOrRestore gomb nyomására updatel-e a chart és nem bugol ki. Nem kritikus mert gesture-re megjavul a chart
     });
   }
 

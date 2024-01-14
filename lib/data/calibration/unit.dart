@@ -1,24 +1,40 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 enum Units{
+  mm,
   m,
   km,
+
+  ms,
   s,
   min,
   h,
+
   g,
+
   N,
-  A,
+  kN,
+
   mA,
-  V,
+  A,
+
   mV,
-  W,
+  V,
+
   mW,
+  W,
+  kW,
+
   K,
+
   J,
+  kJ,
+
   bar,
+
   rad // TODO ki kéne találni vmi kultúráltat a °, °C és a %-ra és akkor minden fasza
 }
 
@@ -27,13 +43,38 @@ const Map<Units, List<Map<Units, int>>> convertTable = {  // TODO ezt fájlból
   Units.W: [{Units.J: 1, Units.s: -1}, {Units.V: 1, Units.A: 1}]
 };
 
+const Map<Units?, Map<Units?, double>> prefixTableToBase = {  // TODO ezt fájlból
+  // Ha nincs benne akkor önmaga
+  Units.mm: {Units.m: 0.001},
+  Units.km: {Units.m: 1000},
+
+  Units.ms: {Units.s: 0.001},
+  Units.min: {Units.s: 60},
+  Units.h: {Units.s: 3600},
+
+  Units.kN: {Units.N: 1000},
+
+  Units.mA: {Units.A: 0.001},
+
+  Units.mV: {Units.V: 0.001},
+
+  Units.mW: {Units.W: 0.001},
+  Units.kW: {Units.W: 1000},
+
+  Units.kJ: {Units.J: 1000},
+
+  Units.rad: {null: pi / 180},
+  null: {null: 180 / pi},
+};
+
 class Unit{
   final Map<Units, int> components;
+  final double scalar;
 
-  const Unit({required this.components});
+  const Unit({required this.scalar, required this.components});
 
   factory Unit.fromUnit(Units unit){
-    return Unit(components: {unit: 1});
+    return Unit(components: {unit: 1}, scalar: 1);
   }
 
   static Unit? tryParse(final String str){
@@ -87,7 +128,7 @@ class Unit{
       }
     }
 
-    return Unit(components: components);
+    return Unit(components: components, scalar: 1);
   }
 
   Map<Units, int> __simplified(){
@@ -205,7 +246,7 @@ class Unit{
         copy[unit] = other.components[unit]!;
       }
     }
-    return Unit(components: copy);
+    return Unit(components: copy, scalar: scalar * other.scalar);
   }
 
   Unit operator /(final Unit other){
@@ -221,6 +262,37 @@ class Unit{
         copy[unit] = -other.components[unit]!;
       }
     }
-    return Unit(components: copy);
+    return Unit(components: copy, scalar: scalar / other.scalar);
+  }
+}
+
+
+Unit? unitMult(Unit? p0, Unit? p1){
+  if(p0 != null && p1 != null){
+    return p0 * p1;
+  }
+  else if(p0 != null){
+    return p0;
+  }
+  else if(p1 != null){
+    return p1;
+  }
+  else{
+    return null;
+  }
+}
+
+Unit? unitDiv(Unit? p0, Unit? p1){
+  if(p0 != null && p1 != null){
+    return p0 / p1;
+  }
+  else if(p0 != null){
+    return p0;
+  }
+  else if(p1 != null){
+    return const Unit(scalar: 1, components: {}) / p1;
+  }
+  else{
+    return null;
   }
 }

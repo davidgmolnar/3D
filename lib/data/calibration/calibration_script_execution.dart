@@ -5,6 +5,7 @@ import '../data.dart';
 import '../signal_container.dart';
 import 'calibration_script_parsing.dart';
 import 'constants.dart';
+import 'unit.dart';
 
 class CalibrationOptions{
   final bool cleanRebuild;
@@ -83,34 +84,35 @@ class CalibrationScriptProcessor{
       );
     }
 
+    // TODO olyanok nincsenek megcsinálva h pl összeadsz fokot radiánnal akkor az jól jöjjön ki
     switch (inst.op) {
       case Operation.ADD:
-        return __twoOperandBase(inst, options, (p0, p1) => p0 + p1);
+        return __twoOperandBase(inst, options, (p0, p1) => p0 + p1, null);
       case Operation.SUB:
-        return __twoOperandBase(inst, options, (p0, p1) => p0 - p1);
+        return __twoOperandBase(inst, options, (p0, p1) => p0 - p1, null);
       case Operation.MULT:
-        return __twoOperandBase(inst, options, (p0, p1) => p0 * p1);
+        return __twoOperandBase(inst, options, (p0, p1) => p0 * p1, (p0, p1) => unitMult(p0, p1));
       case Operation.DIV:
-        return __twoOperandBase(inst, options, (p0, p1) => p0 / p1);
-      /*case Operation.DERIVATE:
-        return 1;*/
+        return __twoOperandBase(inst, options, (p0, p1) => p0 / p1, ((p0, p1) => unitDiv(p0, p1)));
+      case Operation.DERIVATE: // TODO a zoh import ezt rendesen megbaszkodja
+        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1) => (p1.value - p0.value) / (p1.timeStamp - p0.timeStamp) * 1000.0, (p0) => 0, (p0) => unitDiv(p0, const Unit(scalar: 1, components: {Units.s: 1})));
       case Operation.AND:
-        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt());
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt(), null);
       case Operation.NAND:
-        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() & p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned nand
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() & p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int nand
       case Operation.OR:
-        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() | p1.toInt());
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() | p1.toInt(), null);
       case Operation.NOR:
-        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() | p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned nor
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() | p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int nor
       case Operation.XOR:
-        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() ^ p1.toInt());
+        return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() ^ p1.toInt(), null);
       case Operation.XNOR:
-        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() ^ p1.toInt()) & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned xnor
-      /*case Operation.NOT:
-        return 1;
+        return __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() ^ p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int xnor
+      case Operation.NOT:
+        return __oneOperandBase(inst, options, (p0) => ~p0.toInt() & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned int not
       case Operation.ABS:
-        return 1;
-      case Operation.SHIFT:
+        return __oneOperandBase(inst, options, (p0) => p0.abs());
+      /*case Operation.SHIFT:
         return 2;
       case Operation.F:
         return 2;*/
@@ -119,18 +121,18 @@ class CalibrationScriptProcessor{
       case Operation.SKIPIF:
         return null;
       /*case Operation.SET:
-        return 1;
-      case Operation.DELETE:
         return 1;*/
+      case Operation.DELETE:
+        return __delete(inst, options);
       case Operation.MIN:
-        return __twoOperandBase(inst, options, (p0, p1) => min(p0, p1));
+        return __twoOperandBase(inst, options, (p0, p1) => min(p0, p1), null);
       case Operation.MAX:
-        return __twoOperandBase(inst, options, (p0, p1) => max(p0, p1));
+        return __twoOperandBase(inst, options, (p0, p1) => max(p0, p1), null);
       /*case Operation.IF:
-        return 5;
+        return 5;*/
       case Operation.INTEGRATE:
-        return 1;
-      case Operation.RCLP:
+        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1) => p0.value + (p0.value + p1.value) / 2 * (p1.timeStamp - p0.timeStamp) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
+      /*case Operation.RCLP:
         return 2;
       case Operation.CONST:
         return 2;*/
@@ -161,14 +163,18 @@ class CalibrationScriptProcessor{
     return minTime;
   }
 
-  static void __commit(final String sig, final String meas, final List<Measurement> values){
+  static void __commit(final String sig, final String meas, final List<Measurement> values, final Unit? unit){
     signalData[meas]![sig]!.values.clear();
     signalData[meas]![sig]!.values.addAll(values);
+
+    if(unit != null){
+      signalData[meas]![sig]!.unit = unit;
+    }
   }
 
-  static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num, num) op){
+  static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num, num) op, final Unit? Function(Unit?, Unit?)? resultUnit){
     if(inst.numberOfChannelParameters == 0){
-      return LogEntry.warning("Combining two constants via script is not recommended and therefore not implemented");
+      return LogEntry.error("Combining two constants via script is not recommended and therefore not implemented");
     }
     else if(inst.numberOfChannelParameters == 1){
       final String channelOperand = inst.operands.firstWhere((element) => element[0] == '#').substring(1);
@@ -216,9 +222,70 @@ class CalibrationScriptProcessor{
         values.add(Measurement(op(p0, p1), time));
       }
 
-      __commit(inst.result, options.measurement, values);
+      final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit): null; 
+      __commit(inst.result, options.measurement, values, unit);
     }
 
     return null;
   }
+
+  static LogEntry? __oneOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num) op){
+    if(inst.numberOfChannelParameters != 1){
+      return LogEntry.error("One operand operations must be called on a channel not a constant");
+    }
+    final String channelOperand = inst.operands[0].substring(1);
+
+    if(inst.result != channelOperand){
+      signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
+    }
+    for(final Measurement point in signalData[options.measurement]![inst.result]!.values){
+      point.value = op(point.value);
+    }
+    return null;
+  }
+
+  static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalibrationOptions options, final num Function(Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
+    if(inst.numberOfChannelParameters != 1){
+      return LogEntry.error("One operand operations must be called on a channel not a constant");
+    }
+    final String channelOperand = inst.operands[0].substring(1);
+
+    if(inst.result != channelOperand){
+      signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
+    }
+    signalData[options.measurement]![inst.result]!.values[0].value = initialValue(signalData[options.measurement]![inst.result]!.values[0].value);
+    for(int i = 1; i < signalData[options.measurement]![inst.result]!.values.length; i++){
+      signalData[options.measurement]![inst.result]!.values[i].value = op(
+        signalData[options.measurement]![inst.result]!.values[i - 1],
+        signalData[options.measurement]![inst.result]!.values[i]
+      );
+    }
+
+    final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![channelOperand]!.unit): null; 
+    if(unit == null){
+      signalData[options.measurement]![inst.result]!.unit = unit;
+    }
+    return null;
+  }
+
+  static LogEntry? __delete(final FrozenInstruction inst, final CalibrationOptions options){
+    if(inst.numberOfChannelParameters != 1){
+      return LogEntry.error("The delete operation needs a channel to be specified, not a constant");
+    }
+    
+    final String channelOperand = inst.operands[0].substring(1);
+    signalData[options.measurement]![channelOperand]!.values.clear();
+    signalData[options.measurement]!.remove(channelOperand);
+    return null;
+  }
+
+  // __set
+
+  // __shift
+
+  // __const
+
+  // __if
+
+  // __f
 }

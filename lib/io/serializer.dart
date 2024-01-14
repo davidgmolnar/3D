@@ -76,6 +76,9 @@ abstract class Serializer {
     // TODO ^^ de akkor a kurzor értékeket is interpolálni kell, most ez egy nearest measurement value
 
     // TODO option interp import vagy zoh import, ezt signaldata[meas]-enként tárolni kell hogy mi volt mert akkor pl a kurzor értékek a kurzoridőhöz képesti legutóbbi értékek nem interp
+    // meg kell vizsgálni a bejövő értékre hogy ugyanaz mint a .last és mint a .length-2edik. Ilyenkor az új pont hozzáadása helyett a .last timestampjét kell felülírni az új timestampre
+    // ^^ ha nem ugyanaz akkor hozzá kell adni az új pontot ahogy eddig
+    // ^^ ha az új != last és zoh akkor előbb a hozzá kell adni last érték új timestampet, majd az új érték új timestampet
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [];
     final bool doIndication = lineProgressIndication != null && indicationCount != null;

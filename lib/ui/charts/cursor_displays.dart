@@ -73,7 +73,7 @@ class CursorInfo{
           ret[meas]![signal] = cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!;
         }
         else if(cursors[index].deltaType == DeltaDisplayType.DERIVATE){
-          ret[meas]![signal] = (cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!) / (cursors[index].timeStamp - cursors[absIdx].timeStamp) * 1000; // 1/ms to 1/s
+          ret[meas]![signal] = (cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!) / (cursors[index].timeStamp - cursors[absIdx].timeStamp) * 1000.0; // 1/ms to 1/s
         }
         else if(cursors[index].deltaType == DeltaDisplayType.INTEGRAL){
           ret[meas]![signal] = signalIntegral(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp);

@@ -32,7 +32,7 @@ num signalIntegral(final String meas, final String signal, final int ref, final 
     Measurement currVal = signalData[meas]![signal]!.values[currIndex];
     Measurement nextVal = signalData[meas]![signal]!.values[currIndex + inc];
     while(ref < stop ? nextVal.timeStamp <= stop : nextVal.timeStamp >= stop){
-      sum += ((currVal.value + nextVal.value) / 2) * (currVal.timeStamp - nextVal.timeStamp).abs() / 1000; // ms to s
+      sum += ((currVal.value + nextVal.value) / 2) * (currVal.timeStamp - nextVal.timeStamp).abs() / 1000.0; // ms to s
       currIndex = currIndex! + inc;
       currVal = signalData[meas]![signal]!.values[currIndex];
       nextVal = signalData[meas]![signal]!.values[currIndex + inc];

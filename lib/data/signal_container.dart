@@ -42,7 +42,7 @@ class Measurement{
 class SignalContainer{
   final List<Measurement> values;
   final String dbcName;
-  final Unit? unit;
+  Unit? unit;
   String displayName;
 
   SignalContainer({
