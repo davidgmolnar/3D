@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../data/calibration/calibration_script_execution.dart';
+import '../data/calibration/calibration_script_runtime.dart';
 import '../data/data.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
@@ -108,12 +110,39 @@ abstract class ChildProcessController{
           localLogger.addAll(result.context);
         }
         return; // no kill
+
       case ResponseFinishableType.TRACE_EDITOR_DATA:
         TraceSettingsProvider.reload(finishedTask.data);
         ChartController.shownDurationNotifier.update((value) {
           value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;
         });
-        break;
+        break; // kill
+
+      case ResponseFinishableType.RUN_CAL:
+        CalibrationOptions? options = CalibrationOptions.fromJson(finishedTask.data["options"]);
+        if(options == null){
+          final LogEntry entry = LogEntry.error("Internal error when serializing calibration options: ${finishedTask.data["options"]}");
+          sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
+            "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
+            "value": 0,
+            "status": entry.asString("CALIBRATION")
+          }));
+          return;
+        }
+
+        for(String path in finishedTask.data["script_paths"]){
+          CalibrationScriptRuntime.run(File(path), options,
+            progressIndication: (final double linePercentage, final String? entry) {
+              sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
+                "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
+                "value": linePercentage,
+                "status": entry ?? 0
+              }));
+            }, indicationCount: 100
+          );
+        }
+        return; // no kill
+        
       default:
         localLogger.error("Finished task ${finishedTask.type.name} handling not implemented");
     }

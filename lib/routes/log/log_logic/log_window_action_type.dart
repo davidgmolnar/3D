@@ -1,6 +1,7 @@
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/theme/theme.dart';
+import 'calibration_io_controller.dart';
 import 'log_io_controller.dart';
 
 enum LogWindowType{
@@ -46,17 +47,27 @@ void logHandlePeriodicUpdateReceived(Map data){
   switch (PeriodicUpdateType.values[data['type']]) {
     case PeriodicUpdateType.IO_LINE_PERCENTAGE:
       try{
-        if(logWindowType != LogWindowType.IMPORT && logWindowType != LogWindowType.EXPORT){
+        if(logWindowType != LogWindowType.IMPORT && logWindowType != LogWindowType.EXPORT && logWindowType != LogWindowType.CALCULATION){
           localLogger.warning("PeriodicUpdateType.IO_LINE_PERCENTAGE was received but this window was neither a LogWindowType.IMPORT or LogWindowType.EXPORT");
           return;
         }
-        final double linePercentage = data['value'];
+        final double linePercentage = data['value'].toDouble();
         final dynamic entry = data['status'];
         if(linePercentage != 0){
-          LogIOInfoController.setLinePercentage(linePercentage);
+          if(logWindowType == LogWindowType.CALCULATION){
+            CalibrationIoController.setLinePercentage(linePercentage);
+          }
+          else{
+            LogIOInfoController.setLinePercentage(linePercentage);
+          }
         }
         if(entry.runtimeType == String){
-          LogIOInfoController.addToContext(entry);
+          if(logWindowType == LogWindowType.CALCULATION){
+            CalibrationIoController.addToContext(entry);
+          }
+          else{
+            LogIOInfoController.addToContext(entry);
+          }
         }
       }catch(exc){
         localLogger.error("PeriodicUpdateType.IO_LINE_PERCENTAGE exception $exc");

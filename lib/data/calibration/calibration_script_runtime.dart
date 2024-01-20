@@ -27,9 +27,10 @@ class CalibrationScriptRuntime{
       if(progressIndication != null){
         progressIndication(0, entry.asString("CALIBRATION"));
       }
+      return false;
 
     }
-    final LogEntry entry = LogEntry.error("Cannot run calibration file on measurement $measurement as it does not exist");
+    final LogEntry entry = LogEntry.error("Cannot run calibration file on measurement $measurement as it does not exist, available measurements are: ${signalData.keys}");
     localLogger.add(entry);
     if(progressIndication != null){
       progressIndication(0, entry.asString("CALIBRATION"));
@@ -98,7 +99,7 @@ class CalibrationScriptRuntime{
     late final CompiledCalibration calibration;
     bool needsCompilation = true;
     final String filename = file.uri.path.split('/').last;
-    if(await __wasCompiled(filename, progressIndication: progressIndication)){
+    if(!await __wasCompiled(filename, progressIndication: progressIndication)){
       if(cleanRebuild){
         await FileSystem.tryDeleteFromLocalAsync(__calibPath, filename);
       }
@@ -122,7 +123,36 @@ class CalibrationScriptRuntime{
       calibration = await CalibrationScriptParser.run(file);
       localLogger.addAll(calibration.context);
       calibrationValid &= await CalibrationScriptParser.validate(calibration);
-      calibrationValid &= calibration.context.any((entry) => entry.level == LogLevel.ERROR || entry.level == LogLevel.CRITICAL);
+
+      if(!calibrationValid){
+        LogEntry entry = LogEntry.error("Build validation failed");
+        localLogger.add(entry);
+        if(doIndication){
+          progressIndication(1, entry.asString("CALIBRATION"));
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+      }
+
+      calibrationValid &= !calibration.context.any((entry) => entry.level == LogLevel.ERROR || entry.level == LogLevel.CRITICAL);
+      if(!calibrationValid){
+        LogEntry entry = LogEntry.error("Build had some errors:");
+        localLogger.add(entry);
+        if(doIndication){
+          progressIndication(1, entry.asString("CALIBRATION"));
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+
+        for(LogEntry entry in calibration.context){
+          if(entry.level == LogLevel.ERROR || entry.level == LogLevel.CRITICAL){
+            localLogger.add(entry);
+            if(doIndication){
+              progressIndication(1, entry.asString("CALIBRATION"));
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+          }
+        }
+      }
+      
     }
 
 

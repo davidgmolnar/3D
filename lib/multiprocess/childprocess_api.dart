@@ -64,7 +64,7 @@ enum ResponseFinishableType{
   // ignore: constant_identifier_names
   IMPORT_LOG,
     // ignore: constant_identifier_names
-  IMPORT_CAL,
+  RUN_CAL,
     // ignore: constant_identifier_names
   IMPORT_UI,
   // ignore: constant_identifier_names
@@ -73,8 +73,6 @@ enum ResponseFinishableType{
   SETTING,
   // ignore: constant_identifier_names
   TRACE_EDITOR_DATA,
-  // ignore: constant_identifier_names
-  CALCULATION
 }
 
 class ResponseFinishable{

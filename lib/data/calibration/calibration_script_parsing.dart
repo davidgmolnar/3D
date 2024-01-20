@@ -293,7 +293,7 @@ class CalibrationScriptParser{
     final decodedLength = str.length;
 
     if(originalLength != decodedLength){
-      final LogEntry entry = LogEntry.error("${originalLength - decodedLength} non-UTF-8 characters were ignored in calibration file ${file.absolute.path}");
+      final LogEntry entry = LogEntry.warning("${originalLength - decodedLength} non-UTF-8 characters were ignored in calibration file ${file.absolute.path}");
       context.add(entry);
       if(doIndication){
         lineProgressIndication(0, entry.asString("CALIBRATION"));

@@ -18,12 +18,14 @@ class MainWindowToolbar extends StatelessWidget {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
-  static _importCALWindow (){}
   static _importUIWindow (){}
 
   static _exportLogWindow (){}
 
-  static _calfileRunnerWindow (){}
+  static _calfileRunnerWindow () async {
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Califile Runner", const Size(1000,700), const Offset(0,0)));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
+  }
   static _traceEditorWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
@@ -39,7 +41,6 @@ class MainWindowToolbar extends StatelessWidget {
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
-      ToolbarDropdownItem(onPressed: _importCALWindow, text: "Import Calfile"),
       ToolbarDropdownItem(onPressed: _importUIWindow, text: "Import UI file"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
@@ -53,7 +54,6 @@ class MainWindowToolbar extends StatelessWidget {
 
   static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
     ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
-    ToolbarDropdownItem(onPressed: _importCALWindow, text: "Import Calfile"),
     ToolbarDropdownItem(onPressed: _importUIWindow, text: "Import UI file"),
     ToolbarDropdownItem(onPressed: _exportLogWindow, text: "Export Log"),
     ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),

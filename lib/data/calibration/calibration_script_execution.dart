@@ -17,6 +17,37 @@ class CalibrationOptions{
     required this.measurement,
     required this.sampleTimeMs
   });
+
+  CalibrationOptions copyWith({bool? cleanRebuild, String? measurement, int? sampleTimeMs}){
+    return CalibrationOptions(
+      cleanRebuild: cleanRebuild ?? this.cleanRebuild,
+      measurement: measurement ?? this.measurement,
+      sampleTimeMs: sampleTimeMs ?? this.sampleTimeMs
+    );
+  }
+
+  Map<String, dynamic> asJson(){
+    return {
+      "cr": cleanRebuild,
+      "meas": measurement,
+      "st": sampleTimeMs
+    };
+  }
+
+  static CalibrationOptions? fromJson(Map json){
+    if(!json.containsKey('meas') || json['meas'] is! String){
+      return null;
+    }
+    else if(!json.containsKey('cr') || json['cr'] is! bool){
+      return null;
+    }
+    else if(!json.containsKey('st') || json['st'] is! int){
+      return null;
+    }
+    else{
+      return CalibrationOptions(cleanRebuild: json["cr"], measurement: json["meas"], sampleTimeMs: json["st"]);
+    }
+  }
 }
 
 class CalibrationScriptProcessor{
@@ -253,12 +284,12 @@ class CalibrationScriptProcessor{
     if(inst.result != channelOperand){
       signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
     }
+    Measurement previousValue = signalData[options.measurement]![inst.result]!.values[0];
     signalData[options.measurement]![inst.result]!.values[0].value = initialValue(signalData[options.measurement]![inst.result]!.values[0].value);
     for(int i = 1; i < signalData[options.measurement]![inst.result]!.values.length; i++){
-      signalData[options.measurement]![inst.result]!.values[i].value = op(
-        signalData[options.measurement]![inst.result]!.values[i - 1],
-        signalData[options.measurement]![inst.result]!.values[i]
-      );
+      num newPoint = op(previousValue, signalData[options.measurement]![inst.result]!.values[i]);
+      previousValue = signalData[options.measurement]![inst.result]!.values[i];
+      signalData[options.measurement]![inst.result]!.values[i].value = newPoint;
     }
 
     final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![channelOperand]!.unit): null; 
@@ -274,9 +305,14 @@ class CalibrationScriptProcessor{
     }
     
     final String channelOperand = inst.operands[0].substring(1);
-    signalData[options.measurement]![channelOperand]!.values.clear();
-    signalData[options.measurement]!.remove(channelOperand);
-    return null;
+    if(signalData[options.measurement]!.containsKey(channelOperand)){
+      signalData[options.measurement]![channelOperand]!.values.clear();
+      signalData[options.measurement]!.remove(channelOperand);
+      return null;
+    }
+    else{
+      return LogEntry.error("The channel $channelOperand does not exist in measurement ${options.measurement}");
+    }
   }
 
   // __set

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import '../../io/logger.dart';
+import 'unit.dart';
 
 abstract class Const{
   static final Map<String, num> __parameters = {
@@ -42,10 +43,59 @@ abstract class Const{
       return false;
     }
     else if(str.startsWith("Parameters.")){
+      return false;
+    }
+    else if(str.startsWith("FAVG")){
+      if(int.tryParse(str.substring(4)) != null){
+        return true;
+      }
+      else{
+        final String rest = str.substring(4);
+        for(int i = 0; i < rest.length - 1; i++){
+          if(double.tryParse(rest.substring(0, rest.length - i)) != null){
+            String maybeUnit = rest.substring(rest.length - i);
+            if(maybeUnit.toUpperCase() == "SEC"){
+              maybeUnit = "s";
+            }
+            return Units.values.map((e) => e.name).contains(maybeUnit);
+          }
+        }
+        return false;
+      }
+    }
+    else if(["<", ">", "=", "<=", ">=", "<>", "!="].contains(str)){
       return true;
     }
+    else if(str.toUpperCase().startsWith("DIM=")){
+      String maybeUnit = str.substring(5, str.length - 1);
+      if(maybeUnit.toUpperCase() == "SEC"){
+        maybeUnit = "s";
+      }
+      else if(maybeUnit == "km/h"){
+        return true;
+      }
+      return Units.values.map((e) => e.name).contains(maybeUnit);
+    }
     else{
-      return num.tryParse(str) != null;
+      num? res = num.tryParse(str);
+      if(res != null){
+        return true;
+      }
+
+      for(int i = 0; i < str.length - 1; i++){
+        if(double.tryParse(str.substring(0, str.length - i)) != null){
+          String maybeUnit = str.substring(str.length - i);
+          if(maybeUnit.toUpperCase() == "SEC"){
+            maybeUnit = "s";
+          }
+          else if(maybeUnit == "km/h"){
+            return true;
+          }
+          return Units.values.map((e) => e.name).contains(maybeUnit);
+        }
+      }
+      return false;
+
     }
   }
 
