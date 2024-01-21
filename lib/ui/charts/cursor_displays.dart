@@ -116,7 +116,7 @@ class CursorTooltip extends StatelessWidget {
     return Positioned(
       left: pos! + cursorHorizontalDragBuffer,
       child: Container(
-        width: 250,
+        width: 280,
         color: StyleManager.globalStyle.secondaryColor.withOpacity(0.6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -182,7 +182,7 @@ class CursorTooltip extends StatelessWidget {
                     value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
                   });
                 },
-                elementWidth: 80,
+                elementWidth: 90,
               ),
             cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
               CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex))

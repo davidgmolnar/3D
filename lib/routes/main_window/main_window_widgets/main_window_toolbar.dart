@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:log_analyser/data/settings.dart';
-import 'package:log_analyser/routes/settings/settings_logic/settings_window_type.dart';
 
+import '../../../data/settings.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
 import '../../log/log_logic/log_window_action_type.dart';
+import '../../settings/settings_logic/settings_window_type.dart';
 import '../../startup.dart';
 import '../../window_type.dart';
 
@@ -23,7 +23,7 @@ class MainWindowToolbar extends StatelessWidget {
   static _exportLogWindow (){}
 
   static _calfileRunnerWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Califile Runner", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calfile Runner", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
   static _traceEditorWindow () async {

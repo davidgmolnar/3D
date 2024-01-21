@@ -158,6 +158,14 @@ class CalibrationScriptRuntime{
 
     if(calibrationValid){
       FileSystem.trySaveMapToLocalAsync(__calibPath, "$filename.comp", calibration.toJson());
+      
+      LogEntry entry = LogEntry.info("Successfully compiled $filename");
+      localLogger.add(entry);
+      if(doIndication){
+        progressIndication(1, entry.asString("CALIBRATION"));
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+
       return calibration;
     }
     else{

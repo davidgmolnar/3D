@@ -63,6 +63,7 @@ class _SlidingSwitchState extends State<SlidingSwitch> {
                 }),
                 child: Text(
                   widget.labels[i],
+                  style: StyleManager.textStyle,
                 ),
               ),
             ))

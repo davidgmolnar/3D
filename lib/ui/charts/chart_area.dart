@@ -135,12 +135,12 @@ class _ChartAreaState extends State<ChartArea> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
-        const TopCursorDisplay(),
+        TopCursorDisplay(),
         Expanded(
           child: Row(
-            children: const [
+            children: [
               ChartScalerContainer(),
               Expanded(child: _ChartGestureArea()),
             ],

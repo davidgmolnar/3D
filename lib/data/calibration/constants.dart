@@ -1,7 +1,10 @@
 import 'dart:math';
 
+import '../../io/file_system.dart';
 import '../../io/logger.dart';
 import 'unit.dart';
+
+const String parameterPath = "CalibrationParameters/";
 
 abstract class Const{
   static final Map<String, num> __parameters = {
@@ -15,10 +18,37 @@ abstract class Const{
     "DEG2RAD": pi / 180,
   };
 
+  static bool parameterIsBasic(final String parameter){
+    return ["PI", "2PI", "PI/2", "E", "G", "LN2", "RAD2DEG", "DEG2RAD"].contains(parameter.toUpperCase());
+  }
+
+  static Map<String, num> get parameters => __parameters;
+
   static void loadParameters(Map<String, num> parameters){
     for(String key in parameters.keys){
       __parameters[key.toUpperCase()] = parameters[key]!;
     }
+    __syncToDisk();
+  }
+
+  static void addParameter(final String key, final num value){
+    __parameters[key.toUpperCase()] = value;
+    __syncToDisk();
+  }
+
+  static void removeParameter(final String key){
+    __parameters.remove(key.toUpperCase());
+    __syncToDisk();
+  }
+
+  static void __syncToDisk(){
+    FileSystem.trySaveMapToLocalAsync(parameterPath, "calibration_parameters.json", __parameters);
+  }
+
+  static void loadFromDisk(){
+    clearParameters();
+    Map<String, num> loaded = FileSystem.tryLoadMapFromLocalSync(parameterPath, "calibration_parameters.json").cast<String, num>();
+    loadParameters(loaded);
   }
 
   static void clearParameters() {
@@ -33,6 +63,7 @@ abstract class Const{
       "RAD2DEG": 180 / pi,
       "DEG2RAD": pi / 180,
     });
+    __syncToDisk();
   }
 
   static bool parsable(final String str){
@@ -43,7 +74,7 @@ abstract class Const{
       return false;
     }
     else if(str.startsWith("Parameters.")){
-      return false;
+      return true;
     }
     else if(str.startsWith("FAVG")){
       if(int.tryParse(str.substring(4)) != null){

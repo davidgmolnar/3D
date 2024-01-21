@@ -20,9 +20,9 @@ class SettingsBottomBar extends StatelessWidget{
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(onPressed: () => onCancel(), child: const Text("Cancel")),
-          TextButton(onPressed: () => onApply(), child: const Text("Apply")),
-          //TextButton(onPressed: () => onApplyAndClose(), child: const Text("OK")),
+          TextButton(onPressed: () => onCancel(), child: Text("Cancel", style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),)),
+          TextButton(onPressed: () => onApply(), child: Text("Apply", style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),)),
+          //TextButton(onPressed: () => onApplyAndClose(), child: const Text("OK", style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),)),
         ]
       )
     );

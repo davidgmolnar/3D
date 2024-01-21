@@ -7,6 +7,7 @@ import '../../../ui/common.dart';
 import '../../../ui/input_widgets/buttons.dart';
 import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/theme/theme.dart';
+import '../../../ui/toolbar/toolbar_item.dart';
 import '../log_logic/calibration_io_controller.dart';
 import 'log_container.dart';
 
@@ -94,65 +95,6 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                       },
                       child: Text("Select", style: StyleManager.textStyle,),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          onPressed: (){
-                            if(CalibrationIoController.calIOInfoNotifier.value.processing){
-                              return;
-                            }
-                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
-                              showError(context, "Nothing was selected");
-                              return;
-                            }
-                            if(CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.measurement == "Please select measurement"){
-                              showError(context, "A measurement must be selected");
-                              return;
-                            }
-                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
-                            try{
-                              CalibrationIoController.sendFilesToMaster();
-                            }catch(exc){
-                              showError(context, "Error when starting calfile execution: ${exc.toString()}");
-                            }
-                            setState(() {});
-                            CalibrationIoController.calIOInfoNotifier.update((value) {});
-                          },
-                          icon: Icon(Icons.play_arrow, color: StyleManager.globalStyle.primaryColor,),
-                        ),
-                        IconButton(
-                          onPressed: (){
-                            showError(context, "This feature is WIP");
-                            return;
-                            /*if(CalibrationIoController.calIOInfoNotifier.value.processing){
-                              return;
-                            }
-                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
-                              showError(context, "Nothing was selected");
-                              return;
-                            }
-                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
-                            CalibrationIoController.calIOInfoNotifier.value.isDebug = true;
-                            try{
-                              CalibrationIoController.sendFilesToMaster();
-                            }catch(exc){
-                              showError(context, "Error when starting calfile execution: ${exc.toString()}");
-                            }
-                            setState(() {});
-                            CalibrationIoController.calIOInfoNotifier.update((value) {});*/
-                          },
-                          icon: Icon(Icons.bug_report, color: StyleManager.globalStyle.primaryColor,),
-                        ),
-                        IconButton(
-                          onPressed: (){
-                            showError(context, "This feature is WIP");
-                            return;
-                          },
-                          icon: Icon(FontAwesomeIcons.arrowRightToBracket, color: StyleManager.globalStyle.primaryColor,),
-                        ),
-                      ],
-                    ),
                     ToggleableTextField<String>(
                       initialValue: CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.measurement,
                       parser: (p0) => p0,
@@ -188,6 +130,73 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                         ),
                       ],
                     ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          onPressed: (){
+                            if(CalibrationIoController.calIOInfoNotifier.value.processing){
+                              return;
+                            }
+                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
+                              showError(context, "Nothing was selected");
+                              return;
+                            }
+                            if(CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.measurement == "Please select measurement"){
+                              showError(context, "A measurement must be selected");
+                              return;
+                            }
+                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
+                            try{
+                              CalibrationIoController.sendFilesToMaster();
+                            }catch(exc){
+                              showError(context, "Error when starting calfile execution: ${exc.toString()}");
+                            }
+                            setState(() {});
+                            CalibrationIoController.calIOInfoNotifier.update((value) {});
+                          },
+                          icon: Icon(Icons.play_arrow, color: StyleManager.globalStyle.primaryColor,),
+                          splashRadius: 10,
+                        ),
+                        IconButton(
+                          onPressed: (){
+                            showError(context, "This feature is WIP");
+                            return;
+                            /*if(CalibrationIoController.calIOInfoNotifier.value.processing){
+                              return;
+                            }
+                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
+                              showError(context, "Nothing was selected");
+                              return;
+                            }
+                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
+                            CalibrationIoController.calIOInfoNotifier.value.isDebug = true;
+                            try{
+                              CalibrationIoController.sendFilesToMaster();
+                            }catch(exc){
+                              showError(context, "Error when starting calfile execution: ${exc.toString()}");
+                            }
+                            setState(() {});
+                            CalibrationIoController.calIOInfoNotifier.update((value) {});*/
+                          },
+                          icon: Icon(Icons.bug_report, color: StyleManager.globalStyle.primaryColor,),
+                          splashRadius: 10,
+                        ),
+                        IconButton(
+                          onPressed: (){
+                            showError(context, "This feature is WIP");
+                            return;
+                          },
+                          icon: Icon(FontAwesomeIcons.arrowRightToBracket, color: StyleManager.globalStyle.primaryColor,),
+                          splashRadius: 10,
+                        ),
+                        ToolbarItemWithDropdown(iconData: Icons.more_horiz, dropdownItems: [
+                          const ToolbarDropdownItem(onPressed: CalibrationIoController.compileOnly, text: "Compile only"),
+                          ToolbarDropdownItem(onPressed: (){CalibrationIoController.compileAll(context);}, text: "Compile all"),
+                          ToolbarDropdownItem(onPressed: (){CalibrationIoController.editParameters(context);}, text: "Edit parameters"),
+                        ], iconHeight: toolbarItemSize, invertColors: true,),
+                      ],
+                    ),
                   ],
                 ),
               )
@@ -220,12 +229,12 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: CalibrationIoController.calIOInfoNotifier.value.linePercentage,),
+                      child: LinearProgressIndicator(value: CalibrationIoController.calIOInfoNotifier.value.linePercentage, color: StyleManager.globalStyle.primaryColor,),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
                       child: LinearProgressIndicator(value: CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
-                        CalibrationIoController.calIOInfoNotifier.value.scriptsFinished / CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length: 0),
+                        CalibrationIoController.calIOInfoNotifier.value.scriptsFinished / CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length: 0, color: StyleManager.globalStyle.primaryColor,),
                     ),
                   ],
                 ),

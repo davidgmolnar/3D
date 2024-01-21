@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../data/calibration/calibration_script_parsing.dart';
 import '../data/calibration/unit.dart';
 import '../data/signal_container.dart';
 import 'logger.dart';

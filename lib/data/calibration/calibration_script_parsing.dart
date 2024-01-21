@@ -230,7 +230,7 @@ class FrozenInstruction{
   }
 
   static FrozenInstruction fromJson(Map data){
-    return FrozenInstruction(result: data["result"], operands: data["operands"], op: Operation.values[data["op"]]);
+    return FrozenInstruction(result: data["result"], operands: data["operands"].cast<String>().toList(), op: Operation.values[data["op"]]);
   }
 }
 
@@ -257,7 +257,7 @@ class CompiledCalibration{
       "fileLastModified": fileLastModified.millisecondsSinceEpoch,
       "requiredChannels": requiredChannels,
       "resultChannels": resultChannels,
-      "instructions": instructions.map((block) => block.map((inst) => inst.toJson()))
+      "instructions": instructions.map((block) => block.map((inst) => inst.toJson()).toList()).toList()
     };
   }
 
@@ -266,9 +266,9 @@ class CompiledCalibration{
       return CompiledCalibration(
         filename: data["filename"],
         fileLastModified: DateTime.fromMillisecondsSinceEpoch(data["fileLastModified"]),
-        requiredChannels: data["requiredChannels"],
-        resultChannels: data["resultChannels"],
-        instructions: data["instructions"].map((block) => block.map((inst) => FrozenInstruction.fromJson(inst))),
+        requiredChannels: data["requiredChannels"].cast<String>().toList(),
+        resultChannels: data["resultChannels"].cast<String>().toList(),
+        instructions: data["instructions"].map((block) => block.map((inst) => FrozenInstruction.fromJson(inst)).cast<FrozenInstruction>().toList()).cast<List<FrozenInstruction>>().toList(),
         context: []
       );
     }

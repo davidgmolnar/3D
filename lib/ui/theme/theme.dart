@@ -75,7 +75,8 @@ abstract class StyleManager{
   
   static ThemeData? getThemeData(BuildContext context) => ThemeData.dark().copyWith(
     scaffoldBackgroundColor: globalStyle.bgColor,
-    backgroundColor: globalStyle.bgColor,
+    //backgroundColor: globalStyle.bgColor,
+    colorScheme: ColorScheme.fromSwatch(backgroundColor: globalStyle.bgColor),
     textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(bodyColor: globalStyle.textColor),
     canvasColor: globalStyle.bgColor,
     primaryColor: globalStyle.primaryColor,

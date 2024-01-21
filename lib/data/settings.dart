@@ -189,7 +189,7 @@ abstract class TraceSettingsProvider{
       for(String measurement in traceSetting.keys){
         for(int i = 0; i < traceSetting[measurement]!.length; i++){
           if(traceSetting[measurement]![i].scalingGroup == group){
-            double diff = (traceSetting[measurement]![i].span * 0.01 * delta * _scrollMultiplierVertical);
+            double diff = (traceSetting[measurement]![i].span * 0.001 * delta * _scrollMultiplierVertical);
             if(diff == 0){
               diff = delta.sign * traceSetting[measurement]![i].span * 0.01;
             }

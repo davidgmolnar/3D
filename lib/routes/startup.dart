@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
+import '../data/calibration/constants.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
@@ -135,6 +136,7 @@ Future<void> postStartup() async {
   else{
     await ChildProcess.start().then((_) => ChildProcess.signalReady());
   }
+  Const.loadFromDisk();
 }
 
 Future<void> shutdown() async {

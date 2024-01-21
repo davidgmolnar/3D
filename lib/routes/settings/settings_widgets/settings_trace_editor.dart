@@ -75,7 +75,7 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               widget.traceSetting.scalingGroup = p0;
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(scalingGroup: p0);
             },
-            width: 50,
+            width: 60, // 50
           ),
           /*ToggleableTextField<num>(
             initialValue: widget.traceSetting.span,
