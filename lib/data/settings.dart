@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
+import '../io/logger.dart';
 import '../routes/window_type.dart';
 import '../ui/charts/chart_logic/chart_controller.dart';
 import '../ui/theme/theme.dart';
@@ -80,6 +81,40 @@ abstract class TraceSettingsProvider{
         }
       ).toList();
     });
+    _postUpdate(measurement);
+  }
+
+  static void updateEntriesFrom(final String measurement, final List<String> signals){
+    if(!signalData.containsKey(measurement)){
+      return;
+    }
+
+    traceSettingNotifier.update((value) {
+      if(!traceSettingNotifier.value.containsKey(measurement)){
+        value[measurement] = [];
+      }
+      for(final String sig in signals){
+        if(!signalData[measurement]!.containsKey(sig)){
+          localLogger.error("Skipping signal $sig from updating as it does not exist in measurement $measurement");
+          continue;
+        }
+
+        final int sigIdx = value[measurement]!.indexWhere((ts) => ts.signal == sig);
+        final num minValue = signalData[measurement]![sig]!.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
+        final num maxValue = signalData[measurement]![sig]!.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+
+        if(sigIdx == -1){
+          value[measurement]!.add(TraceSetting(signal: sig, color: _nextColor, scalingGroup: _nextScalingGroup, displayName: sig)
+          ..offset = minValue..span = maxValue - minValue
+          );
+        }
+        else{
+          value[measurement]![sigIdx].offset = minValue;
+          value[measurement]![sigIdx].span = maxValue - minValue;
+        }
+      }
+    });
+
     _postUpdate(measurement);
   }
 

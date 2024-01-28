@@ -193,18 +193,26 @@ abstract class ChildProcessController{
       List<Command> toRemove = [];
       for(Command command in _backlog.keys){
         if(_activeChildProcesses.containsKey(command.childProcessPort)){
-          for(Uint8List fragment in Protocol.encode(command.encode())){
-            await Future.delayed(const Duration(milliseconds: 10));
-            _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+          try{
+            for(Uint8List fragment in Protocol.encode(command.encode())){
+              await Future.delayed(const Duration(milliseconds: 10));
+              _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+            }
+            toRemove.add(command);
+          }catch(ex){
+            _backlog[command] = _backlog[command]! + 1;
+            if(_backlog[command]! >= 10){
+              toRemove.add(command);
+              localLogger.error("Error when attempting to send message to process at port ${command.childProcessPort}");
+            }
           }
-          toRemove.add(command);
         }
         else{
           _backlog[command] = _backlog[command]! + 1;
-            if(_backlog[command]! >= 10){
-              toRemove.add(command);
-              localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
-            }
+          if(_backlog[command]! >= 10){
+            toRemove.add(command);
+            localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
+          }
         }
       }
       for(int i = 0; i < toRemove.length; i++) {

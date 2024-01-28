@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../io/file_system.dart';
 import '../../io/logger.dart';
 import '../data.dart';
+import '../settings.dart';
 import 'calibration_script_execution.dart';
 import 'calibration_script_parsing.dart';
 
@@ -43,7 +44,7 @@ class CalibrationScriptRuntime{
     final Set<String> requirements = requiredChannels.toSet();
     for(FileSystemEntity file in elements.whereType<File>()){
       final String filename = file.uri.path.split('/').last;
-      Map calibrationJson = await FileSystem.tryLoadMapFromLocalAsync(__calibPath, filename);
+      Map calibrationJson = await FileSystem.tryLoadMapFromLocalAsync(__calibPath, "$filename.comp");
       final Set<String> results = calibrationJson["resultChannels"].toSet();
       final Set<String> intersect = requirements.intersection(results);
       if(intersect.isNotEmpty){
@@ -58,9 +59,10 @@ class CalibrationScriptRuntime{
     }
   }
 
-  static Future<bool> __wasCompiled(final String filename, {Function(double, String?)? progressIndication}) async {
-    final List<FileSystemEntity> elements = await FileSystem.tryListElementsInLocalAsync(__calibPath);
-    return elements.any((element) => element is File && element.uri.path.split('/').last == "$filename.comp");
+  static bool __wasCompiled(final String filename){
+    return FileSystem.tryListElementsInLocalSync(__calibPath).any(
+      (element) => element is File && element.uri.path.split('/').last == filename
+    );
   }
 
   static Future<void> run(final File file, final CalibrationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
@@ -82,7 +84,7 @@ class CalibrationScriptRuntime{
     }
     
     try{
-      CalibrationScriptProcessor.exec(calibration.instructions, options, progressIndication: progressIndication, indicationCount: indicationCount);
+      await CalibrationScriptProcessor.exec(calibration.instructions, options, progressIndication: progressIndication, indicationCount: indicationCount);
     }
     catch(ex){
       final LogEntry entry = LogEntry.error("Exception when running script: ${ex.toString()}");
@@ -91,6 +93,8 @@ class CalibrationScriptRuntime{
         progressIndication(1, entry.asString(localLogger.loggerName));
       }
     }
+
+    __updateTraceSettings(options.measurement, calibration.resultChannels);
   }
 
   static Future<CompiledCalibration?> runCompilationOnly(final File file, final bool cleanRebuild, {Function(double, String?)? progressIndication}) async {
@@ -99,20 +103,34 @@ class CalibrationScriptRuntime{
     late final CompiledCalibration calibration;
     bool needsCompilation = true;
     final String filename = file.uri.path.split('/').last;
-    if(!await __wasCompiled(filename, progressIndication: progressIndication)){
+    if(__wasCompiled("$filename.comp")){
       if(cleanRebuild){
-        await FileSystem.tryDeleteFromLocalAsync(__calibPath, filename);
+        await FileSystem.tryDeleteFromLocalAsync(__calibPath, "$filename.comp");
       }
       else{
-        Map calibrationJson = await FileSystem.tryLoadMapFromLocalAsync(__calibPath, filename);
+        Map calibrationJson = await FileSystem.tryLoadMapFromLocalAsync(__calibPath, "$filename.comp");
         if(calibrationJson.isNotEmpty){
           CompiledCalibration? calibrationTmp = CompiledCalibration.fromJson(calibrationJson);
           if(calibrationTmp != null && await CalibrationScriptParser.validate(calibrationTmp) && calibrationTmp.fileLastModified == await file.lastModified()){
             calibration = calibrationTmp;
             needsCompilation = false;
+
+            LogEntry entry = LogEntry.info("Found valid previously compiled version");
+            localLogger.add(entry);
+            if(doIndication){
+              progressIndication(1, entry.asString("CALIBRATION"));
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+
           }
           else{
-            await FileSystem.tryDeleteFromLocalAsync(__calibPath, filename);
+            LogEntry entry = LogEntry.error("Invalidated previously compiled version, recompiling");
+            localLogger.add(entry);
+            if(doIndication){
+              progressIndication(1, entry.asString("CALIBRATION"));
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+            await FileSystem.tryDeleteFromLocalAsync(__calibPath, "$filename.comp");
           }
         }
       }
@@ -152,7 +170,6 @@ class CalibrationScriptRuntime{
           }
         }
       }
-      
     }
 
 
@@ -170,7 +187,7 @@ class CalibrationScriptRuntime{
     }
     else{
       LogEntry entry = LogEntry.error("Build failed");
-      FileSystem.tryDeleteFromLocalAsync(__calibPath, filename);
+      FileSystem.tryDeleteFromLocalAsync(__calibPath, "$filename.comp");
       localLogger.add(entry);
       if(doIndication){
         progressIndication(1, entry.asString("CALIBRATION"));
@@ -178,5 +195,13 @@ class CalibrationScriptRuntime{
       }
       return null;
     }
+  }
+
+  static void __updateTraceSettings(final String measurement, final List<String> signals){
+    if(!signalData.containsKey(measurement)){
+      localLogger.error("Measurement $measurement referenced by __updateTraceSettings did not exist");
+      return;
+    }
+    TraceSettingsProvider.updateEntriesFrom(measurement, signals);
   }
 }

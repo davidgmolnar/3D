@@ -51,7 +51,7 @@ class CalibrationOptions{
 }
 
 class CalibrationScriptProcessor{
-  static void exec(final List<List<FrozenInstruction>> script, final CalibrationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
+  static Future<void> exec(final List<List<FrozenInstruction>> script, final CalibrationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
     final bool doIndication = progressIndication != null && indicationCount != null;
     int instNo = 0;
     int blockNo = 0;
@@ -107,14 +107,6 @@ class CalibrationScriptProcessor{
   }
 
   static LogEntry? __doInstruction(FrozenInstruction inst, CalibrationOptions options){
-    if(!signalData[options.measurement]!.containsKey(inst.result)){
-      signalData[options.measurement]![inst.result] = SignalContainer(
-        dbcName: inst.result,
-        values: [],
-        displayName: inst.result
-      );
-    }
-
     // TODO olyanok nincsenek megcsinálva h pl összeadsz fokot radiánnal akkor az jól jöjjön ki
     switch (inst.op) {
       case Operation.ADD:
@@ -173,9 +165,9 @@ class CalibrationScriptProcessor{
   }
 
   static int __commonStartTime(final FrozenInstruction inst, final CalibrationOptions options){
-    int maxTime = double.negativeInfinity.toInt();
+    int maxTime = -double.maxFinite.toInt();
     for(final String ch in inst.operands){
-      final int chMinTime = signalData[options.measurement]![ch]!.values.first.timeStamp;
+      final int chMinTime = signalData[options.measurement]![ch.substring(1)]!.values.first.timeStamp;
       if(chMinTime > maxTime){
         maxTime = chMinTime;
       }
@@ -184,9 +176,9 @@ class CalibrationScriptProcessor{
   }
 
   static int __commonEndTime(final FrozenInstruction inst, final CalibrationOptions options){
-    int minTime = double.infinity.toInt();
+    int minTime = double.maxFinite.toInt();
     for(final String ch in inst.operands){
-      final int chMaxTime = signalData[options.measurement]![ch]!.values.last.timeStamp;
+      final int chMaxTime = signalData[options.measurement]![ch.substring(1)]!.values.last.timeStamp;
       if(chMaxTime < minTime){
         minTime = chMaxTime;
       }
@@ -195,6 +187,14 @@ class CalibrationScriptProcessor{
   }
 
   static void __commit(final String sig, final String meas, final List<Measurement> values, final Unit? unit){
+    if(!signalData[meas]!.containsKey(sig)){
+      signalData[meas]![sig] = SignalContainer(
+        dbcName: sig,
+        values: [],
+        displayName: sig
+      );
+    }
+
     signalData[meas]![sig]!.values.clear();
     signalData[meas]![sig]!.values.addAll(values);
 
@@ -204,6 +204,7 @@ class CalibrationScriptProcessor{
   }
 
   static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num, num) op, final Unit? Function(Unit?, Unit?)? resultUnit){
+    final List<Measurement> values = [];
     if(inst.numberOfChannelParameters == 0){
       return LogEntry.error("Combining two constants via script is not recommended and therefore not implemented");
     }
@@ -219,16 +220,17 @@ class CalibrationScriptProcessor{
         return constParseError;
       }
 
-      if(inst.result != channelOperand){
-        signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
+      for(final Measurement point in signalData[options.measurement]![channelOperand]!.values){
+        values.add(Measurement(op(point.value, constantvalue), point.timeStamp));
+        if(values.last.value.isNaN || values.last.value.isInfinite){
+          return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
+        }
       }
-      for(final Measurement point in signalData[options.measurement]![inst.result]!.values){
-        point.value = op(point.value, constantvalue);
-      }
+
+      __commit(inst.result, options.measurement, values, signalData[options.measurement]![channelOperand]!.unit);
       
     }
     else if(inst.numberOfChannelParameters == 2){
-      final List<Measurement> values = [];
       int time = __commonStartTime(inst, options);
       int endTime = __commonEndTime(inst, options);
       final String op0 = inst.operands[0].substring(1);
@@ -244,13 +246,30 @@ class CalibrationScriptProcessor{
           p1Index++;
         }
 
-        final num p0 = signalData[options.measurement]![op0]!.values[p0Index - 1].interpAt(
-          signalData[options.measurement]![op0]!.values[p0Index], time
-        );
-        final num p1 = signalData[options.measurement]![op1]!.values[p1Index - 1].interpAt(
-          signalData[options.measurement]![op1]!.values[p1Index], time
-        );
+        late final num p0;
+        late final num p1;
+        if(p0Index == 0){
+          p0 = signalData[options.measurement]![op0]!.values[p0Index].value;
+        }
+        else{
+          p0 = signalData[options.measurement]![op0]!.values[p0Index - 1].interpAt(
+            signalData[options.measurement]![op0]!.values[p0Index], time
+          );
+        }
+        
+        if(p1Index == 0){
+          p1 = signalData[options.measurement]![op1]!.values[p0Index].value;
+        }
+        else{
+          p1 = signalData[options.measurement]![op1]!.values[p1Index - 1].interpAt(
+            signalData[options.measurement]![op1]!.values[p1Index], time
+          );
+        }
         values.add(Measurement(op(p0, p1), time));
+
+        if(values.last.value.isNaN || values.last.value.isInfinite){
+          return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
+        }
       }
 
       final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit): null; 
@@ -261,41 +280,42 @@ class CalibrationScriptProcessor{
   }
 
   static LogEntry? __oneOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num) op){
+    final List<Measurement> values = [];
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("One operand operations must be called on a channel not a constant");
     }
     final String channelOperand = inst.operands[0].substring(1);
 
-    if(inst.result != channelOperand){
-      signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
+    for(final Measurement point in signalData[options.measurement]![channelOperand]!.values){
+      values.add(Measurement(op(point.value), point.timeStamp));
+
+      if(values.last.value.isNaN || values.last.value.isInfinite){
+        return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
+      }
     }
-    for(final Measurement point in signalData[options.measurement]![inst.result]!.values){
-      point.value = op(point.value);
-    }
+
+    __commit(inst.result, options.measurement, values, signalData[options.measurement]![channelOperand]!.unit);
     return null;
   }
 
   static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalibrationOptions options, final num Function(Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
+    final List<Measurement> values = [];
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("One operand operations must be called on a channel not a constant");
     }
     final String channelOperand = inst.operands[0].substring(1);
 
-    if(inst.result != channelOperand){
-      signalData[options.measurement]![inst.result] = signalData[options.measurement]![channelOperand]!;
-    }
-    Measurement previousValue = signalData[options.measurement]![inst.result]!.values[0];
-    signalData[options.measurement]![inst.result]!.values[0].value = initialValue(signalData[options.measurement]![inst.result]!.values[0].value);
-    for(int i = 1; i < signalData[options.measurement]![inst.result]!.values.length; i++){
-      num newPoint = op(previousValue, signalData[options.measurement]![inst.result]!.values[i]);
-      previousValue = signalData[options.measurement]![inst.result]!.values[i];
-      signalData[options.measurement]![inst.result]!.values[i].value = newPoint;
+    Measurement previousValue = signalData[options.measurement]![channelOperand]!.values[0];
+    values.add(Measurement(initialValue(signalData[options.measurement]![channelOperand]!.values[0].value), signalData[options.measurement]![channelOperand]!.values[0].timeStamp));
+    for(int i = 1; i < signalData[options.measurement]![channelOperand]!.values.length; i++){
+      values.add(Measurement(op(previousValue, signalData[options.measurement]![channelOperand]!.values[i]), signalData[options.measurement]![channelOperand]!.values[i].timeStamp));
+      if(values.last.value.isNaN || values.last.value.isInfinite){
+        return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
+      }
     }
 
     final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![channelOperand]!.unit): null; 
-    if(unit == null){
-      signalData[options.measurement]![inst.result]!.unit = unit;
-    }
+    __commit(inst.result, options.measurement, values, unit);
     return null;
   }
 

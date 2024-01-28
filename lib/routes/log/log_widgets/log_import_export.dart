@@ -156,12 +156,20 @@ class _LogImportState extends State<LogImport> {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: LogIOInfoController.logIOInfoNotifier.value.linePercentage, color: StyleManager.globalStyle.primaryColor,),
+                      child: LinearProgressIndicator(
+                        value: LogIOInfoController.logIOInfoNotifier.value.linePercentage,
+                        color: StyleManager.globalStyle.primaryColor,
+                        backgroundColor: StyleManager.globalStyle.bgColor,
+                      ),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: LogIOInfoController.logIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
-                        LogIOInfoController.logIOInfoNotifier.value.filesLoaded / LogIOInfoController.logIOInfoNotifier.value.selectedPaths.length: 0, color: StyleManager.globalStyle.primaryColor,),
+                      child: LinearProgressIndicator(
+                        value: LogIOInfoController.logIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
+                          LogIOInfoController.logIOInfoNotifier.value.filesLoaded / LogIOInfoController.logIOInfoNotifier.value.selectedPaths.length : 0,
+                        color: StyleManager.globalStyle.primaryColor,
+                        backgroundColor: StyleManager.globalStyle.bgColor,
+                      ),
                     ),
                   ],
                 ),

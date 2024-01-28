@@ -66,7 +66,7 @@ abstract class FileSystem{
       return {};
     }
     final RandomAccessFile access = await file.open(mode: FileMode.read);
-    List<int> buffer = [];
+    List<int> buffer = List.filled(await file.length(), -1);
     await access.readInto(buffer);
     await access.close();
     if(deleteWhenDone){

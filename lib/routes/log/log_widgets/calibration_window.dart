@@ -229,12 +229,20 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: CalibrationIoController.calIOInfoNotifier.value.linePercentage, color: StyleManager.globalStyle.primaryColor,),
+                      child: LinearProgressIndicator(
+                        value: CalibrationIoController.calIOInfoNotifier.value.linePercentage,
+                        color: StyleManager.globalStyle.primaryColor,
+                        backgroundColor: StyleManager.globalStyle.bgColor,
+                      ),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: LinearProgressIndicator(value: CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
-                        CalibrationIoController.calIOInfoNotifier.value.scriptsFinished / CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length: 0, color: StyleManager.globalStyle.primaryColor,),
+                      child: LinearProgressIndicator(
+                        value: CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
+                          CalibrationIoController.calIOInfoNotifier.value.scriptsFinished / CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length : 0,
+                        color: StyleManager.globalStyle.primaryColor,
+                        backgroundColor: StyleManager.globalStyle.bgColor,
+                        ),
                     ),
                   ],
                 ),
