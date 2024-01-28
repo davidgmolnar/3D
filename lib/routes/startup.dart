@@ -19,7 +19,7 @@ import 'window_type.dart';
 
 Map<WindowType,String> windowTypeTitle = {
   WindowType.INITIAL: "Loading",
-  WindowType.MAIN_WINDOW: "3D Log Analyser",
+  WindowType.MAIN_WINDOW: "3D Log Analyzer",
   WindowType.SETTINGS: "Settings",
   WindowType.TIME_SERIES_CHART: "Chart",
   WindowType.MAP_CHART: "Map",
@@ -88,7 +88,6 @@ void runSelectedApp() async {
   doWhenWindowReady(() {
     if(windowSetup != null){
       appWindow.title = windowSetup!.title;
-      StyleManager.title = windowSetup!.title;
       appWindow.size = windowSetup!.size;
       appWindow.position = windowSetup!.position;
       appWindow.alignment = Alignment.center;
@@ -115,6 +114,7 @@ Future<bool> tryStartup(List<String> args) async {
       localLogger = Logger(mainLogPath, "${windowType.name} @$localSocketPort");
       localLogger.start();
       windowSetup = WindowSetupInfo.fromJson(FileSystem.tryLoadMapFromLocalSync("", args[2], deleteWhenDone: true));
+      StyleManager.title = windowSetup!.title;
     }
   }
   catch (exc){

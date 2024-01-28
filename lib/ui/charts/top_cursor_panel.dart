@@ -60,7 +60,7 @@ class _TopCursorDisplayState extends State<TopCursorDisplay> {
             },
           ),
           cursorInfoNotifier.value.cursors.isEmpty ?
-            Text("No cursors set", style: StyleManager.textStyle,)
+            Text("No markers set", style: StyleManager.textStyle,)
             :
             Expanded(
               child: Row(

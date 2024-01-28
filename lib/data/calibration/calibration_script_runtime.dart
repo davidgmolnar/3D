@@ -122,6 +122,7 @@ class CalibrationScriptRuntime{
               await Future.delayed(const Duration(milliseconds: 10));
             }
 
+            return calibration;
           }
           else{
             LogEntry entry = LogEntry.error("Invalidated previously compiled version, recompiling");

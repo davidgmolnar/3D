@@ -18,12 +18,12 @@ class MainWindowToolbar extends StatelessWidget {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
-  static _importUIWindow (){}
+  static _importCustomChartWindow (){}
 
   static _exportLogWindow (){}
 
   static _calfileRunnerWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calfile Runner", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calibration", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
   static _traceEditorWindow () async {
@@ -41,7 +41,7 @@ class MainWindowToolbar extends StatelessWidget {
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
-      ToolbarDropdownItem(onPressed: _importUIWindow, text: "Import UI file"),
+      ToolbarDropdownItem(onPressed: _importCustomChartWindow, text: "Import Custom Chart"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
     ToolbarItem(iconData: Icons.calculate, onPressed: _calfileRunnerWindow),
@@ -54,7 +54,7 @@ class MainWindowToolbar extends StatelessWidget {
 
   static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
     ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
-    ToolbarDropdownItem(onPressed: _importUIWindow, text: "Import UI file"),
+    ToolbarDropdownItem(onPressed: _importCustomChartWindow, text: "Import Custom Chart"),
     ToolbarDropdownItem(onPressed: _exportLogWindow, text: "Export Log"),
     ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
     ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),

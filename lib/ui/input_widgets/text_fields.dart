@@ -30,7 +30,7 @@ class _ToggleableTextFieldState<T> extends State<ToggleableTextField<T>> {
   void _onPressed(){
     final T? parsedValue = widget.parser(_controller.text);
     if(parsedValue == null){
-      showError(context, "Invalid value $parsedValue");
+      showError(context, "Value could not be parsed: $parsedValue");
       return;
     }
     value = parsedValue.toString();

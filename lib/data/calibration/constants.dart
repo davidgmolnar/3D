@@ -59,7 +59,7 @@ abstract class Const{
       "PI/2": pi / 2,
       "E": e,
       "G": 9.80665,
-      "LN2": log(2),
+      "LN2": ln2,
       "RAD2DEG": 180 / pi,
       "DEG2RAD": pi / 180,
     });

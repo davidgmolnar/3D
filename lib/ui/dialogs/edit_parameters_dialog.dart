@@ -22,7 +22,7 @@ class EditSingleParameter extends StatelessWidget {
             child: Text("$parameterKey:", style: StyleManager.textStyle,),
           ),
           const Spacer(),
-          (Const.parameterIsBasic(parameterKey)) ?
+          Const.parameterIsBasic(parameterKey) ?
           Container(
             width: 350,
             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
@@ -39,7 +39,8 @@ class EditSingleParameter extends StatelessWidget {
 
               final Evaluation maybeEval = ConstEval.run(p0);
               if(maybeEval.failResult != null){
-                return "0";
+                showError(context, maybeEval.failResult!);
+                return null;
               }
               else{
                 return maybeEval.value.toString();
@@ -52,19 +53,13 @@ class EditSingleParameter extends StatelessWidget {
                 updater();
                 return;
               }
-
-              final Evaluation maybeEval = ConstEval.run(p0);
-              if(maybeEval.failResult != null){
-                showError(context, maybeEval.failResult!);
-              }
               else{
-                Const.addParameter(parameterKey, maybeEval.value);
-                updater();
+                return;
               }
             },
             width: 350,
           ),
-          (Const.parameterIsBasic(parameterKey)) ?
+          Const.parameterIsBasic(parameterKey) ?
           const SizedBox(width: 50,)
           :
           IconButton(
@@ -119,6 +114,7 @@ class _EditParametersDialogState extends State<EditParametersDialog> {
                       return;
                     }
                     Const.addParameter(newParameter, 0);
+                    newParameter = "New parameter name";
                     update();
                   },
                   child: Text("Add", style: StyleManager.textStyle,)
