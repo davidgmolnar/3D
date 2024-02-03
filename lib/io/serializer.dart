@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dart_dbc_parser/dart_dbc_parser.dart';
 
 import '../data/calibration/unit.dart';
+import '../data/settings.dart';
 import '../data/signal_container.dart';
 import 'logger.dart';
 
@@ -51,11 +55,11 @@ abstract class Serializer {
     try{
       String extension = file.path.split('.').last;
       if(await file.exists()){
-        switch (extension) {
+        switch (extension.toLowerCase()) {
           case "csv":
             return await _csvLoader(file, lineProgressIndication: lineProgressIndication, indicationCount: indicationCount);
           case "bin":
-            return await _binaryLoader(file);
+            return await _binaryLoader(file, lineProgressIndication: lineProgressIndication, indicationCount: indicationCount);
           //case "txt":
           //  return await _txtLogLoader(file);
           default:
@@ -125,7 +129,7 @@ abstract class Serializer {
         if(doIndication){
           lineProgressIndication(0, entry.asString(localLogger.loggerName));
         }
-        return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
+        return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
       int timeIndex = signals.indexOf('Time');
       double? timeToMsMultiplier = timeUnitToMsMultiplier[units[signals.indexOf('Time')]];
@@ -135,7 +139,7 @@ abstract class Serializer {
         if(doIndication){
           lineProgressIndication(0, entry.asString(localLogger.loggerName));
         }
-        return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
+        return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
       for(int i = 0; i < signals.length; i++){
         if(i != timeIndex){
@@ -184,11 +188,130 @@ abstract class Serializer {
     return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }
 
-  static Future<LoadContext> _binaryLoader(File file) async {
-    // Map<String, SignalContainer> data = {};
-    throw UnimplementedError();
-    // ...
-    // return data;
+  static Future<LoadContext> _binaryLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
+    // TODO csvloader kommentek itt is érvényesek
+    Map<String, SignalContainer> storage = {};
+    List<LogEntry> context = [];
+
+    final bool doIndication = lineProgressIndication != null && indicationCount != null;
+    {
+      final LogEntry entry = LogEntry.info("Started loading bin ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    }
+    {
+      final LogEntry entry = LogEntry.info("Reading file ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    }
+    await Future.delayed(const Duration(milliseconds: 10));
+    Uint8List bytes = await file.readAsBytes();
+    {
+      final LogEntry entry = LogEntry.info("File read ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+      }
+    }
+
+    // ignore: constant_identifier_names
+    const int PACKET_LEN_3D_FORMAT = 14;
+    // ignore: constant_identifier_names
+    const int CAN_LEN_3D_FORMAT = 10;
+    late final int indicationStep;
+    if(doIndication){
+      indicationStep = (bytes.length ~/ PACKET_LEN_3D_FORMAT) ~/ indicationCount;
+    }
+
+    final List<String>? dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+    if(dbcPaths == null || dbcPaths.isEmpty){
+      final LogEntry entry = LogEntry.error("DBC database was not set, cant decode binary log, skipping file");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(1, entry.asString(localLogger.loggerName));
+      }
+      return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
+    }
+
+    final DBCDatabase can = await DBCDatabase.loadFromFile(dbcPaths.map((e) => File(e)).toList());
+    if(can.database.isEmpty){
+      final LogEntry entry = LogEntry.error("Failed to load DBC database, cant decode binary log, skipping file");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(1, entry.asString(localLogger.loggerName));
+      }
+      return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
+    }
+    {
+      final LogEntry entry = LogEntry.info("Successfully loaded DBC database from files $dbcPaths");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(0, entry.asString(localLogger.loggerName));
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+    }
+
+    Set<int> unknownCANIDs = {};
+    int prevTimeStamp = 0;
+    int timeStampOffset = 0;
+    int packetCnt = 0;
+    for(int i = 0; i < bytes.length; i += PACKET_LEN_3D_FORMAT){
+      if(doIndication && packetCnt % indicationStep == 0){
+        lineProgressIndication(i / bytes.length, null);
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+
+      packetCnt++;
+      final int canID = bytes.sublist(i, i + 2).buffer.asByteData().getUint16(0);
+      if(!can.database.containsKey(canID)){
+        if(!unknownCANIDs.contains(canID)){
+          final LogEntry entry = LogEntry.warning("Unknown CANID $canID at pos $i skipping packet");
+          context.add(entry);
+          if(doIndication){
+            lineProgressIndication(i / bytes.length, entry.asString(localLogger.loggerName));
+            await Future.delayed(const Duration(milliseconds: 10));
+          }
+          unknownCANIDs.add(canID);
+        }
+        continue;
+      }
+      final int timeStampMS = bytes.sublist(i + CAN_LEN_3D_FORMAT, i + PACKET_LEN_3D_FORMAT).buffer.asByteData().getUint32(0);
+      if(timeStampMS < prevTimeStamp){
+        final LogEntry entry = LogEntry.warning("Packet at pos $i had ${prevTimeStamp - timeStampMS} ms earlier timestamp than the previous one, adjusting time to be continuous");
+        context.add(entry);
+        /*if(doIndication){
+          lineProgressIndication(i / bytes.length, entry.asString(localLogger.loggerName));
+          await Future.delayed(const Duration(milliseconds: 10));
+        }*/
+        timeStampOffset += timeStampMS - prevTimeStamp;
+      }
+      prevTimeStamp = timeStampMS;
+
+      final Map<String, num> newSignalValues = can.decode(bytes.sublist(i, i + CAN_LEN_3D_FORMAT));
+      for(final String signal in newSignalValues.keys){
+        if(!storage.containsKey(signal)){
+          storage[signal] = SignalContainer(dbcName: signal, values: [], displayName: signal, unit: Unit.tryParse(can.database[canID]![signal]!.unit));
+        }
+
+        if(storage[signal]!.values.isNotEmpty && newSignalValues[signal]! == storage[signal]!.values.last.value){
+          storage[signal]!.values.last = Measurement(newSignalValues[signal]!, timeStampMS - timeStampOffset);
+        }
+        else{
+          storage[signal]!.values.add(Measurement(newSignalValues[signal]!, timeStampMS - timeStampOffset));
+        }
+      }
+    }
+    
+    final LogEntry entry = LogEntry.info("Successfully loaded binary ${file.absolute.path}");
+    context.add(entry);
+    if(doIndication){
+      lineProgressIndication(1, entry.asString(localLogger.loggerName));
+    }
+    return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }
 
   /*static Future<LoadContext> loadCalfile(File file) async {

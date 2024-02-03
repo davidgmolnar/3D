@@ -39,7 +39,7 @@ class LogIOInfoController{
       if(entry.contains("ERROR")){
         value.error = true;
       }
-      if(entry.contains("Successfully loaded") || entry.contains('skipping file')){
+      if(entry.contains("Successfully loaded csv") || entry.contains("Successfully loaded binary") || entry.contains('skipping file')){
         value.filesLoaded++;
         if(value.filesLoaded == value.selectedPaths.length){
           value.processing = false;

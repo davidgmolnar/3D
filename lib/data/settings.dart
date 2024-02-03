@@ -1,9 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:log_analyser/extensions.dart';
 
+import '../io/file_system.dart';
 import '../io/logger.dart';
+import '../multiprocess/childprocess.dart';
+import '../multiprocess/childprocess_controller.dart';
 import '../routes/window_type.dart';
 import '../ui/charts/chart_logic/chart_controller.dart';
 import '../ui/theme/theme.dart';
@@ -15,22 +17,64 @@ import 'updateable_valuenotifier.dart';
 const int _scrollMultiplierVertical = 1; // setting
 const int _dragMultiplierVertical = 1; // setting
 
-final Map<String, List<Setting>> _defaultSettings = {
-  "Visual": [
-    Setting(identifier: "Theme", type: SettingType.SELECTION, selection: StyleManager.getStyleList(), max: null, min: null, value: StyleManager.getStyleList().indexOf(StyleManager.activeStyle)),
-  ]
+final Map<String, Setting> __defaultSettings = {
+  "visual.theme": Setting(identifier: "visual.theme", type: SettingType.SELECTION, selection: StyleManager.getStyleList(), max: null, min: null, value: StyleManager.getStyleList().indexOf(StyleManager.activeStyle)),
+  "dbc.pathlist": Setting(identifier: "dbc.pathlist", type: SettingType.STRLIST, selection: [], max: null, min: null, value: 0)
 };
 
 abstract class SettingsProvider{
-  static final Map<String, List<Setting>> setting = _defaultSettings;
+  static final Map<String, Setting> __setting = __defaultSettings;
+  static const String __settingsPath = "Settings/";
 
-  static Map<String, List> get toJsonFormattable =>
-    setting.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
-
-  static set update(Map<String, List> newData){
-    for(String category in newData.keys){
-      setting.update(category, (value) => newData[category]!.map((e) => Setting.fromJson(e)).toList().removedWhere((element) => element == null) as List<Setting>);
+  static void __syncToDisk() async {
+    await FileSystem.trySaveMapToLocalAsync(__settingsPath, "settings.json", toJsonFormattable);
+    if(windowType == WindowType.MAIN_WINDOW){
+      ChildProcessController.triggerSettingsUpdateInChildProcesses();
     }
+    else{
+      ChildProcess.triggerSettingsUpdateInMaster();
+    }
+  }
+
+  static void loadFromDisk() async {
+    Map loaded = await FileSystem.tryLoadMapFromLocalAsync(__settingsPath, "settings.json");
+    Map<String, Setting?> loadedEntries = loaded.map((key, value) => MapEntry(key as String, Setting.fromJson(value)));
+    loadedEntries.removeWhere((key, value) => value == null);
+    __setting.addAll(loadedEntries.cast<String, Setting>());
+    localLogger.info("Settings reloaded");
+  }
+
+  static Map<String, Map<String, dynamic>> get toJsonFormattable =>
+    __setting.map((key, value) => MapEntry(key, value.asJson));
+
+  static set setting(final Map<String, Setting> newData){
+    __setting.clear();
+    for(String newSetting in newData.keys){
+      if(newData[newSetting]!.trySet(newData[newSetting]!.value)){
+        __setting[newSetting] = newData[newSetting]!;
+      }
+    }
+    __syncToDisk();
+  }
+
+  static bool update(final String settingsPath, final dynamic newValue){
+    if(__setting.containsKey(settingsPath)){
+      if(newValue is num && __setting[settingsPath]!.type != SettingType.STRLIST){
+        final bool success = __setting[settingsPath]!.trySet(newValue);
+        __syncToDisk();
+        return success;
+      }
+      else if(newValue is List<String> && __setting[settingsPath]!.type == SettingType.STRLIST){
+        __setting[settingsPath] = Setting(identifier: settingsPath, type: SettingType.STRLIST, selection: newValue, max: null, min: null, value: 0);
+        __syncToDisk();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static Setting? get(final String settingsPath){
+    return __setting[settingsPath];
   }
 }
 
@@ -74,8 +118,12 @@ abstract class TraceSettingsProvider{
   static void addEntriesFrom(final String measurement, final List<SignalContainer> signalContainers){
     traceSettingNotifier.update((traceSetting) {
       traceSetting[measurement] = signalContainers.map((signalContainer) {
-        final num minValue = signalContainer.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
-        final num maxValue = signalContainer.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        num minValue = signalContainer.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
+        num maxValue = signalContainer.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        if(minValue == maxValue){
+          minValue--;
+          maxValue++;
+        }
         return TraceSetting(signal: signalContainer.dbcName, color: _nextColor, scalingGroup: _nextScalingGroup, displayName: signalContainer.displayName)
           ..offset = minValue..span = maxValue - minValue;
         }

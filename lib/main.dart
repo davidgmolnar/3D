@@ -11,14 +11,24 @@ void main(List<String> args) async {
     return;
   }
 
-  /*if(args.isEmpty){
-    String measurementAlias = "test";
-    LoadContext result = await Serializer.loadLogFile(File("C:\\Users\\Lenovo\\Desktop\\3D-Converters\\out\\test.csv"));
-    signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
-    TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
-    TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
-    TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_ECU_Heartbeat";}).isVisible = true;
-  }*/
+  if(args.isEmpty){
+    /*Future.delayed(const Duration(seconds: 5), () async {
+      print("start");
+      SettingsProvider.loadFromDisk();
+      String measurementAlias = "test";
+      LoadContext result = await Serializer.loadLogFile(File("C:\\Users\\Lenovo\\Desktop\\3D\\test\\D32.BIN"),
+        indicationCount: 100,
+        lineProgressIndication: (p0, p1) {
+          print("$p0${p1 != null ? ' - $p1' : ''}");
+        },
+      );
+      signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
+      TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+      TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
+      //TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
+      //TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_ECU_Heartbeat";}).isVisible = true;
+    });*/
+  }
 
   runSelectedApp();
 }

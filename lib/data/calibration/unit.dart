@@ -77,8 +77,11 @@ class Unit{
     return Unit(components: {unit: 1}, scalar: 1);
   }
 
-  static Unit? tryParse(final String str){
+  static Unit? tryParse(final String? str){
     final Map<Units, int> components = {};
+    if(str == null){
+      return Unit(components: components, scalar: 1);
+    }
 
     bool reachedDenominator = false;
     int i = 0;

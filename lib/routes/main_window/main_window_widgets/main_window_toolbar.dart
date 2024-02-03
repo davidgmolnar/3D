@@ -2,41 +2,74 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../data/settings.dart';
+import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
+import '../../../ui/dialogs/dbc_selector_dialog.dart';
+import '../../../ui/dialogs/dialog_base.dart';
+import '../../../ui/dialogs/edit_parameters_dialog.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
 import '../../log/log_logic/log_window_action_type.dart';
 import '../../settings/settings_logic/settings_window_type.dart';
 import '../../startup.dart';
 import '../../window_type.dart';
+import '../screen.dart';
 
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
-  static _importLogWindow () async {
+  static void _importLogWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
-  static _importCustomChartWindow (){}
+  static void _importCustomChartWindow (){}
 
-  static _exportLogWindow (){}
+  static void _exportLogWindow (){}
 
-  static _calfileRunnerWindow () async {
+  static void _calfileRunnerWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calibration", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
-  static _traceEditorWindow () async {
+  static void _traceEditorWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
   }
-  static _calfileCreatorWindow (){}
-  static _settingsWindow () async {
+  static void _calfileCreatorWindow (){}
+  static void _settingsWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.SETTINGS)));
   }
-  static _logWindow (){}
+  static void _editParametersDialog (){
+    if(mainWindowNavigatorKey.currentContext == null){
+      localLogger.error("Could not show EditParametersDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      return;
+    }
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return const DialogBase(
+        title: "Edit parameters",
+        dialog: EditParametersDialog(),
+        minWidth: 600,
+      );
+    });
+  }
+  // ignore: non_constant_identifier_names
+  static void _DBCMenuDialog (){
+    if(mainWindowNavigatorKey.currentContext == null){
+      localLogger.error("Could not show DBCSelectorDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      return;
+    }
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return const DialogBase(
+        title: "DBC Selection",
+        dialog: DBCSelectorDialog(),
+        minWidth: 700,
+      );
+    });
+  }
+
+  static void _logWindow (){}
 
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
@@ -48,7 +81,11 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
     ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
-    ToolbarItem(iconData: Icons.settings, onPressed: _settingsWindow),
+    ToolbarItemWithDropdown(iconData: Icons.settings, dropdownItems: [
+      ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
+      ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
+      ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
+    ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
   ];
 
@@ -59,7 +96,9 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
     ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
     ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
-    ToolbarDropdownItem(onPressed: _settingsWindow, text: "Settings"),
+    ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
+    ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
+    ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
     ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
   ];
 

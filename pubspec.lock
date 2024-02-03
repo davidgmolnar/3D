@@ -137,6 +137,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.6"
+  dart_dbc_parser:
+    dependency: "direct main"
+    description:
+      name: dart_dbc_parser
+      sha256: c5f584c7290a0bb7a084ef1c6b43e0a8af24f3eb0ebae304831337181c8035df
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
   dart_eval:
     dependency: "direct main"
     description:

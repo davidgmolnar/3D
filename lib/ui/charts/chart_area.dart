@@ -242,6 +242,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       }
     }
     cursorInfoNotifier.value.visibility = dataSeen.map((key, value) => MapEntry(key, value.keys.toList()));
+    print("finished rescale");
     setState(() {});
   }
 
@@ -323,6 +324,8 @@ class _ChartLinePainter extends CustomPainter {
       path.lineTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
     }
     canvas.drawPath(path, paint);
+    
+    print("finished repaint");
   }
   
   @override

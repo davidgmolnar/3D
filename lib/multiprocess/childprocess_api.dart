@@ -14,6 +14,8 @@ enum CommandType{
   // ignore: constant_identifier_names
   PERIODIC_UPDATE,
   // ignore: constant_identifier_names
+  UPDATE_SETTINGS,
+  // ignore: constant_identifier_names
   KILL
 }
 
@@ -54,6 +56,8 @@ enum ResponseType{
   INIT_READY,
   // ignore: constant_identifier_names
   DATA,
+  // ignore: constant_identifier_names
+  UPDATE_SETTINGS,
   // ignore: constant_identifier_names
   FINISHED,
   // ignore: constant_identifier_names

@@ -7,6 +7,8 @@ import '../startup.dart';
 import '../window_type.dart';
 import 'main_window_widgets/main_window_layout.dart';
 
+final GlobalKey<NavigatorState> mainWindowNavigatorKey = GlobalKey<NavigatorState>();
+
 class MainWindowApp extends StatefulWidget {
   const MainWindowApp({super.key});
 
@@ -28,6 +30,7 @@ class _MainWindowAppState extends State<MainWindowApp> {
   Widget build(BuildContext context) {
     rebuildAllChildren(context);
     return MaterialApp(
+      navigatorKey: mainWindowNavigatorKey,
       debugShowCheckedModeBanner: false,
       title: StyleManager.title ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,

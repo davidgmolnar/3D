@@ -2,7 +2,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
+import '../../../data/settings.dart';
 import '../../../ui/common.dart';
+import '../../../ui/dialogs/dbc_selector_dialog.dart';
+import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/theme/theme.dart';
 import '../log_logic/log_io_controller.dart';
 import 'log_container.dart';
@@ -92,14 +95,42 @@ class _LogImportState extends State<LogImport> {
                           dialogTitle: "Pick files to be imported",
                           allowMultiple: true,
                           type: FileType.custom,
-                          allowedExtensions: ["csv", "bin", "txt"]
+                          allowedExtensions: ["csv", "bin"]
                         );
                         if(result != null){
+                          final List<String> filtered = result.paths.removedWhere((element) => element == null).cast<String>();
                           LogIOInfoController.logIOInfoNotifier.update((value) {
-                            final List<String> filtered = result.paths.removedWhere((element) => element == null).cast<String>();
                             value.selectedPaths.addAll(filtered);
                             value.measurementAliases.addAll(List.filled(filtered.length, null));
                           });
+                          if(filtered.any((element) => element.toLowerCase().contains(".bin"))){
+                            List<String>? dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+                            if(dbcPaths == null || dbcPaths.isEmpty){
+                              // ignore: use_build_context_synchronously
+                              await showDialog<Widget>(context: context, builder: (BuildContext context){
+                                return const DialogBase(
+                                  title: "DBC Selection",
+                                  dialog: DBCSelectorDialog(),
+                                  minWidth: 700,
+                                );
+                              });
+                              dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+
+                              if(dbcPaths == null || dbcPaths.isEmpty){
+                                // ignore: use_build_context_synchronously
+                                showError(context, "You must select a DBC file to import a binary log");
+                                // ignore: use_build_context_synchronously
+                                await showDialog<Widget>(context: context, builder: (BuildContext context){
+                                  return const DialogBase(
+                                    title: "DBC Selection",
+                                    dialog: DBCSelectorDialog(),
+                                    minWidth: 700,
+                                  );
+                                });
+                                dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+                              }
+                            }
+                          }
                         }
                       },
                       child: Text("Select", style: StyleManager.textStyle,),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
 import '../data/calibration/constants.dart';
+import '../data/settings.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
@@ -137,6 +138,7 @@ Future<void> postStartup() async {
     await ChildProcess.start().then((_) => ChildProcess.signalReady());
   }
   Const.loadFromDisk();
+  SettingsProvider.loadFromDisk();
 }
 
 Future<void> shutdown() async {

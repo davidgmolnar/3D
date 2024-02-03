@@ -36,7 +36,7 @@ abstract class ChildProcessController{
 
   static void _init() async {
     localLogger.info("ChildProcessController started listening");
-    _sock!.listen((udp) {
+    _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = Protocol.decode(_sock?.receive()?.data);
         if (udpPayload != null && udpPayload.isNotEmpty) {
@@ -60,6 +60,18 @@ abstract class ChildProcessController{
 
               case ResponseType.FINISHED:
                 _handleFinished(response.childProcessPort, response.data);
+                break;
+
+              case ResponseType.UPDATE_SETTINGS:
+                SettingsProvider.loadFromDisk();
+                for(final int port in _activeChildProcesses.keys){
+                  if(port == response.childProcessPort){
+                    continue;
+                  }
+                  final Command command = Command(port, CommandType.UPDATE_SETTINGS, {});
+                  sendTo(command);
+                  await Future.delayed(const Duration(milliseconds: 10));
+                }
                 break;
 
               case ResponseType.STOPPING:
@@ -168,6 +180,13 @@ abstract class ChildProcessController{
     _newConnections[port] = type;
     localLogger.info("Started ${type.name}");
     return port;
+  }
+
+  static void triggerSettingsUpdateInChildProcesses(){
+    for(final int port in _activeChildProcesses.keys){
+      final Command command = Command(port, CommandType.UPDATE_SETTINGS, {});
+      sendTo(command);
+    }
   }
 
   static void sendTo(Command command) async {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import '../data/settings.dart';
 import '../io/logger.dart';
 import '../routes/log/log_logic/log_window_action_type.dart';
 import '../routes/settings/settings_logic/settings_window_type.dart';
@@ -14,6 +15,7 @@ abstract class ChildProcess{
 
   static final Uint8List _stopSignal = Protocol.encode(Response(localSocketPort, ResponseType.STOPPING, {}).encode()).first;
   static final Uint8List _readySignal = Protocol.encode(Response(localSocketPort, ResponseType.INIT_READY, {}).encode()).first;
+  static final Uint8List _settingsUpdateSignal = Protocol.encode(Response(localSocketPort, ResponseType.UPDATE_SETTINGS, {}).encode()).first;
 
   static Future<void> start() async {
     _sock ??= await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
@@ -38,8 +40,13 @@ abstract class ChildProcess{
                 localLogger.info("Controller killed this childprocess, stopping");
                 await localLogger.stop();
                 exit(0);
+
               case CommandType.PERIODIC_UPDATE:
                 _handlePeriodicUpdate(command.data);
+                break;
+
+              case CommandType.UPDATE_SETTINGS:
+                SettingsProvider.loadFromDisk();
                 break;
 
               default:
@@ -82,6 +89,10 @@ abstract class ChildProcess{
       await Future.delayed(const Duration(milliseconds: 10));
       _sock?.send(fragment, InternetAddress.loopbackIPv4, masterSocketPort);
     }
+  }
+
+  static void triggerSettingsUpdateInMaster(){
+    _sock?.send(_settingsUpdateSignal, InternetAddress.loopbackIPv4, masterSocketPort);
   }
 
   static void signalReady(){

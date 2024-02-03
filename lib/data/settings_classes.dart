@@ -14,6 +14,8 @@ enum SettingType{
   SELECTION,
   // ignore: constant_identifier_names
   MINMAX,
+  // ignore: constant_identifier_names
+  STRLIST,
 }
 
 class Setting{
@@ -55,6 +57,9 @@ class Setting{
       }
       return false;
     }
+    else if(type == SettingType.STRLIST){
+      return true;
+    }
     return false;
   }
 
@@ -64,16 +69,16 @@ class Setting{
     }
     switch (SettingType.values[json['type']]) {
       case SettingType.BOOL:
-        if(json.containsKey('identifier') && json.containsKey('identifier') is String && json.containsKey('value') && json['value'] is num){
+        if(json.containsKey('identifier') && json['identifier'] is String && json.containsKey('value') && json['value'] is num){
           return Setting(identifier: json['identifier'], type: SettingType.BOOL, selection: null, max: null, min: null, value: json['value']);
         }
         else{
           return null;
         }
       case SettingType.SELECTION:
-        if(json.containsKey('identifier') && json.containsKey('identifier') is String && json.containsKey('value') && json['value'] is num
+        if(json.containsKey('identifier') && json['identifier'] is String && json.containsKey('value') && json['value'] is num
           && json.containsKey('selection') && json['selection'] is List){
-          if(json['selection'].isEmpty || !json['signals'].every((selectable) => selectable is String)){
+          if(json['selection'].isEmpty || !json['selection'].every((selectable) => selectable is String)){
             return null;
           }
           return Setting(identifier: json['identifier'], type: SettingType.SELECTION, selection: json['selection'].map<String>((e) => e.toString()).toList(), max: null, min: null, value: json['value']);
@@ -82,9 +87,16 @@ class Setting{
           return null;
         }
       case SettingType.MINMAX:
-        if(json.containsKey('identifier') && json.containsKey('identifier') is String && json.containsKey('value') && json['value'] is num
+        if(json.containsKey('identifier') && json['identifier'] is String && json.containsKey('value') && json['value'] is num
           && json.containsKey('max') && json['max'] is num && json.containsKey('min') && json['min'] is num){
           return Setting(identifier: json['identifier'], type: SettingType.MINMAX, selection: null, max: json['max'], min: json['min'], value: json['value']);
+        }
+        else{
+          return null;
+        }
+      case SettingType.STRLIST:
+        if(json.containsKey('identifier') && json['identifier'] is String && json.containsKey("selection") && json["selection"] is List){
+          return Setting(identifier: json['identifier'], type: SettingType.STRLIST, selection: json["selection"].cast<String>().toList(), max: null, min: null, value: 0);
         }
         else{
           return null;
@@ -114,6 +126,12 @@ class Setting{
       'value': value,
       'max': max,
       'min': min,
+      'type': type.index,
+    }
+    : type == SettingType.STRLIST ?
+    {
+      'identifier': identifier,
+      'selection': selection,
       'type': type.index,
     }
     :
