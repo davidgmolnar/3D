@@ -118,7 +118,7 @@ class CalibrationScriptProcessor{
       case Operation.DIV:
         return __twoOperandBase(inst, options, (p0, p1) => p0 / p1, ((p0, p1) => unitDiv(p0, p1)));
       case Operation.DERIVATE: // TODO a zoh import ezt rendesen megbaszkodja
-        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1) => (p1.value - p0.value) / (p1.timeStamp - p0.timeStamp) * 1000.0, (p0) => 0, (p0) => unitDiv(p0, const Unit(scalar: 1, components: {Units.s: 1})));
+        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1, p2) => (p1.value - p0.value) / (p1.timeStamp - p0.timeStamp) * 1000.0, (p0) => 0, (p0) => unitDiv(p0, const Unit(scalar: 1, components: {Units.s: 1})));
       case Operation.AND:
         return __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt(), null);
       case Operation.NAND:
@@ -154,7 +154,7 @@ class CalibrationScriptProcessor{
       /*case Operation.IF:
         return 5;*/
       case Operation.INTEGRATE:
-        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1) => p0.value + (p0.value + p1.value) / 2 * (p1.timeStamp - p0.timeStamp) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
+        return __oneOperandBaseWithLookAhead(inst, options, (p0, p1, p2) => p2.value + (p0.value + p1.value) / 2 * (p1.timeStamp - p0.timeStamp) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
       /*case Operation.RCLP:
         return 2;
       case Operation.CONST:
@@ -297,8 +297,8 @@ class CalibrationScriptProcessor{
     __commit(inst.result, options.measurement, values, signalData[options.measurement]![channelOperand]!.unit);
     return null;
   }
-
-  static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalibrationOptions options, final num Function(Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
+//                                                                                                                                  logvalue1    logvalue2    prev calc
+  static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalibrationOptions options, final num Function(Measurement, Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
     final List<Measurement> values = [];
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("One operand operations must be called on a channel not a constant");
@@ -308,7 +308,8 @@ class CalibrationScriptProcessor{
     Measurement previousValue = signalData[options.measurement]![channelOperand]!.values[0];
     values.add(Measurement(initialValue(signalData[options.measurement]![channelOperand]!.values[0].value), signalData[options.measurement]![channelOperand]!.values[0].timeStamp));
     for(int i = 1; i < signalData[options.measurement]![channelOperand]!.values.length; i++){
-      values.add(Measurement(op(previousValue, signalData[options.measurement]![channelOperand]!.values[i]), signalData[options.measurement]![channelOperand]!.values[i].timeStamp));
+      values.add(Measurement(op(previousValue, signalData[options.measurement]![channelOperand]!.values[i], values.last), signalData[options.measurement]![channelOperand]!.values[i].timeStamp));
+      previousValue = signalData[options.measurement]![channelOperand]!.values[i];
       if(values.last.value.isNaN || values.last.value.isInfinite){
         return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
       }
