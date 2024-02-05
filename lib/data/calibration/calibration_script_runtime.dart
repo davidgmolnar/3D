@@ -45,7 +45,7 @@ class CalibrationScriptRuntime{
     for(FileSystemEntity file in elements.whereType<File>()){
       final String filename = file.uri.path.split('/').last;
       Map calibrationJson = await FileSystem.tryLoadMapFromLocalAsync(__calibPath, "$filename.comp");
-      final Set<String> results = calibrationJson["resultChannels"].toSet();
+      final Set<String> results = calibrationJson["resultChannels"]?.toSet() ?? {};
       final Set<String> intersect = requirements.intersection(results);
       if(intersect.isNotEmpty){
         final LogEntry entry = LogEntry.info("Running calibration file ${calibrationJson['filename']} would create some required channels: ${intersect.toList()}");

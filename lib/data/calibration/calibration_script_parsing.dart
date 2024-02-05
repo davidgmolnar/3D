@@ -357,13 +357,13 @@ class CalibrationScriptParser{
               _state = ParserState.OP;
             }
             else if(["("].contains(char)){
-              if(instruction.result == "IfExists"){
+              if(instruction.result.toUpperCase() == "IFEXISTS"){
                 instruction.result = "";
                 instruction.op = Operation.SKIPIF;
                 instruction.operands.add('');
                 _state = ParserState.OPERAND;
               }
-              else if(instruction.result == "Delete"){
+              else if(instruction.result.toUpperCase() == "DELETE"){
                 instruction.result = "";
                 instruction.op = Operation.DELETE;
                 instruction.operands.add('');
@@ -436,7 +436,7 @@ class CalibrationScriptParser{
     for(List<FrozenInstruction> blockInstructions in instructions){
       for(FrozenInstruction inst in blockInstructions){
         if(inst.op == Operation.SKIPIF){
-          optionalChannels.add(inst.operands[0]);
+          optionalChannels.add(inst.operands[0].substring(1));
         }
         for(String operand in inst.operands){
           if(operand.startsWith("#")){
