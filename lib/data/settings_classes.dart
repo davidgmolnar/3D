@@ -202,4 +202,12 @@ class TraceSetting{
     '6': scalingGroup,
     '7': displayName
   };
+
+  @override
+  bool operator ==(covariant TraceSetting other){
+    return signal == other.signal && color == other.color && isVisible == other.isVisible && offset == other.offset && span == other.span && scalingGroup == other.scalingGroup && displayName == other.displayName;
+  }
+
+  @override
+  int get hashCode => signal.hashCode ^ color.hashCode ^ isVisible.hashCode ^ offset.hashCode ^ span.hashCode ^ scalingGroup.hashCode ^ displayName.hashCode;
 }

@@ -85,6 +85,11 @@ abstract class TraceSettingsProvider{
   static int _maxScalingGroup = 0;
   static int _newColorIndex = 0;
 
+  static int firstVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset;
+  static int lastVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset + ChartController.shownDurationNotifier.value.timeDuration;
+
+  static int get fullVisibleTime => lastVisibleTimestamp - firstVisibleTimestamp;
+
   static List<Color> colorBank = [
     Colors.red,
     Colors.blue,
@@ -104,7 +109,8 @@ abstract class TraceSettingsProvider{
         value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
       });
       _postUpdate(measurement);
-    } 
+    }
+    _reCalculateVisibleDuration();
   }
 
   static void _postUpdate(final String measurement){
@@ -112,6 +118,30 @@ abstract class TraceSettingsProvider{
       for(TraceSetting traceSetting in traceSettingNotifier.value[measurement]!){
         signalData[measurement]![traceSetting.signal]!.displayName = traceSetting.displayName;
       }
+    }
+  }
+
+  static void _reCalculateVisibleDuration(){
+    final Map<String, List<String>> vis = visibleSignals;
+    int first = double.maxFinite.toInt();
+    int last = 0;
+
+    for(final String meas in vis.keys){
+      for(final String sig in vis[meas]!){
+        final int sigFirst = signalData[meas]![sig]!.values.first.timeStamp;
+        final int sigLast = signalData[meas]![sig]!.values.last.timeStamp;
+        if(sigFirst < first){
+          first = sigFirst;
+        }
+        if(sigLast > last){
+          last = sigLast;
+        }
+      }
+    }
+
+    if(last != 0){
+      firstVisibleTimestamp = first;
+      lastVisibleTimestamp = last;
     }
   }
 
@@ -130,6 +160,7 @@ abstract class TraceSettingsProvider{
       ).toList();
     });
     _postUpdate(measurement);
+    _reCalculateVisibleDuration();
   }
 
   static void updateEntriesFrom(final String measurement, final List<String> signals){
@@ -164,6 +195,7 @@ abstract class TraceSettingsProvider{
     });
 
     _postUpdate(measurement);
+    _reCalculateVisibleDuration();
   }
 
   static int itemCount(String measurement){
@@ -239,7 +271,20 @@ abstract class TraceSettingsProvider{
     return tmp;
   }
 
-  static int get firstVisibleTimestamp {
+  static Map<String, List<TraceSetting>> get visibleSignalsData{
+    Map<String, List<TraceSetting>> tmp = {};
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].isVisible){
+          tmp[measurement] ??= [];
+          tmp[measurement]!.add(traceSettingNotifier.value[measurement]![i]);
+        }
+      }
+    }
+    return tmp;
+  }
+
+  /*static int get firstVisibleTimestamp {
     int tmp = -1;
     for(String measurement in traceSettingNotifier.value.keys){
       for(TraceSetting traceSetting in traceSettingNotifier.value[measurement]!){
@@ -253,7 +298,7 @@ abstract class TraceSettingsProvider{
       }
     }
     return tmp;
-  }
+  }*/
 
   static void dragScalingGroup(int group, double delta){
     traceSettingNotifier.update((traceSetting) {

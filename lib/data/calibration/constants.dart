@@ -73,7 +73,7 @@ abstract class Const{
       }
       return false;
     }
-    else if(str.startsWith("Parameters.")){
+    else if(str.toUpperCase().startsWith("PARAMETERS.")){
       return true;
     }
     else if(str.startsWith("FAVG")){
@@ -142,7 +142,7 @@ abstract class Const{
       }
     }
 
-    else if(str.startsWith("Parameters.")){
+    else if(str.toUpperCase().startsWith("PARAMETERS.")){
       final p = str.substring(11).toUpperCase();
       if(__parameters.containsKey(p)){
         return __parameters[p]!;

@@ -21,7 +21,7 @@ class ChartContainer extends StatelessWidget {
           height: height + 2,
           width: constraints.maxWidth,
           decoration: BoxDecoration(
-            border: Border.symmetric(horizontal: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor)),
+            border: Border(top: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor)),
           ),
           child: const Chart(),
         );

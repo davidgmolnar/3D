@@ -11,6 +11,14 @@ class ChartShowDuration{ // TODO lehet mégiscsak double kéne ez legyen
   int timeDuration;
 
   ChartShowDuration({required this.timeDuration, required this.timeOffset});
+
+  @override
+  bool operator ==(covariant ChartShowDuration other){
+    return timeOffset == other.timeOffset && timeDuration == other.timeDuration;
+  }
+
+  @override
+  int get hashCode => timeOffset.hashCode ^ timeDuration.hashCode;
 }
 
 abstract class ChartController{
@@ -45,6 +53,13 @@ abstract class ChartController{
   static set moveInTime(double horizontalDragUpdateDelta){
     shownDurationNotifier.update((shown) {
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
+      shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
+    });
+  }
+
+  static set moveInFullChannelTime(double horizontalDragUpdateDelta){
+    shownDurationNotifier.update((shown) {
+      final double delta = horizontalDragUpdateDelta / _chartAreaWidth * TraceSettingsProvider.fullVisibleTime * _dragMultiplierHorizontal;
       shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
     });
   }

@@ -36,7 +36,7 @@ class MainWindowToolbar extends StatelessWidget {
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
   }
-  static void _calfileCreatorWindow (){}
+  static void _calfileCreatorWindow (){/* builtin kontextuális warningok pl ha ifexistben van channel majd később másik blockban újra van használva a channel meg ilyenek*/}
   static void _settingsWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.SETTINGS)));
