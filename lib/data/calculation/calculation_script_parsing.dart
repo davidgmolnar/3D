@@ -429,6 +429,10 @@ class CalculationScriptParser{
       } // for(String char in line.characters)
     } // for(String line in lines)
 
+    if(_state == ParserState.LINEFINISHED && instruction != Instruction()){
+        instructions.last.add(instruction.freeze);
+    }
+
     List<String> resultChannels = [];
     List<String> requiredChannels = [];
     List<String> optionalChannels = [];
