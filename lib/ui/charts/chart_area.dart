@@ -112,13 +112,25 @@ class _PlotContext{
 
   void reScalePoints(ScalingInfo newInfo, ScalingInfo oldInfo){
     // TODO https://pub.dev/packages/ml_linalg
-    // TODO offset cache
+    final bool updateTime = newInfo.timeDataChanged(oldInfo);
+    final bool updateValue = newInfo.valueDataChanged(oldInfo);
+
+    final double timeMult = newInfo.timeScale / oldInfo.timeScale;
+    final double timeOffset = (oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
+    final double valueMult = newInfo.valueScale / oldInfo.valueScale;
+    final double valueOffset = (oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
     for(int i = 0; i < scaledChartLine.length; i++){
-      if(newInfo.timeDataChanged(oldInfo)){
-        scaledChartLine[i].x = (scaledChartLine[i].x / oldInfo.timeScale + oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
+      if(updateTime){
+        //scaledChartLine[i].x = (scaledChartLine[i].x / oldInfo.timeScale + oldInfo.timeOffset - newInfo.timeOffset) * newInfo.timeScale;
+        scaledChartLine[i].x = scaledChartLine[i].x * timeMult + timeOffset;
+        //scaledChartLine[i].x *= timeMult;
+        //scaledChartLine[i].x += timeOffset;
       }
-      if(newInfo.valueDataChanged(oldInfo)){
-        scaledChartLine[i].y = (scaledChartLine[i].y / oldInfo.valueScale + oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
+      if(updateValue){
+        //scaledChartLine[i].y = (scaledChartLine[i].y / oldInfo.valueScale + oldInfo.valueOffset - newInfo.valueOffset) * newInfo.valueScale;
+        scaledChartLine[i].y = scaledChartLine[i].y * valueMult + valueOffset;
+        //scaledChartLine[i].y *= valueMult;
+        //scaledChartLine[i].y += valueOffset;
       }
     }
   }

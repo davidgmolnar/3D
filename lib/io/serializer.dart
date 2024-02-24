@@ -4,7 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dart_dbc_parser/dart_dbc_parser.dart';
 
-import '../data/calibration/unit.dart';
+import '../data/calculation/unit.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
 import 'logger.dart';

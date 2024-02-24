@@ -8,23 +8,23 @@ import '../../../ui/input_widgets/buttons.dart';
 import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
-import '../log_logic/calibration_io_controller.dart';
+import '../log_logic/calculation_io_controller.dart';
 import 'log_container.dart';
 
 const double scriptSelectionBarHeight = 150;
 
-class CalibrationWindow extends StatefulWidget {
-  const CalibrationWindow({super.key});
+class CalculationWindow extends StatefulWidget {
+  const CalculationWindow({super.key});
 
   @override
-  State<CalibrationWindow> createState() => _CalibrationWindowState();
+  State<CalculationWindow> createState() => _CalculationWindowState();
 }
 
-class _CalibrationWindowState extends State<CalibrationWindow> {
+class _CalculationWindowState extends State<CalculationWindow> {
 
   @override
   void initState() {
-    CalibrationIoController.calIOInfoNotifier.addListener(update);
+    CalculationIoController.calIOInfoNotifier.addListener(update);
     super.initState();
   }
 
@@ -45,7 +45,7 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                     border: Border(right: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor,))
                   ),
                   child: ListView.builder(
-                    itemCount: CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length,
+                    itemCount: CalculationIoController.calIOInfoNotifier.value.selectedPaths.length,
                     itemExtent: 25,
                     itemBuilder: ((context, index) {
                       return Row(
@@ -53,11 +53,11 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                         children: [
                           Padding(
                             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                            child: Text(CalibrationIoController.calIOInfoNotifier.value.selectedPaths[index]),
+                            child: Text(CalculationIoController.calIOInfoNotifier.value.selectedPaths[index]),
                           ),
                           IconButton(
                             onPressed: () {
-                              CalibrationIoController.calIOInfoNotifier.update((value) {
+                              CalculationIoController.calIOInfoNotifier.update((value) {
                                 value.selectedPaths.removeAt(index);
                               });
                             },
@@ -79,7 +79,7 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                   children: [
                     TextButton(
                       onPressed: () async {
-                        CalibrationIoController.reset();
+                        CalculationIoController.reset();
                         FilePickerResult? result = await FilePicker.platform.pickFiles(
                           dialogTitle: "Pick scripts",
                           allowMultiple: true,
@@ -87,7 +87,7 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                           allowedExtensions: ["CAL"]
                         );
                         if(result != null){
-                          CalibrationIoController.calIOInfoNotifier.update((value) {
+                          CalculationIoController.calIOInfoNotifier.update((value) {
                             final List<String> filtered = result.paths.removedWhere((element) => element == null).cast<String>();
                             value.selectedPaths.addAll(filtered);
                           });
@@ -96,11 +96,11 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                       child: Text("Select", style: StyleManager.textStyle,),
                     ),
                     ToggleableTextField<String>(
-                      initialValue: CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.measurement,
+                      initialValue: CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement,
                       parser: (p0) => p0,
                       onFinished: (p0) {
-                        CalibrationIoController.calIOInfoNotifier.update((value) {
-                          value.calibrationOptions = value.calibrationOptions.copyWith(measurement: p0);
+                        CalculationIoController.calIOInfoNotifier.update((value) {
+                          value.calculationOptions = value.calculationOptions.copyWith(measurement: p0);
                         });
                       },
                       width: 250,
@@ -110,20 +110,20 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                       children: [
                         ButtonWithTwoText(
                           onPressed: (p0) {
-                            CalibrationIoController.calIOInfoNotifier.update((value) {
-                              value.calibrationOptions = value.calibrationOptions.copyWith(cleanRebuild: p0);
+                            CalculationIoController.calIOInfoNotifier.update((value) {
+                              value.calculationOptions = value.calculationOptions.copyWith(cleanRebuild: p0);
                             });
                           },
-                          isInitiallyActive: CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.cleanRebuild,
+                          isInitiallyActive: CalculationIoController.calIOInfoNotifier.value.calculationOptions.cleanRebuild,
                           textWhenActive: "Clean rebuild",
                           textWhenInactive: "Lazy rebuild",
                         ),
                         ToggleableTextField<int>(
-                          initialValue: CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.sampleTimeMs,
+                          initialValue: CalculationIoController.calIOInfoNotifier.value.calculationOptions.sampleTimeMs,
                           parser: (p0) => int.tryParse(p0),
                           onFinished: (p0) {
-                            CalibrationIoController.calIOInfoNotifier.update((value) {
-                              value.calibrationOptions = value.calibrationOptions.copyWith(sampleTimeMs: p0);
+                            CalculationIoController.calIOInfoNotifier.update((value) {
+                              value.calculationOptions = value.calculationOptions.copyWith(sampleTimeMs: p0);
                             });
                           },
                           width: 100,
@@ -135,25 +135,25 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                       children: [
                         IconButton(
                           onPressed: (){
-                            if(CalibrationIoController.calIOInfoNotifier.value.processing){
+                            if(CalculationIoController.calIOInfoNotifier.value.processing){
                               return;
                             }
-                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
+                            if(CalculationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
                               showError(context, "Nothing was selected");
                               return;
                             }
-                            if(CalibrationIoController.calIOInfoNotifier.value.calibrationOptions.measurement == "Please select measurement"){
+                            if(CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement == "Please select measurement"){
                               showError(context, "A measurement must be selected");
                               return;
                             }
-                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
+                            CalculationIoController.calIOInfoNotifier.value.processing = true;
                             try{
-                              CalibrationIoController.sendFilesToMaster();
+                              CalculationIoController.sendFilesToMaster();
                             }catch(exc){
                               showError(context, "Error when starting calfile execution: ${exc.toString()}");
                             }
                             setState(() {});
-                            CalibrationIoController.calIOInfoNotifier.update((value) {});
+                            CalculationIoController.calIOInfoNotifier.update((value) {});
                           },
                           icon: Icon(Icons.play_arrow, color: StyleManager.globalStyle.primaryColor,),
                           splashRadius: 10,
@@ -162,22 +162,22 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                           onPressed: (){
                             showError(context, "This feature is WIP");
                             return;
-                            /*if(CalibrationIoController.calIOInfoNotifier.value.processing){
+                            /*if(CalculationIoController.calIOInfoNotifier.value.processing){
                               return;
                             }
-                            if(CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
+                            if(CalculationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
                               showError(context, "Nothing was selected");
                               return;
                             }
-                            CalibrationIoController.calIOInfoNotifier.value.processing = true;
-                            CalibrationIoController.calIOInfoNotifier.value.isDebug = true;
+                            CalculationIoController.calIOInfoNotifier.value.processing = true;
+                            CalculationIoController.calIOInfoNotifier.value.isDebug = true;
                             try{
-                              CalibrationIoController.sendFilesToMaster();
+                              CalculationIoController.sendFilesToMaster();
                             }catch(exc){
                               showError(context, "Error when starting calfile execution: ${exc.toString()}");
                             }
                             setState(() {});
-                            CalibrationIoController.calIOInfoNotifier.update((value) {});*/
+                            CalculationIoController.calIOInfoNotifier.update((value) {});*/
                           },
                           icon: Icon(Icons.bug_report, color: StyleManager.globalStyle.primaryColor,),
                           splashRadius: 10,
@@ -191,9 +191,9 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                           splashRadius: 10,
                         ),
                         ToolbarItemWithDropdown(iconData: Icons.more_horiz, dropdownItems: [
-                          const ToolbarDropdownItem(onPressed: CalibrationIoController.compileOnly, text: "Compile only"),
-                          ToolbarDropdownItem(onPressed: (){CalibrationIoController.compileAll(context);}, text: "Compile all"),
-                          ToolbarDropdownItem(onPressed: (){CalibrationIoController.editParameters(context);}, text: "Edit parameters"),
+                          const ToolbarDropdownItem(onPressed: CalculationIoController.compileOnly, text: "Compile only"),
+                          ToolbarDropdownItem(onPressed: (){CalculationIoController.compileAll(context);}, text: "Compile all"),
+                          ToolbarDropdownItem(onPressed: (){CalculationIoController.editParameters(context);}, text: "Edit parameters"),
                         ], iconHeight: toolbarItemSize, invertColors: true,),
                       ],
                     ),
@@ -210,9 +210,9 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
             ),
             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
             child: ListView.builder(
-              itemCount: CalibrationIoController.calIOInfoNotifier.value.context.length,
+              itemCount: CalculationIoController.calIOInfoNotifier.value.context.length,
               itemBuilder: (BuildContext context, int index) {
-                return Text(CalibrationIoController.calIOInfoNotifier.value.context[index], maxLines: 5,);
+                return Text(CalculationIoController.calIOInfoNotifier.value.context[index], maxLines: 5,);
               },
             ),
           )
@@ -230,7 +230,7 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
                       child: LinearProgressIndicator(
-                        value: CalibrationIoController.calIOInfoNotifier.value.linePercentage,
+                        value: CalculationIoController.calIOInfoNotifier.value.linePercentage,
                         color: StyleManager.globalStyle.primaryColor,
                         backgroundColor: StyleManager.globalStyle.bgColor,
                       ),
@@ -238,8 +238,8 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
                       child: LinearProgressIndicator(
-                        value: CalibrationIoController.calIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
-                          CalibrationIoController.calIOInfoNotifier.value.scriptsFinished / CalibrationIoController.calIOInfoNotifier.value.selectedPaths.length : 0,
+                        value: CalculationIoController.calIOInfoNotifier.value.selectedPaths.isNotEmpty ? 
+                          CalculationIoController.calIOInfoNotifier.value.scriptsFinished / CalculationIoController.calIOInfoNotifier.value.selectedPaths.length : 0,
                         color: StyleManager.globalStyle.primaryColor,
                         backgroundColor: StyleManager.globalStyle.bgColor,
                         ),
@@ -253,17 +253,17 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
                   Container(
                     width: 200,
                     padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text(CalibrationIoController.calIOInfoNotifier.value.error ? "There were errors" : "There were no errors"),
+                    child: Text(CalculationIoController.calIOInfoNotifier.value.error ? "There were errors" : "There were no errors"),
                   ),
                   Container(
                     width: 250,
                     padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text("Processed ${CalibrationIoController.calIOInfoNotifier.value.scriptsFinished} scripts"),
+                    child: Text("Processed ${CalculationIoController.calIOInfoNotifier.value.scriptsFinished} scripts"),
                   ),
                   Container(
                     width: 100,
                     padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text(CalibrationIoController.calIOInfoNotifier.value.processing ? "Processing" : "Idle"),
+                    child: Text(CalculationIoController.calIOInfoNotifier.value.processing ? "Processing" : "Idle"),
                   ),
                 ],
               )
@@ -276,7 +276,7 @@ class _CalibrationWindowState extends State<CalibrationWindow> {
 
   @override
   void dispose() {
-    CalibrationIoController.calIOInfoNotifier.removeListener(update);
+    CalculationIoController.calIOInfoNotifier.removeListener(update);
     super.dispose();
   }
 }

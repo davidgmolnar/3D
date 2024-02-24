@@ -4,7 +4,7 @@ import '../../io/file_system.dart';
 import '../../io/logger.dart';
 import 'unit.dart';
 
-const String parameterPath = "CalibrationParameters/";
+const String parameterPath = "CalculationParameters/";
 
 abstract class Const{
   static final Map<String, num> __parameters = {
@@ -42,12 +42,12 @@ abstract class Const{
   }
 
   static void __syncToDisk(){
-    FileSystem.trySaveMapToLocalAsync(parameterPath, "calibration_parameters.json", __parameters);
+    FileSystem.trySaveMapToLocalAsync(parameterPath, "calculation_parameters.json", __parameters);
   }
 
   static void loadFromDisk(){
     clearParameters();
-    Map<String, num> loaded = FileSystem.tryLoadMapFromLocalSync(parameterPath, "calibration_parameters.json").cast<String, num>();
+    Map<String, num> loaded = FileSystem.tryLoadMapFromLocalSync(parameterPath, "calculation_parameters.json").cast<String, num>();
     loadParameters(loaded);
   }
 

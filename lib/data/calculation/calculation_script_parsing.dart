@@ -234,7 +234,7 @@ class FrozenInstruction{
   }
 }
 
-class CompiledCalibration{
+class CompiledCalculation{
   final String filename;
   final DateTime fileLastModified;
   final List<String> requiredChannels;
@@ -242,7 +242,7 @@ class CompiledCalibration{
   final List<List<FrozenInstruction>> instructions;
   final List<LogEntry> context;
 
-  CompiledCalibration({
+  CompiledCalculation({
     required this.filename,
     required this.fileLastModified,
     required this.requiredChannels,
@@ -261,9 +261,9 @@ class CompiledCalibration{
     };
   }
 
-  static CompiledCalibration? fromJson(Map data){
+  static CompiledCalculation? fromJson(Map data){
     try{
-      return CompiledCalibration(
+      return CompiledCalculation(
         filename: data["filename"],
         fileLastModified: DateTime.fromMillisecondsSinceEpoch(data["fileLastModified"]),
         requiredChannels: data["requiredChannels"].cast<String>().toList(),
@@ -278,11 +278,11 @@ class CompiledCalibration{
   }
 }
 
-class CalibrationScriptParser{
+class CalculationScriptParser{
 
   static ParserState _state = ParserState.LINESTART;
 
-  static Future<CompiledCalibration> run(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
+  static Future<CompiledCalculation> run(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
     _state = ParserState.LINESTART;
     final bool doIndication = lineProgressIndication != null && indicationCount != null;
     List<LogEntry> context = [];
@@ -293,10 +293,10 @@ class CalibrationScriptParser{
     final decodedLength = str.length;
 
     if(originalLength != decodedLength){
-      final LogEntry entry = LogEntry.warning("${originalLength - decodedLength} non-UTF-8 characters were ignored in calibration file ${file.absolute.path}");
+      final LogEntry entry = LogEntry.warning("${originalLength - decodedLength} non-UTF-8 characters were ignored in calculation file ${file.absolute.path}");
       context.add(entry);
       if(doIndication){
-        lineProgressIndication(0, entry.asString("CALIBRATION"));
+        lineProgressIndication(0, entry.asString("CALCULATION"));
         await Future.delayed(const Duration(milliseconds: 10));
       }
     }
@@ -373,7 +373,7 @@ class CalibrationScriptParser{
                 final LogEntry entry = LogEntry.error("Interpretation for preprocessor token ${instruction.result} at line $lineNum not implemented, notify 3D responsible, token ignored");
                 context.add(entry);
                 if(doIndication){
-                  lineProgressIndication(lineNum / lines.length, entry.asString("CALIBRATION"));
+                  lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
                   await Future.delayed(const Duration(milliseconds: 10));
                 }
                 _state = ParserState.COMMENT;
@@ -392,7 +392,7 @@ class CalibrationScriptParser{
                 final LogEntry entry = LogEntry.error("Interpretation for operation ${instruction.opBuffer} at line $lineNum not implemented, notify 3D responsible, operation ignored");
                 context.add(entry);
                 if(doIndication){
-                  lineProgressIndication(lineNum / lines.length, entry.asString("CALIBRATION"));
+                  lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
                   await Future.delayed(const Duration(milliseconds: 10));
                 }
                 _state = ParserState.COMMENT;
@@ -459,7 +459,7 @@ class CalibrationScriptParser{
       }
     }
 
-    return CompiledCalibration(
+    return CompiledCalculation(
       filename: file.absolute.path,
       fileLastModified: await file.lastModified(),
       requiredChannels: requiredChannels,
@@ -469,7 +469,7 @@ class CalibrationScriptParser{
     );
   }
 
-  static Future<bool> validate(CompiledCalibration script, {Function(double, String?)? lineProgressIndication}) async {
+  static Future<bool> validate(CompiledCalculation script, {Function(double, String?)? lineProgressIndication}) async {
     bool valid = true;
     final bool doIndication = lineProgressIndication != null;
 
@@ -480,7 +480,7 @@ class CalibrationScriptParser{
           final LogEntry entry = LogEntry.error("Operation ${inst.op.name} in block $blockNum requires ${inst.op.requiredParams()} operands, ${inst.operands.length} given");
           script.context.add(entry);
           if(doIndication){
-            lineProgressIndication(1, entry.asString("CALIBRATION"));
+            lineProgressIndication(1, entry.asString("CALCULATION"));
             await Future.delayed(const Duration(milliseconds: 10));
           }
           valid = false;
@@ -493,7 +493,7 @@ class CalibrationScriptParser{
                 final LogEntry entry = LogEntry.error("Constant expression '$operand' in block $blockNum cannot be parsed, if this is unexpected, notify 3D responsible");
                 script.context.add(entry);
                 if(doIndication){
-                  lineProgressIndication(1, entry.asString("CALIBRATION"));
+                  lineProgressIndication(1, entry.asString("CALCULATION"));
                   await Future.delayed(const Duration(milliseconds: 10));
                 }
                 valid = false;

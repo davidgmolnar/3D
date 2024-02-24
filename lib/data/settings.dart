@@ -107,10 +107,11 @@ abstract class TraceSettingsProvider{
       traceSettingNotifier.update((value) {
         value[measurement] ??= [];
         value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
+        
+        _postUpdate(measurement);
+        _reCalculateVisibleDuration();
       });
-      _postUpdate(measurement);
     }
-    _reCalculateVisibleDuration();
   }
 
   static void _postUpdate(final String measurement){
@@ -158,9 +159,10 @@ abstract class TraceSettingsProvider{
           ..offset = minValue..span = maxValue - minValue;
         }
       ).toList();
+      
+      _postUpdate(measurement);
+      _reCalculateVisibleDuration();
     });
-    _postUpdate(measurement);
-    _reCalculateVisibleDuration();
   }
 
   static void updateEntriesFrom(final String measurement, final List<String> signals){
@@ -192,10 +194,10 @@ abstract class TraceSettingsProvider{
           value[measurement]![sigIdx].span = maxValue - minValue;
         }
       }
+      
+      _postUpdate(measurement);
+      _reCalculateVisibleDuration();
     });
-
-    _postUpdate(measurement);
-    _reCalculateVisibleDuration();
   }
 
   static int itemCount(String measurement){

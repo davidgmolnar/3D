@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
-import '../data/calibration/constants.dart';
+import '../data/calculation/constants.dart';
 import '../data/settings.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';

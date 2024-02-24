@@ -28,7 +28,7 @@ class MainWindowToolbar extends StatelessWidget {
   static void _exportLogWindow (){}
 
   static void _calfileRunnerWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calibration", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calculation", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
   static void _traceEditorWindow () async {

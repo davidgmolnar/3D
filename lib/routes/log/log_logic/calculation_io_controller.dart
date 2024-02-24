@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../../data/calibration/calibration_script_execution.dart';
-import '../../../data/calibration/calibration_script_parsing.dart';
-import '../../../data/calibration/calibration_script_runtime.dart';
+import '../../../data/calculation/calculation_script_execution.dart';
+import '../../../data/calculation/calculation_script_parsing.dart';
+import '../../../data/calculation/calculation_script_runtime.dart';
 import '../../../data/updateable_valuenotifier.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
@@ -12,7 +12,7 @@ import '../../../ui/common.dart';
 import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
 
-class CalibrationIOInfo{
+class CalculationIOInfo{
   String? processingFile;
   bool error = false;
   bool processing = false;
@@ -21,16 +21,16 @@ class CalibrationIOInfo{
   double linePercentage = 0;
   List<String> context = [];
   List<String> selectedPaths = [];
-  CalibrationOptions calibrationOptions = CalibrationOptions(cleanRebuild: false, measurement: "Please select measurement", sampleTimeMs: 10);
+  CalculationOptions calculationOptions = CalculationOptions(cleanRebuild: false, measurement: "Please select measurement", sampleTimeMs: 10);
 }
 
-class CalibrationIoController{
-  static final UpdateableValueNotifier<CalibrationIOInfo> calIOInfoNotifier = UpdateableValueNotifier<CalibrationIOInfo>(CalibrationIOInfo());
+class CalculationIoController{
+  static final UpdateableValueNotifier<CalculationIOInfo> calIOInfoNotifier = UpdateableValueNotifier<CalculationIOInfo>(CalculationIOInfo());
 
   static Future<void> sendFilesToMaster() async {
     final Map<String, dynamic> request = {};
     request["script_paths"] = calIOInfoNotifier.value.selectedPaths;
-    request["options"] = calIOInfoNotifier.value.calibrationOptions.asJson();
+    request["options"] = calIOInfoNotifier.value.calculationOptions.asJson();
 
     ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, ResponseFinishable(ResponseFinishableType.RUN_CAL, request).asJson));
   }
@@ -47,7 +47,7 @@ class CalibrationIoController{
       if(entry.contains("ERROR")){
         value.error = true;
       }
-      if(["Build failed", "Exception when running script", "Cannot run calibration file on measurement", "Script successfully executed"].any((element) => entry.contains(element))){
+      if(["Build failed", "Exception when running script", "Cannot run calculation file on measurement", "Script successfully executed"].any((element) => entry.contains(element))){
         value.scriptsFinished++;
         if(value.scriptsFinished == value.selectedPaths.length){
           value.processing = false;
@@ -66,7 +66,7 @@ class CalibrationIoController{
       value.selectedPaths = [];
       value.processing = false;
       value.isDebug = false;
-      // value.calibrationOptions = CalibrationOptions(cleanRebuild: false, measurement: "Please select measurement", sampleTimeMs: 10);
+      // value.calculationOptions = CalculationOptions(cleanRebuild: false, measurement: "Please select measurement", sampleTimeMs: 10);
     });
   }
 
@@ -80,7 +80,7 @@ class CalibrationIoController{
     });
 
     for(final String path in calIOInfoNotifier.value.selectedPaths){
-      final CompiledCalibration? script = await CalibrationScriptRuntime.runCompilationOnly(File(path), calIOInfoNotifier.value.calibrationOptions.cleanRebuild,
+      final CompiledCalculation? script = await CalculationScriptRuntime.runCompilationOnly(File(path), calIOInfoNotifier.value.calculationOptions.cleanRebuild,
         progressIndication: (p0, p1) {
           if(p0 != 0){
             setLinePercentage(p0);

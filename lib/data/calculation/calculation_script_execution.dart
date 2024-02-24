@@ -3,23 +3,23 @@ import 'dart:math';
 import '../../io/logger.dart';
 import '../data.dart';
 import '../signal_container.dart';
-import 'calibration_script_parsing.dart';
+import 'calculation_script_parsing.dart';
 import 'constants.dart';
 import 'unit.dart';
 
-class CalibrationOptions{
+class CalculationOptions{
   final bool cleanRebuild;
   final String measurement;
   final int sampleTimeMs;
 
-  CalibrationOptions({
+  CalculationOptions({
     required this.cleanRebuild,
     required this.measurement,
     required this.sampleTimeMs
   });
 
-  CalibrationOptions copyWith({bool? cleanRebuild, String? measurement, int? sampleTimeMs}){
-    return CalibrationOptions(
+  CalculationOptions copyWith({bool? cleanRebuild, String? measurement, int? sampleTimeMs}){
+    return CalculationOptions(
       cleanRebuild: cleanRebuild ?? this.cleanRebuild,
       measurement: measurement ?? this.measurement,
       sampleTimeMs: sampleTimeMs ?? this.sampleTimeMs
@@ -34,7 +34,7 @@ class CalibrationOptions{
     };
   }
 
-  static CalibrationOptions? fromJson(Map json){
+  static CalculationOptions? fromJson(Map json){
     if(!json.containsKey('meas') || json['meas'] is! String){
       return null;
     }
@@ -45,13 +45,13 @@ class CalibrationOptions{
       return null;
     }
     else{
-      return CalibrationOptions(cleanRebuild: json["cr"], measurement: json["meas"], sampleTimeMs: json["st"]);
+      return CalculationOptions(cleanRebuild: json["cr"], measurement: json["meas"], sampleTimeMs: json["st"]);
     }
   }
 }
 
-class CalibrationScriptProcessor{
-  static Future<void> exec(final List<List<FrozenInstruction>> script, final CalibrationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
+class CalculationScriptProcessor{
+  static Future<void> exec(final List<List<FrozenInstruction>> script, final CalculationOptions options, {Function(double, String?)? progressIndication, int? indicationCount}) async {
     final bool doIndication = progressIndication != null && indicationCount != null;
     int instNo = 0;
     int blockNo = 0;
@@ -70,7 +70,7 @@ class CalibrationScriptProcessor{
           final LogEntry entry = LogEntry.warning("Skipping $blockNo. block, as ${inst.operands[0].substring(1)} signal did not exist in measurement ${options.measurement}");
           localLogger.add(entry);
           if(doIndication){
-            progressIndication((instNo.toDouble() / fullLen.toDouble()), entry.asString("CALIBRATION"));
+            progressIndication((instNo.toDouble() / fullLen.toDouble()), entry.asString("CALCULATION"));
             lastIndicated = instNo;
             await Future.delayed(const Duration(milliseconds: 10));
           }
@@ -85,7 +85,7 @@ class CalibrationScriptProcessor{
 
         if(doIndication){
           if(entry != null){
-            progressIndication((instNo.toDouble() / fullLen.toDouble()), entry.asString("CALIBRATION"));
+            progressIndication((instNo.toDouble() / fullLen.toDouble()), entry.asString("CALCULATION"));
             lastIndicated = instNo;
             await Future.delayed(const Duration(milliseconds: 10));
           }
@@ -101,12 +101,12 @@ class CalibrationScriptProcessor{
     final LogEntry entry = LogEntry.info("Script successfully executed");
     localLogger.add(entry);
     if(doIndication){
-      progressIndication(1.0, entry.asString("CALIBRATION"));
+      progressIndication(1.0, entry.asString("CALCULATION"));
       await Future.delayed(const Duration(milliseconds: 10));
     }
   }
 
-  static LogEntry? __doInstruction(FrozenInstruction inst, CalibrationOptions options){
+  static LogEntry? __doInstruction(FrozenInstruction inst, CalculationOptions options){
     // TODO olyanok nincsenek megcsinálva h pl összeadsz fokot radiánnal akkor az jól jöjjön ki
     switch (inst.op) {
       case Operation.ADD:
@@ -164,7 +164,7 @@ class CalibrationScriptProcessor{
     }
   }
 
-  static int __commonStartTime(final FrozenInstruction inst, final CalibrationOptions options){
+  static int __commonStartTime(final FrozenInstruction inst, final CalculationOptions options){
     int maxTime = -double.maxFinite.toInt();
     for(final String ch in inst.operands){
       final int chMinTime = signalData[options.measurement]![ch.substring(1)]!.values.first.timeStamp;
@@ -175,7 +175,7 @@ class CalibrationScriptProcessor{
     return maxTime;
   }
 
-  static int __commonEndTime(final FrozenInstruction inst, final CalibrationOptions options){
+  static int __commonEndTime(final FrozenInstruction inst, final CalculationOptions options){
     int minTime = double.maxFinite.toInt();
     for(final String ch in inst.operands){
       final int chMaxTime = signalData[options.measurement]![ch.substring(1)]!.values.last.timeStamp;
@@ -203,7 +203,7 @@ class CalibrationScriptProcessor{
     }
   }
 
-  static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num, num) op, final Unit? Function(Unit?, Unit?)? resultUnit){
+  static LogEntry? __twoOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num, num) op, final Unit? Function(Unit?, Unit?)? resultUnit){
     final List<Measurement> values = [];
     if(inst.numberOfChannelParameters == 0){
       return LogEntry.error("Combining two constants via script is not recommended and therefore not implemented");
@@ -279,7 +279,7 @@ class CalibrationScriptProcessor{
     return null;
   }
 
-  static LogEntry? __oneOperandBase(final FrozenInstruction inst, final CalibrationOptions options, final num Function(num) op){
+  static LogEntry? __oneOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num) op){
     final List<Measurement> values = [];
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("One operand operations must be called on a channel not a constant");
@@ -298,7 +298,7 @@ class CalibrationScriptProcessor{
     return null;
   }
 //                                                                                                                                  logvalue1    logvalue2    prev calc
-  static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalibrationOptions options, final num Function(Measurement, Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
+  static LogEntry? __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalculationOptions options, final num Function(Measurement, Measurement, Measurement) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit){
     final List<Measurement> values = [];
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("One operand operations must be called on a channel not a constant");
@@ -320,7 +320,7 @@ class CalibrationScriptProcessor{
     return null;
   }
 
-  static LogEntry? __delete(final FrozenInstruction inst, final CalibrationOptions options){
+  static LogEntry? __delete(final FrozenInstruction inst, final CalculationOptions options){
     if(inst.numberOfChannelParameters != 1){
       return LogEntry.error("The delete operation needs a channel to be specified, not a constant");
     }

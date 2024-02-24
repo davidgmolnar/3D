@@ -1,7 +1,7 @@
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/theme/theme.dart';
-import 'calibration_io_controller.dart';
+import 'calculation_io_controller.dart';
 import 'log_io_controller.dart';
 
 enum LogWindowType{
@@ -55,7 +55,7 @@ void logHandlePeriodicUpdateReceived(Map data){
         final dynamic entry = data['status'];
         if(linePercentage != 0){
           if(logWindowType == LogWindowType.CALCULATION){
-            CalibrationIoController.setLinePercentage(linePercentage);
+            CalculationIoController.setLinePercentage(linePercentage);
           }
           else{
             LogIOInfoController.setLinePercentage(linePercentage);
@@ -63,7 +63,7 @@ void logHandlePeriodicUpdateReceived(Map data){
         }
         if(entry.runtimeType == String){
           if(logWindowType == LogWindowType.CALCULATION){
-            CalibrationIoController.addToContext(entry);
+            CalculationIoController.addToContext(entry);
           }
           else{
             LogIOInfoController.addToContext(entry);

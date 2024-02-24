@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../ui/theme/theme.dart';
 import '../log_logic/log_window_action_type.dart';
-import 'calibration_window.dart';
+import 'calculation_window.dart';
 import 'log_import_export.dart';
 
 const double logBottomBarHeight = 100;
@@ -24,7 +24,7 @@ class LogContainer extends StatelessWidget {
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
       case LogWindowType.CALCULATION:
-        child = const CalibrationWindow();
+        child = const CalculationWindow();
         break;
       default:
     }

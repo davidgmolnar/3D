@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../data/calibration/const_eval.dart';
-import '../../data/calibration/constants.dart';
+import '../../data/calculation/const_eval.dart';
+import '../../data/calculation/constants.dart';
 import '../common.dart';
 import '../input_widgets/text_fields.dart';
 import '../theme/theme.dart';
