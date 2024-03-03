@@ -70,44 +70,62 @@ class Logger{
     await _flush();
   }
 
+  void __sleep(){
+    timer?.cancel();
+  }
+
+  void __wake(){
+    if(timer?.isActive ?? false){
+      return;
+    }
+    timer = Timer.periodic(Duration(milliseconds: loggerFlushIntervalMS), ((timer) async {
+      await _flush();
+    }));
+  }
+
   void info(String message){
     if(!_isActive){
       return;
     }
-    _buffer.add(LogEntry(message, LogLevel.INFO, DateTime.now()));
+    add(LogEntry(message, LogLevel.INFO, DateTime.now()));
   }
 
   void warning(String message){
     if(!_isActive){
       return;
     }
-    _buffer.add(LogEntry(message, LogLevel.WARNING, DateTime.now()));
+    add(LogEntry(message, LogLevel.WARNING, DateTime.now()));
   }
 
   void error(String message){
     if(!_isActive){
       return;
     }
-    _buffer.add(LogEntry(message, LogLevel.ERROR, DateTime.now()));
+    add(LogEntry(message, LogLevel.ERROR, DateTime.now()));
   }
 
   void critical(String message){
     if(!_isActive){
       return;
     }
-    _buffer.add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()));
+    add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()));
   }
 
   void addAll(List<LogEntry> entries){
     _buffer.addAll(entries);
+    if(entries.isNotEmpty){
+      __wake();
+    }
   }
 
   void add(LogEntry entry){
     _buffer.add(entry);
+    __wake();
   }
 
   Future<void> _flush() async {
     if(_buffer.isEmpty){
+      __sleep();
       return;
     }
 

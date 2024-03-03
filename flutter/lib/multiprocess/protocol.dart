@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:log_analyser/multiprocess/childprocess_api.dart';
+
 import '../io/logger.dart';
 
 const int _fragmentLength = 8000;
@@ -11,20 +13,17 @@ class _FragmentBuffer{
   _FragmentBuffer(this.nextBufferId, this.buffer);
 }
 
-// TODO ki lehet venni a fragment id-t, az ütközés ellen be lehet venni a sender portot, ehhez a datagramot ki kell menteni
-// TODO tesztelni kéne hogy a childprocesst bezárom miközben egy periodic updatet kap. A kérdés hogy a central app utána tud új processeket nyitni, vagy lerohad a central socket
-
 /// Header
 /// [Fragment Flag 0][Message ID 1-7]
 /// [Fragment ID 0-7]
 /// [Fragment ID 0-7]
 /// [Fragment ID 0-7]
 abstract class Protocol{
-  static int _nextMessageId = 0;
+  /*static int _nextMessageId = 0;
   static int get _getNextMessageId {
     _nextMessageId++;
     return _nextMessageId %= 128;
-  }
+  }*/
 
   static final Logger _protocolLogger = Logger(mainLogPath, "PROTOCOL");
 
@@ -32,13 +31,13 @@ abstract class Protocol{
 
   static List<Uint8List> encode(Uint8List data){
     if(data.length < _fragmentLength){
-      return [Uint8List.fromList([_getNextMessageId,0,0,0,...data.toList()])];
+      return [Uint8List.fromList([localSocketPort - masterSocketPort,0,0,0,...data.toList()])];
     }
     else{
       final List<Uint8List> messages = [];
       int fragmentID = 0;
       int offset = 0;
-      int messageID = _getNextMessageId;
+      final int messageID = localSocketPort - masterSocketPort;
       for(; offset < data.length - _fragmentLength; offset += _fragmentLength){
         Uint8List header = Uint8List(4);
         ByteData headerByteData = header.buffer.asByteData();

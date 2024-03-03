@@ -77,9 +77,11 @@ abstract class ChildProcessController{
               case ResponseType.STOPPING:
                 if(_activeChildProcesses.containsKey(response.childProcessPort)){
                   _activeChildProcesses.removeWhere((key, value) => key == response.childProcessPort);
+                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
                 }
                 else if(_newConnections.containsKey(response.childProcessPort)){
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
+                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
                 }
                 else{
                   localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master");
@@ -95,7 +97,11 @@ abstract class ChildProcessController{
           }
         }
       }
-    });
+    },
+    onError: (err){
+      localLogger.critical("Main socket listener got an error ${err.toString()}");
+    }
+    );
   }
 
   static void _handleFinished(int port, Map data) async {
@@ -193,7 +199,9 @@ abstract class ChildProcessController{
     if(_activeChildProcesses.containsKey(command.childProcessPort)){
       for(Uint8List fragment in Protocol.encode(command.encode())){
         await Future.delayed(const Duration(milliseconds: 10));
-        _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+        if(_activeChildProcesses.containsKey(command.childProcessPort)){
+          _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+        }
       }
     }
     else if(_newConnections.containsKey(command.childProcessPort)){
@@ -215,7 +223,9 @@ abstract class ChildProcessController{
           try{
             for(Uint8List fragment in Protocol.encode(command.encode())){
               await Future.delayed(const Duration(milliseconds: 10));
-              _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+              if(_activeChildProcesses.containsKey(command.childProcessPort)){
+                _sock?.send(fragment, InternetAddress.loopbackIPv4, command.childProcessPort);
+              }
             }
             toRemove.add(command);
           }catch(ex){
