@@ -58,7 +58,13 @@ abstract class ChildProcess{
           }
         }
       }
-    });
+    },
+    onError: (err) async {
+      localLogger.critical("Childprocess socket listener got an error ${err.toString()}, assuming master left, shutting down");
+      await localLogger.stop();
+      exit(0);
+    }
+    );
   }
 
   static void _handleData(Map data){
@@ -101,10 +107,9 @@ abstract class ChildProcess{
 
   static void signalStop(){
     _sock?.send(_stopSignal, InternetAddress.loopbackIPv4, masterSocketPort);
-    _sock?.close();
   }
 
-  static void stopWithoutSignaling(){
+  static void close(){
     _sock?.close();
   }
 }

@@ -78,10 +78,12 @@ abstract class ChildProcessController{
                 if(_activeChildProcesses.containsKey(response.childProcessPort)){
                   _activeChildProcesses.removeWhere((key, value) => key == response.childProcessPort);
                   localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
+                  _sock?.send(_killSignal, InternetAddress.loopbackIPv4, response.childProcessPort);
                 }
                 else if(_newConnections.containsKey(response.childProcessPort)){
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
                   localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
+                  _sock?.send(_killSignal, InternetAddress.loopbackIPv4, response.childProcessPort);
                 }
                 else{
                   localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master");

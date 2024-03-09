@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../data/calculation/constants.dart';
 import '../data/settings.dart';
@@ -125,7 +126,7 @@ Future<bool> tryStartup(List<String> args) async {
   return true;
 }
 
-Future<void> postStartup() async {
+Future<void> postStartup(var root) async {
   localLogger.start();
   localLogger.info("Starting ${windowType.name}");
   if(windowType != WindowType.MAIN_WINDOW && windowSetup == null){
@@ -139,15 +140,17 @@ Future<void> postStartup() async {
   }
   Const.loadFromDisk();
   SettingsProvider.loadFromDisk();
+  windowManager.addListener(root);
+  windowManager.setPreventClose(true);
 }
 
 Future<void> shutdown() async {
-  await localLogger.stop();
   if(windowType == WindowType.MAIN_WINDOW){
     ChildProcessController.dispose();
+    await localLogger.stop();
+    exit(0);
   }
   else{
     ChildProcess.signalStop();
   }
-  exit(0);
 }

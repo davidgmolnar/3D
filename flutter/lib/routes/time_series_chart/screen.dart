@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
@@ -12,11 +13,12 @@ class ChartApp extends StatefulWidget {
   State<ChartApp> createState() => _ChartAppState();
 }
 
-class _ChartAppState extends State<ChartApp> {
+class _ChartAppState extends State<ChartApp> with WindowListener{
   @override
   void initState() {
     StyleManager.updater = _update;
-    postStartup();
+    postStartup(this);
+    setState(() {});
     super.initState();
   }
 
@@ -32,6 +34,11 @@ class _ChartAppState extends State<ChartApp> {
       theme: StyleManager.getThemeData(context),
       home: const ChartScreen(),
     );
+  }
+
+  @override
+  void onWindowClose() async {
+    shutdown();
   }
 }
 

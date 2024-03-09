@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
@@ -16,11 +17,12 @@ class MainWindowApp extends StatefulWidget {
   State<MainWindowApp> createState() => _MainWindowAppState();
 }
 
-class _MainWindowAppState extends State<MainWindowApp> {
+class _MainWindowAppState extends State<MainWindowApp> with WindowListener {
   @override
   void initState() {
     StyleManager.updater = _update;
-    postStartup();
+    postStartup(this);
+    setState(() {});
     super.initState();
   }
 
@@ -37,6 +39,11 @@ class _MainWindowAppState extends State<MainWindowApp> {
       theme: StyleManager.getThemeData(context),
       home: const MainWindowScreen(),
     );
+  }
+
+  @override
+  void onWindowClose() async {
+    shutdown();
   }
 }
 

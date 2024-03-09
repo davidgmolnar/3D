@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
@@ -14,11 +15,12 @@ class SettingApp extends StatefulWidget {
   State<SettingApp> createState() => _SettingAppState();
 }
 
-class _SettingAppState extends State<SettingApp> {
+class _SettingAppState extends State<SettingApp> with WindowListener{
   @override
   void initState() {
     StyleManager.updater = _update;
-    postStartup();
+    postStartup(this);
+    setState(() {});
     super.initState();
   }
 
@@ -34,6 +36,11 @@ class _SettingAppState extends State<SettingApp> {
       theme: StyleManager.getThemeData(context),
       home: const SettingScreen(),
     );
+  }
+
+  @override
+  void onWindowClose() async {
+    shutdown();
   }
 }
 

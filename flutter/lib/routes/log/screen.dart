@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
@@ -14,11 +15,12 @@ class LogApp extends StatefulWidget {
   State<LogApp> createState() => _LogAppState();
 }
 
-class _LogAppState extends State<LogApp> {
+class _LogAppState extends State<LogApp> with WindowListener {
   @override
   void initState() {
     StyleManager.updater = _update;
-    postStartup();
+    postStartup(this);
+    setState(() {});
     super.initState();
   }
 
@@ -34,6 +36,11 @@ class _LogAppState extends State<LogApp> {
       theme: StyleManager.getThemeData(context),
       home: const LogScreen(),
     );
+  }
+
+  @override
+  void onWindowClose() async {
+    shutdown();
   }
 }
 

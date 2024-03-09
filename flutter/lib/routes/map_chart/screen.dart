@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
@@ -12,11 +13,12 @@ class MapApp extends StatefulWidget {
   State<MapApp> createState() => _MapAppState();
 }
 
-class _MapAppState extends State<MapApp> {
+class _MapAppState extends State<MapApp> with WindowListener{
   @override
   void initState() {
     StyleManager.updater = _update;
-    postStartup();
+    postStartup(this);
+    setState(() {});
     super.initState();
   }
 
@@ -32,6 +34,11 @@ class _MapAppState extends State<MapApp> {
       theme: StyleManager.getThemeData(context),
       home: const MapScreen(),
     );
+  }
+
+  @override
+  void onWindowClose() async {
+    shutdown();
   }
 }
 
