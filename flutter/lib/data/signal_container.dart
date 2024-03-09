@@ -51,20 +51,4 @@ class SignalContainer{
     required this.displayName,
     this.unit
   });
-
-  Map<String, dynamic> get asJson => {
-    "dbcName": dbcName,
-    "displayName": displayName,
-    "unit": unit ?? "NOT_SET",
-    "values": values.asMap().map((key, value) => MapEntry(key, value.asJson))
-  };
-
-  static SignalContainer fromJson(Map<String, dynamic> map){
-    return SignalContainer(
-      dbcName: map['dbcName'],
-      displayName: map['displayName'],
-      unit: map['unit'] == "NOT_SET" ? null : map['unit'],
-      values: map['values'].values.map((element) => element.fromJson(element)).toList()
-    );
-  }
-} 
+}

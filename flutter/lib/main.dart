@@ -30,7 +30,5 @@ void main(List<String> args) async {
     });*/
   }
 
-  // TODO előbb a close handshake pusholva, majd a signalcontainer storage rework
-
   runSelectedApp();
 }

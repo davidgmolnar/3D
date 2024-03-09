@@ -103,9 +103,21 @@ class _LogImportState extends State<LogImport> {
                             value.selectedPaths.addAll(filtered);
                             value.measurementAliases.addAll(List.filled(filtered.length, null));
                           });
-                          if(filtered.any((element) => element.toLowerCase().contains(".bin"))){
-                            List<String>? dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+                          List<String>? dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+                          if(dbcPaths == null || dbcPaths.isEmpty){
+                            // ignore: use_build_context_synchronously
+                            await showDialog<Widget>(context: context, builder: (BuildContext context){
+                              return const DialogBase(
+                                title: "DBC Selection",
+                                dialog: DBCSelectorDialog(),
+                                minWidth: 700,
+                              );
+                            });
+                            dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+
                             if(dbcPaths == null || dbcPaths.isEmpty){
+                              // ignore: use_build_context_synchronously
+                              showError(context, "You must select a DBC file to import a binary log");
                               // ignore: use_build_context_synchronously
                               await showDialog<Widget>(context: context, builder: (BuildContext context){
                                 return const DialogBase(
@@ -115,20 +127,6 @@ class _LogImportState extends State<LogImport> {
                                 );
                               });
                               dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
-
-                              if(dbcPaths == null || dbcPaths.isEmpty){
-                                // ignore: use_build_context_synchronously
-                                showError(context, "You must select a DBC file to import a binary log");
-                                // ignore: use_build_context_synchronously
-                                await showDialog<Widget>(context: context, builder: (BuildContext context){
-                                  return const DialogBase(
-                                    title: "DBC Selection",
-                                    dialog: DBCSelectorDialog(),
-                                    minWidth: 700,
-                                  );
-                                });
-                                dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
-                              }
                             }
                           }
                         }
