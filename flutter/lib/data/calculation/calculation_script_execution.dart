@@ -205,8 +205,8 @@ class CalculationScriptProcessor{
 
     signalData[meas]![sig]!.values.clear();
     signalData[meas]![sig]!.timestamps.clear();
-    signalData[meas]![sig]!.values.set(values);
-    signalData[meas]![sig]!.timestamps.set(timestamps);
+    signalData[meas]![sig]!.values = values;
+    signalData[meas]![sig]!.timestamps = timestamps;
 
     if(unit != null){
       signalData[meas]![sig]!.unit = unit;
@@ -287,8 +287,8 @@ class CalculationScriptProcessor{
       int endTime = __commonEndTime(inst, options);
       final String op0 = inst.operands[0].substring(1);
       final String op1 = inst.operands[1].substring(1);
-      int p0Index = signalData[options.measurement]![op0]!.values.toList().indexWhere((point) => point.timeStamp >= time);
-      int p1Index = signalData[options.measurement]![op1]!.values.toList().indexWhere((point) => point.timeStamp >= time);
+      int p0Index = signalData[options.measurement]![op0]!.timestamps.toList<int>().indexWhere((point) => point >= time);
+      int p1Index = signalData[options.measurement]![op1]!.timestamps.toList<int>().indexWhere((point) => point >= time);
 
       for(; time < endTime; time += options.sampleTimeMs){
         while(signalData[options.measurement]![op0]!.timestamps[p0Index] < time){
@@ -329,7 +329,7 @@ class CalculationScriptProcessor{
         }
       }
 
-      final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit): null; 
+      final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit): null;
       __commit(inst.result, options.measurement, values, timestamps, unit);
     }
 

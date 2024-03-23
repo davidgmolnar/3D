@@ -44,8 +44,8 @@ class Measurement{
 }
 
 class SignalContainer{
-  final TypedDataListContainer values;
-  final TypedDataListContainer<Uint32List> timestamps;
+  TypedDataListContainer values;
+  TypedDataListContainer<Uint32List> timestamps;
   final String dbcName;
   String displayName;
   Unit? unit;

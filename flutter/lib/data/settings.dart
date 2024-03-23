@@ -181,8 +181,8 @@ abstract class TraceSettingsProvider{
         }
 
         final int sigIdx = value[measurement]!.indexWhere((ts) => ts.signal == sig);
-        final num minValue = signalData[measurement]![sig]!.values.iterable.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
-        final num maxValue = signalData[measurement]![sig]!.values.iterable.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        final num minValue = signalData[measurement]![sig]!.values.iterable.fold(double.maxFinite, (previousValue, element) => min(previousValue, element));
+        final num maxValue = signalData[measurement]![sig]!.values.iterable.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element));
 
         if(sigIdx == -1){
           value[measurement]!.add(TraceSetting(signal: sig, color: _nextColor, scalingGroup: _nextScalingGroup, displayName: sig)

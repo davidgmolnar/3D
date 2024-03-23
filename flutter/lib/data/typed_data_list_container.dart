@@ -24,7 +24,7 @@ class TypedDataListContainer<T extends TypedData>{
   num get first => (_list as List)[0];
   set last(num v){
     if(floatLike.contains(T)){
-      (_list as List)[size - 1] = v;
+      (_list as List)[size - 1] = v.toDouble();
     }
     else{
       (_list as List)[size - 1] = v.toInt();
@@ -160,14 +160,16 @@ class TypedDataListContainer<T extends TypedData>{
   }
 
   void clear(){
-    (_list as List).clear();
-    _capacity = 0;
     _size = 0;
+    reserve(0);
   }
 
   void pushBack(num value){
     if(!floatLike.contains(T)){
       value = value.toInt();
+    }
+    else{
+      value = value.toDouble();
     }
     if(_capacity > _size){
       (_list as List)[_size] = value;
@@ -184,13 +186,6 @@ class TypedDataListContainer<T extends TypedData>{
     reserve(_capacity + other.size);
     (_list as List).setRange(_size, _capacity, other.iterable);
   }*/
-
-  void set(TypedDataListContainer<TypedData> other){
-    (_list as List).clear();
-    _list = other as T;
-    _capacity = other.capacity;
-    _size = other.size;
-  }
 
   void shrinkToFit(){
     if(_size >= _capacity){
