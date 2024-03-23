@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
 import '../../data/settings.dart';
+import '../../io/logger.dart';
 import '../theme/theme.dart';
 import 'chart_logic/axis_data.dart';
 import 'chart_logic/chart_controller.dart';
@@ -33,12 +36,12 @@ class ScalingInfo{
 
   void fillIndexes(ScalingInfo? old, String measurement, String signal){
     //if(old == null){
-    startIndex = signalData[measurement]![signal]!.values.indexWhere((meas) => meas.timeStamp >= timeOffset);
+    startIndex = signalData[measurement]![signal]!.timestamps.toList<int>().indexWhere((timestamp) => timestamp >= timeOffset);
     if(startIndex == -1){
-      startIndex = signalData[measurement]![signal]!.values.length;
+      startIndex = signalData[measurement]![signal]!.timestamps.size;
     }
     // measCount = signalData[measurement]![signal]!.values.skip(startIndex).toList(growable: false).indexWhere((meas) => meas.timeStamp >= timeOffset + timeDuration);
-    measCount = signalData[measurement]![signal]!.values.skip(startIndex).takeWhile((meas) => meas.timeStamp <= timeOffset + timeDuration).length;
+    measCount = signalData[measurement]![signal]!.timestamps.iterable.skip(startIndex).takeWhile((timestamp) => timestamp <= timeOffset + timeDuration).length;
     return;
     /*} // TODO ez azért kéne
     final int len = signalData[measurement]![signal]!.values.length;
@@ -106,8 +109,16 @@ class _PlotContext{
     required this.color
   });
 
+  static PlotPoint __toPlotPoint(final num value, final int timestamp, final ScalingInfo scaling){
+    return PlotPoint(x: (timestamp - scaling.timeOffset) * scaling.timeScale, y: (value - scaling.valueOffset) * scaling.valueScale);
+  }
+
   void initialScaledPoints(String measurement, String signal){
-    scaledChartLine = signalData[measurement]![signal]!.values.map((meas) => meas.toPlotPoint(scalingInfo)).toList();
+    for(int i = 0; i < signalData[measurement]![signal]!.values.size; i++){
+      scaledChartLine.add(__toPlotPoint(signalData[measurement]![signal]!.values[i],
+                                        signalData[measurement]![signal]!.timestamps[i].toInt(),
+                                        scalingInfo));
+    }
   }
 
   void reScalePoints(ScalingInfo newInfo, ScalingInfo oldInfo){
@@ -324,7 +335,8 @@ class _ChartLinePainter extends CustomPainter {
     Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
     final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;
-    for(int i = plotContext.scalingInfo.startIndex; i < end; i++){
+    final int increment = max((end - plotContext.scalingInfo.startIndex) ~/ 100000, 1);
+    for(int i = plotContext.scalingInfo.startIndex; i < end; i += increment){
       if(i == plotContext.scalingInfo.startIndex){
         canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
         canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
@@ -332,7 +344,12 @@ class _ChartLinePainter extends CustomPainter {
         path.moveTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
         continue;
       }
-      path.lineTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
+      try{
+        path.lineTo(plotContext.scaledChartLine[i].x, plotContext.scaledChartLine[i].y);
+      } on RangeError{
+        localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
+        break;
+      }
     }
     canvas.drawPath(path, paint);
   }

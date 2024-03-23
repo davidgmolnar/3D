@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'signal_container.dart';
+import 'typed_data_list_container.dart';
 
 // [measurement][signal] = data
 Map<String, Map<String, SignalContainer>> signalData = {};
@@ -9,7 +12,7 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<Str
   Map<String, Map<String, num>> dataAtTimeStamp = {};
   for(String meas in visibility.keys){
     for(String signal in visibility[meas]!){
-      final num? val = _binarySearchValueAtTimeStamp(signalData[meas]![signal]!.values, timeStamp);
+      final num? val = _binarySearchValueAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, timeStamp);
       if(val != null){
         if(!dataAtTimeStamp.keys.contains(meas)){
           dataAtTimeStamp[meas] = {};
@@ -23,61 +26,65 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<Str
 
 num signalIntegral(final String meas, final String signal, final int ref, final int stop){
   final int inc = ref < stop ? 1 : -1;
-  int? currIndex = _binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.values, ref);
+  int? currIndex = _binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, ref);
   if(currIndex == null){
     return 0;
   }
   else{
     num sum = 0;
-    Measurement currVal = signalData[meas]![signal]!.values[currIndex];
-    Measurement nextVal = signalData[meas]![signal]!.values[currIndex + inc];
-    while(ref < stop ? nextVal.timeStamp <= stop : nextVal.timeStamp >= stop){
-      sum += ((currVal.value + nextVal.value) / 2) * (currVal.timeStamp - nextVal.timeStamp).abs() / 1000.0; // ms to s
+    num currVal = signalData[meas]![signal]!.values[currIndex];
+    num currTs = signalData[meas]![signal]!.timestamps[currIndex];
+    num nextVal = signalData[meas]![signal]!.values[currIndex + inc];
+    num nextTs = signalData[meas]![signal]!.timestamps[currIndex + inc];
+    while(ref < stop ? nextTs <= stop : nextTs >= stop){
+      sum += ((currVal + nextVal) / 2) * (currTs - nextTs).abs() / 1000.0; // ms to s
       currIndex = currIndex! + inc;
       currVal = signalData[meas]![signal]!.values[currIndex];
+      currTs = signalData[meas]![signal]!.timestamps[currIndex];
       nextVal = signalData[meas]![signal]!.values[currIndex + inc];
+      nextTs = signalData[meas]![signal]!.timestamps[currIndex + inc];
     }
     return sum;
   }
 }
 
-num? _binarySearchValueAtTimeStamp(final List<Measurement> list, final int timeStamp){
-  if(timeStamp > list.last.timeStamp || timeStamp < list.first.timeStamp){
+num? _binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+  if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
   int partStart = 0;
-  int partEnd = list.length - 1;
+  int partEnd = values.size - 1;
   int searchIndex = -1;
   while(partStart <= partEnd){
     searchIndex = ((partStart + partEnd) / 2).floor();
-    if(list[searchIndex].timeStamp < timeStamp){
+    if(timeStamps[searchIndex] < timeStamp){
       partStart = searchIndex + 1;
     }
-    else if(list[searchIndex].timeStamp > timeStamp){
+    else if(timeStamps[searchIndex] > timeStamp){
       partEnd = searchIndex - 1;
     }
     else{
       // direkt találat
-      return list[searchIndex].value;
+      return values[searchIndex];
     }
   }
   // legközelebbi találat
-  return list[searchIndex].value;
+  return values[searchIndex];
 }
 
-int? _binarySearchIndexAtTimeStamp(final List<Measurement> list, final int timeStamp){
-  if(timeStamp > list.last.timeStamp || timeStamp < list.first.timeStamp){
+int? _binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+  if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
   int partStart = 0;
-  int partEnd = list.length - 1;
+  int partEnd = values.size - 1;
   int searchIndex = -1;
   while(partStart <= partEnd){
     searchIndex = ((partStart + partEnd) / 2).floor();
-    if(list[searchIndex].timeStamp < timeStamp){
+    if(timeStamps[searchIndex] < timeStamp){
       partStart = searchIndex + 1;
     }
-    else if(list[searchIndex].timeStamp > timeStamp){
+    else if(timeStamps[searchIndex] > timeStamp){
       partEnd = searchIndex - 1;
     }
     else{
@@ -90,21 +97,37 @@ int? _binarySearchIndexAtTimeStamp(final List<Measurement> list, final int timeS
 }
 
 int timestampAtMax(final String meas, final String signal, final int start, final int stop){
-  return signalData[meas]![signal]!.values.skipWhile((value) => value.timeStamp < start).takeWhile((value) => value.timeStamp < stop).fold(Measurement(double.negativeInfinity, 0), (previousValue, element){
-    if(previousValue.value < element.value){
-      return element;
+  int? minIndex;
+  for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
+    if(signalData[meas]![signal]!.timestamps[i] < start){
+      continue;
     }
-    return previousValue;
-  }).timeStamp;
+    else if(signalData[meas]![signal]!.timestamps[i] > stop){
+      break;
+    }
+    minIndex ??= i;
+    if(signalData[meas]![signal]!.values[minIndex] > signalData[meas]![signal]!.values[i]){
+      minIndex = i;
+    }
+  }
+  return signalData[meas]![signal]!.timestamps[minIndex!].toInt();
 }
 
 int timestampAtMin(final String meas, final String signal, final int start, final int stop){
-  return signalData[meas]![signal]!.values.skipWhile((value) => value.timeStamp < start).takeWhile((value) => value.timeStamp < stop).fold(Measurement(double.infinity, 0), (previousValue, element){
-    if(previousValue.value > element.value){
-      return element;
+  int? maxIndex;
+  for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
+    if(signalData[meas]![signal]!.timestamps[i] < start){
+      continue;
     }
-    return previousValue;
-  }).timeStamp;
+    else if(signalData[meas]![signal]!.timestamps[i] > stop){
+      break;
+    }
+    maxIndex ??= i;
+    if(signalData[meas]![signal]!.values[maxIndex] < signalData[meas]![signal]!.values[i]){
+      maxIndex = i;
+    }
+  }
+  return signalData[meas]![signal]!.timestamps[maxIndex!].toInt();
 }
 
 String representNumber(String ret, {int maxDigit = 10}){

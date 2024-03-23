@@ -129,8 +129,8 @@ abstract class TraceSettingsProvider{
 
     for(final String meas in vis.keys){
       for(final String sig in vis[meas]!){
-        final int sigFirst = signalData[meas]![sig]!.values.first.timeStamp;
-        final int sigLast = signalData[meas]![sig]!.values.last.timeStamp;
+        final int sigFirst = signalData[meas]![sig]!.timestamps.first.toInt();
+        final int sigLast = signalData[meas]![sig]!.timestamps.last.toInt();
         if(sigFirst < first){
           first = sigFirst;
         }
@@ -149,8 +149,8 @@ abstract class TraceSettingsProvider{
   static void addEntriesFrom(final String measurement, final List<SignalContainer> signalContainers){
     traceSettingNotifier.update((traceSetting) {
       traceSetting[measurement] = signalContainers.map((signalContainer) {
-        num minValue = signalContainer.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
-        num maxValue = signalContainer.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        num minValue = signalContainer.values.iterable.fold(double.maxFinite, (previousValue, element) => min(previousValue, element));
+        num maxValue = signalContainer.values.iterable.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element));
         if(minValue == maxValue){
           minValue--;
           maxValue++;
@@ -181,8 +181,8 @@ abstract class TraceSettingsProvider{
         }
 
         final int sigIdx = value[measurement]!.indexWhere((ts) => ts.signal == sig);
-        final num minValue = signalData[measurement]![sig]!.values.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
-        final num maxValue = signalData[measurement]![sig]!.values.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
+        final num minValue = signalData[measurement]![sig]!.values.iterable.fold(double.maxFinite, (previousValue, element) => min(previousValue, element.value));
+        final num maxValue = signalData[measurement]![sig]!.values.iterable.fold(-double.maxFinite, (previousValue, element) => max(previousValue, element.value));
 
         if(sigIdx == -1){
           value[measurement]!.add(TraceSetting(signal: sig, color: _nextColor, scalingGroup: _nextScalingGroup, displayName: sig)

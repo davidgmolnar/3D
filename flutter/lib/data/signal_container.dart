@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:log_analyser/data/typed_data_list_container.dart';
+
 import '../ui/charts/chart_area.dart';
 import 'calculation/unit.dart';
 
@@ -40,14 +44,16 @@ class Measurement{
 }
 
 class SignalContainer{
-  final List<Measurement> values;
+  final TypedDataListContainer values;
+  final TypedDataListContainer<Uint32List> timestamps;
   final String dbcName;
-  Unit? unit;
   String displayName;
+  Unit? unit;
 
   SignalContainer({
-    required this.dbcName,
     required this.values,
+    required this.timestamps,
+    required this.dbcName,
     required this.displayName,
     this.unit
   });

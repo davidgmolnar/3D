@@ -114,7 +114,6 @@ class _LogImportState extends State<LogImport> {
                               );
                             });
                             dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
-
                             if(dbcPaths == null || dbcPaths.isEmpty){
                               // ignore: use_build_context_synchronously
                               showError(context, "You must select a DBC file to import a binary log");

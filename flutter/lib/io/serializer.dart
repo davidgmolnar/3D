@@ -3,10 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dart_dbc_parser/dart_dbc_parser.dart';
+import 'package:dart_dbc_parser/signal/dbc_signal.dart';
 
 import '../data/calculation/unit.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
+import '../data/typed_data_list_container.dart';
 import 'logger.dart';
 
 class LoadContext{
@@ -141,9 +143,62 @@ abstract class Serializer {
         }
         return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
+
+      bool dbcFail = false;
+      final List<String>? dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
+      if(dbcPaths == null || dbcPaths.isEmpty){
+        dbcFail = true;
+        final LogEntry entry = LogEntry.warning("DBC database was not set, cant efficiently store measurement");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+      }
+
+      late final DBCDatabase can;
+      if(!dbcFail){
+        can = await DBCDatabase.loadFromFile(dbcPaths!.map((e) => File(e)).toList());
+        if(can.database.isEmpty){
+          dbcFail = true;
+          final LogEntry entry = LogEntry.warning("Failed to load DBC database, cant efficiently store measurement");
+          context.add(entry);
+          if(doIndication){
+            lineProgressIndication(0, entry.asString(localLogger.loggerName));
+            await Future.delayed(const Duration(milliseconds: 10));
+          }
+        }
+      }
+      if(!dbcFail){
+        final LogEntry entry = LogEntry.info("Successfully loaded DBC database from files $dbcPaths");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
+      }
+
       for(int i = 0; i < signals.length; i++){
         if(i != timeIndex){
-          storage[signals[i]] = SignalContainer(dbcName: signals[i], values: [], displayName: signals[i], unit: Unit.tryParse(units[i]));
+          DBCSignal? signal;
+          for(final Map<String, DBCSignal> msg in can.database.values){
+            if(msg.keys.contains(signals[i])){
+              signal = msg[signals[i]];
+              break;
+            }
+          }
+          if(dbcFail || signal == null){
+            final LogEntry entry = LogEntry.warning("Failed to find signal ${signals[i]} in DBC database, cant efficiently store channel, falling back to float32");
+            context.add(entry);
+            if(doIndication){
+              lineProgressIndication(0, entry.asString(localLogger.loggerName));
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer<Float32List>(list: Float32List(0)), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: Unit.tryParse(units[i]));
+          }
+          else{
+            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer.emptyFromDBC(signal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: Unit.tryParse(units[i]));
+          }
         }
       }
       int lineCnt = 3;
@@ -161,7 +216,8 @@ abstract class Serializer {
           int timeStamp = (double.parse(tokens[timeIndex]) * timeToMsMultiplier).toInt();
           for(int i = 0; i < signals.length; i++){
             if(i != timeIndex){
-              storage[signals[i]]!.values.add(Measurement(double.parse(tokens[i]), timeStamp));
+              storage[signals[i]]!.values.pushBack(double.parse(tokens[i]));
+              storage[signals[i]]!.timestamps.pushBack(timeStamp);
             }
           }
           lineCnt++;
@@ -180,6 +236,21 @@ abstract class Serializer {
         return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
     }
+
+    {
+      final LogEntry entry = LogEntry.info("Finishing up ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(1, entry.asString(localLogger.loggerName));
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+    }
+
+    for(final String name in storage.keys){
+      storage[name]!.values.shrinkToFit();
+      storage[name]!.timestamps.shrinkToFit();
+    }
+
     final LogEntry entry = LogEntry.info("Successfully loaded csv ${file.absolute.path}");
     context.add(entry);
     if(doIndication){
@@ -294,16 +365,39 @@ abstract class Serializer {
       final Map<String, num> newSignalValues = can.decode(bytes.sublist(i, i + CAN_LEN_3D_FORMAT));
       for(final String signal in newSignalValues.keys){
         if(!storage.containsKey(signal)){
-          storage[signal] = SignalContainer(dbcName: signal, values: [], displayName: signal, unit: Unit.tryParse(can.database[canID]![signal]!.unit));
+          late final DBCSignal dbcSignal;
+          for(final Map<String, DBCSignal> msg in can.database.values){
+            if(msg.keys.contains(signal)){
+              dbcSignal = msg[signal]!;
+              break;
+            }
+          }
+          storage[signal] = SignalContainer(dbcName: signal, values: TypedDataListContainer.emptyFromDBC(dbcSignal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signal, unit: Unit.tryParse(can.database[canID]![signal]!.unit));
         }
 
-        if(storage[signal]!.values.isNotEmpty && newSignalValues[signal]! == storage[signal]!.values.last.value){
-          storage[signal]!.values.last = Measurement(newSignalValues[signal]!, timeStampMS - timeStampOffset);
+        if(storage[signal]!.values.isNotEmpty && newSignalValues[signal]! == storage[signal]!.values.last){
+          storage[signal]!.values.last = newSignalValues[signal]!;
+          storage[signal]!.timestamps.last = timeStampMS - timeStampOffset;
         }
         else{
-          storage[signal]!.values.add(Measurement(newSignalValues[signal]!, timeStampMS - timeStampOffset));
+          storage[signal]!.values.pushBack(newSignalValues[signal]!);
+          storage[signal]!.timestamps.pushBack(timeStampMS - timeStampOffset);
         }
       }
+    }
+
+    {
+      final LogEntry entry = LogEntry.info("Finishing up ${file.absolute.path}");
+      context.add(entry);
+      if(doIndication){
+        lineProgressIndication(1, entry.asString(localLogger.loggerName));
+        await Future.delayed(const Duration(milliseconds: 10));
+      }
+    }
+
+    for(final String name in storage.keys){
+      storage[name]!.values.shrinkToFit();
+      storage[name]!.timestamps.shrinkToFit();
     }
     
     final LogEntry entry = LogEntry.info("Successfully loaded binary ${file.absolute.path}");
