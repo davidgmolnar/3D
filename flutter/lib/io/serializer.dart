@@ -375,7 +375,7 @@ abstract class Serializer {
           storage[signal] = SignalContainer(dbcName: signal, values: TypedDataListContainer.emptyFromDBC(dbcSignal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signal, unit: Unit.tryParse(can.database[canID]![signal]!.unit));
         }
 
-        if(storage[signal]!.values.isNotEmpty && newSignalValues[signal]! == storage[signal]!.values.last){
+        if(storage[signal]!.values.size > 1 && newSignalValues[signal]! == storage[signal]!.values.last && storage[signal]!.values.last == storage[signal]!.values[storage[signal]!.values.size - 2]){
           storage[signal]!.values.last = newSignalValues[signal]!;
           storage[signal]!.timestamps.last = timeStampMS - timeStampOffset;
         }
