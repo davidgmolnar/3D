@@ -312,20 +312,20 @@ class CalculationScriptProcessor{
         }
         
         if(p1Index == 0){
-          p1 = signalData[options.measurement]![op1]!.values[p0Index];
+          p1 = signalData[options.measurement]![op1]!.values[p1Index];
         }
         else{
-          p1 = __interpAt(signalData[options.measurement]![op1]!.values[p0Index - 1],
-                          signalData[options.measurement]![op1]!.timestamps[p0Index - 1],
-                          signalData[options.measurement]![op1]!.values[p0Index],
-                          signalData[options.measurement]![op1]!.timestamps[p0Index],
+          p1 = __interpAt(signalData[options.measurement]![op1]!.values[p1Index - 1],
+                          signalData[options.measurement]![op1]!.timestamps[p1Index - 1],
+                          signalData[options.measurement]![op1]!.values[p1Index],
+                          signalData[options.measurement]![op1]!.timestamps[p1Index],
                           time);
         }
         values.pushBack(op(p0, p1));
         timestamps.pushBack(time);
 
         if(values.last.isNaN || values.last.isInfinite){
-          return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
+          return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name} ${values.last}");
         }
       }
 
