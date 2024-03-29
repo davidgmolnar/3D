@@ -26,7 +26,7 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<Str
 
 num signalIntegral(final String meas, final String signal, final int ref, final int stop){
   final int inc = ref < stop ? 1 : -1;
-  int? currIndex = _binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, ref);
+  int? currIndex = binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.timestamps, ref);
   if(currIndex == null){
     return 0;
   }
@@ -72,12 +72,12 @@ num? _binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> value
   return values[searchIndex];
 }
 
-int? _binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
   if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
   int partStart = 0;
-  int partEnd = values.size - 1;
+  int partEnd = timeStamps.size - 1;
   int searchIndex = -1;
   while(partStart <= partEnd){
     searchIndex = ((partStart + partEnd) / 2).floor();
