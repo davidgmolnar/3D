@@ -286,23 +286,7 @@ abstract class TraceSettingsProvider{
     return tmp;
   }
 
-  /*static int get firstVisibleTimestamp {
-    int tmp = -1;
-    for(String measurement in traceSettingNotifier.value.keys){
-      for(TraceSetting traceSetting in traceSettingNotifier.value[measurement]!){
-        final int first = signalData[measurement]![traceSetting.signal]!.values.first.timeStamp;
-        if(tmp == -1){
-          tmp = first;
-        }
-        else if(first < tmp){
-          tmp = first;
-        }
-      }
-    }
-    return tmp;
-  }*/
-
-  static void dragScalingGroup(int group, double delta){
+  static void dragScalingGroup(final int group, final double delta){
     traceSettingNotifier.update((traceSetting) {
       for(String measurement in traceSetting.keys){
         for(int i = 0; i < traceSetting[measurement]!.length; i++){
@@ -314,7 +298,7 @@ abstract class TraceSettingsProvider{
     });
   }
 
-  static void zoomScalingGroup(int group, double delta){
+  static void zoomScalingGroup(final int group, final double delta){
     traceSettingNotifier.update((traceSetting) {
       for(String measurement in traceSetting.keys){
         for(int i = 0; i < traceSetting[measurement]!.length; i++){
@@ -331,7 +315,7 @@ abstract class TraceSettingsProvider{
     });
   }
 
-  static Map<String, dynamic> getValueAxisDataForGroup(int group){
+  static Map<String, dynamic> getValueAxisDataForGroup(final int group){
     for(String measurement in traceSettingNotifier.value.keys){
       for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
         if(traceSettingNotifier.value[measurement]![i].scalingGroup == group){

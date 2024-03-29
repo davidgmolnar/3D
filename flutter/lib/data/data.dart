@@ -54,22 +54,22 @@ num? _binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> value
   }
   int partStart = 0;
   int partEnd = values.size - 1;
-  int searchIndex = -1;
-  while(partStart <= partEnd){
-    searchIndex = ((partStart + partEnd) / 2).floor();
-    if(timeStamps[searchIndex] < timeStamp){
-      partStart = searchIndex + 1;
+  double searchIndex = -1;
+  while(partStart < partEnd){
+    searchIndex = ((partStart + partEnd) / 2);
+    if(timeStamps[searchIndex.toInt()] < timeStamp){
+      partStart = searchIndex.ceil();
     }
-    else if(timeStamps[searchIndex] > timeStamp){
-      partEnd = searchIndex - 1;
+    else if(timeStamps[searchIndex.toInt()] > timeStamp){
+      partEnd = searchIndex.floor();
     }
     else{
       // direkt találat
-      return values[searchIndex];
+      return values[searchIndex.toInt()];
     }
   }
   // legközelebbi találat
-  return values[searchIndex];
+  return values[searchIndex.toInt()];
 }
 
 int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
@@ -78,22 +78,22 @@ int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeSt
   }
   int partStart = 0;
   int partEnd = timeStamps.size - 1;
-  int searchIndex = -1;
-  while(partStart <= partEnd){
-    searchIndex = ((partStart + partEnd) / 2).floor();
-    if(timeStamps[searchIndex] < timeStamp){
-      partStart = searchIndex + 1;
+  double searchIndex = -1;
+  while(partStart < partEnd){
+    searchIndex = ((partStart + partEnd) / 2);
+    if(timeStamps[searchIndex.toInt()] < timeStamp){
+      partStart = searchIndex.ceil();
     }
-    else if(timeStamps[searchIndex] > timeStamp){
-      partEnd = searchIndex - 1;
+    else if(timeStamps[searchIndex.toInt()] > timeStamp){
+      partEnd = searchIndex.floor();
     }
     else{
       // direkt találat
-      return searchIndex;
+      return searchIndex.toInt();
     }
   }
   // legközelebbi találat
-  return searchIndex;
+  return searchIndex.toInt();
 }
 
 int timestampAtMax(final String meas, final String signal, final int start, final int stop){
@@ -130,7 +130,7 @@ int timestampAtMin(final String meas, final String signal, final int start, fina
   return signalData[meas]![signal]!.timestamps[maxIndex!].toInt();
 }
 
-String representNumber(String ret, {int maxDigit = 10}){
+String representNumber(String ret, {final int maxDigit = 10}){
   if(ret.length > maxDigit){
     ret = ret.substring(0, maxDigit);
   }

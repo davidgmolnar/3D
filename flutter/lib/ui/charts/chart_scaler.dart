@@ -81,14 +81,14 @@ class _ChartScalerState extends State<ChartScaler> {
     super.initState();
   }
 
-  void handleDrag(double delta){
+  void handleDrag(final double delta){
     TraceSettingsProvider.dragScalingGroup(widget.scalingGroup, delta);
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
     valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
     setState(() {});
   }
 
-  void handleZoom(double delta){
+  void handleZoom(final double delta){
     TraceSettingsProvider.zoomScalingGroup(widget.scalingGroup, delta);
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
     valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());

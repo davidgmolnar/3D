@@ -38,7 +38,7 @@ abstract class Serializer {
     "us": 0.001
   };
 
-  static String safeUTF8Decode(List<int> bytes){
+  static String safeUTF8Decode(final List<int> bytes){
     List<int> removeIndexes = [];
     for(int i = 0; i < bytes.length; i++){
       if(bytes[i] > 127){
@@ -53,7 +53,7 @@ abstract class Serializer {
     return utf8Decoder.convert(bytes);
   }
   
-  static Future<LoadContext> loadLogFile(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
+  static Future<LoadContext> loadLogFile(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
     try{
       String extension = file.path.split('.').last;
       if(await file.exists()){
@@ -75,7 +75,7 @@ abstract class Serializer {
     }
   }
 
-  static Future<LoadContext> _csvLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
+  static Future<LoadContext> _csvLoader(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
     // TODO a nagyon nem változó részeken lehet valahogy spórolni kéne, pl bináris/int/double csatornákat külön lehetne kezelni, vagy egyéb módon memóriára optimalizálni
     // TODO a nem változó részek közül az első és utolsó pontot lehet megtartani így a calibrációs interpolálásnál felfutó élek meg a jelleg megmarad
     // TODO ^^ de akkor a kurzor értékeket is interpolálni kell, most ez egy nearest measurement value
@@ -259,7 +259,7 @@ abstract class Serializer {
     return LoadContext(storage: storage, context: context, filePath: file.absolute.path);
   }
 
-  static Future<LoadContext> _binaryLoader(File file, {Function(double, String?)? lineProgressIndication, int? indicationCount}) async {
+  static Future<LoadContext> _binaryLoader(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
     // TODO csvloader kommentek itt is érvényesek
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [];

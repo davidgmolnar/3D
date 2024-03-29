@@ -34,7 +34,7 @@ abstract class FileSystem{
     }
   }
 
-  static Future<void> trySaveMapToLocalAsync(final String path, final String filename, Map jsonEncodeable) async {
+  static Future<void> trySaveMapToLocalAsync(final String path, final String filename, final Map jsonEncodeable) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory");
       return;
@@ -45,7 +45,7 @@ abstract class FileSystem{
     await access.close();
   }
 
-  static void trySaveMapToLocalSync(final String path, final String filename, Map jsonEncodeable){
+  static void trySaveMapToLocalSync(final String path, final String filename, final Map jsonEncodeable){
     if(_currentDirectory == null){
       localLogger.error("Cant determine current directory");
       return;
@@ -56,7 +56,7 @@ abstract class FileSystem{
     access.closeSync();
   }
 
-  static Future<Map> tryLoadMapFromLocalAsync(final String path, final String filename, {bool deleteWhenDone = false}) async {
+  static Future<Map> tryLoadMapFromLocalAsync(final String path, final String filename, {final bool deleteWhenDone = false}) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory");
       return {};
@@ -75,7 +75,7 @@ abstract class FileSystem{
     return Serializer.jsonFromBytes(buffer);
   }
 
-  static Map tryLoadMapFromLocalSync(final String path, final String filename, {bool deleteWhenDone = false}){
+  static Map tryLoadMapFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
     if(_currentDirectory == null){
       localLogger.error("Cant determine current directory");
       return {};

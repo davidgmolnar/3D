@@ -20,25 +20,25 @@ class LogEntry{
   final LogLevel level;
   final DateTime timeStamp;
 
-  LogEntry(this.message, this.level, this.timeStamp);
+  const LogEntry(this.message, this.level, this.timeStamp);
 
-  static LogEntry info(String message){
+  static LogEntry info(final String message){
     return LogEntry(message, LogLevel.INFO, DateTime.now());
   }
 
-  static LogEntry warning(String message){
+  static LogEntry warning(final String message){
     return LogEntry(message, LogLevel.WARNING, DateTime.now());
   }
 
-  static LogEntry error(String message){
+  static LogEntry error(final String message){
     return LogEntry(message, LogLevel.ERROR, DateTime.now());
   }
 
-  static LogEntry critical(String message){
+  static LogEntry critical(final String message){
     return LogEntry(message, LogLevel.CRITICAL, DateTime.now());
   }
 
-  String asString(String loggerName) => "[$timeStamp] [$loggerName - ${level.name.toUpperCase()}] $message";
+  String asString(final String loggerName) => "[$timeStamp] [$loggerName - ${level.name.toUpperCase()}] $message";
 }
 
 class Logger{
@@ -57,7 +57,7 @@ class Logger{
     }
     _isActive = true;
     timer = Timer.periodic(Duration(milliseconds: loggerFlushIntervalMS), ((timer) async {
-      await _flush();
+      await __flush();
     }));
   }
 
@@ -67,7 +67,7 @@ class Logger{
     }
     _isActive = false;
     timer?.cancel();
-    await _flush();
+    await __flush();
   }
 
   void __sleep(){
@@ -79,51 +79,51 @@ class Logger{
       return;
     }
     timer = Timer.periodic(Duration(milliseconds: loggerFlushIntervalMS), ((timer) async {
-      await _flush();
+      await __flush();
     }));
   }
 
-  void info(String message){
+  void info(final String message){
     if(!_isActive){
       return;
     }
     add(LogEntry(message, LogLevel.INFO, DateTime.now()));
   }
 
-  void warning(String message){
+  void warning(final String message){
     if(!_isActive){
       return;
     }
     add(LogEntry(message, LogLevel.WARNING, DateTime.now()));
   }
 
-  void error(String message){
+  void error(final String message){
     if(!_isActive){
       return;
     }
     add(LogEntry(message, LogLevel.ERROR, DateTime.now()));
   }
 
-  void critical(String message){
+  void critical(final String message){
     if(!_isActive){
       return;
     }
     add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()));
   }
 
-  void addAll(List<LogEntry> entries){
+  void addAll(final List<LogEntry> entries){
     _buffer.addAll(entries);
     if(entries.isNotEmpty){
       __wake();
     }
   }
 
-  void add(LogEntry entry){
+  void add(final LogEntry entry){
     _buffer.add(entry);
     __wake();
   }
 
-  Future<void> _flush() async {
+  Future<void> __flush() async {
     if(_buffer.isEmpty){
       __sleep();
       return;
@@ -135,20 +135,16 @@ class Logger{
     }
     RandomAccessFile access = await logFile.open(mode: FileMode.append);
     List<LogEntry> copy = _buffer;
-    await access.writeString(contentsToString(copy));
+    await access.writeString(__contentsToString(copy));
     _buffer = _buffer.skip(copy.length).toList();
     await access.close();
   }
 
-  String contentsToString(List<LogEntry> data){
+  String __contentsToString(final List<LogEntry> data){
     String str = "";
     for(LogEntry line in data){
       str = "$str[${line.timeStamp}] [$loggerName - ${line.level.name.toUpperCase()}] ${line.message}\n";
     }
     return str;
-  }
-
-  List<String> contentsToStringList(){
-    return _buffer.map((entry) => entry.asString(loggerName)).toList();
   }
 }

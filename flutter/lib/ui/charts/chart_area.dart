@@ -36,7 +36,7 @@ class ScalingInfo{
     required this.measCount,
   });
 
-  void fillIndexes(ScalingInfo? old, String measurement, String signal){
+  void fillIndexes(final ScalingInfo? old, final String measurement, final String signal){
     if(signalData[measurement]![signal]!.timestamps.first > timeOffset){
       startIndex = 0;
     }
@@ -92,7 +92,7 @@ class _PlotContext{
     required this.color
   });
 
-  void initialScaledPoints(String measurement, String signal){
+  void initialScaledPoints(final String measurement, final String signal){
     y = Vector.fromList(signalData[measurement]![signal]!.values.iterable.map((e) => e.toDouble()).toList().cast<double>(), dtype: DType.float32);
     x = Vector.fromList(signalData[measurement]![signal]!.timestamps.iterable.map((e) => e.toDouble()).toList().cast<double>(), dtype: DType.float32);
 
@@ -100,7 +100,7 @@ class _PlotContext{
     x = (x - scalingInfo.timeOffset) * scalingInfo.timeScale;
   }
 
-  void reScalePoints(ScalingInfo newInfo, ScalingInfo oldInfo){
+  void reScalePoints(final ScalingInfo newInfo, final ScalingInfo oldInfo){
     final bool updateTime = newInfo.timeDataChanged(oldInfo);
     final bool updateValue = newInfo.valueDataChanged(oldInfo);
 
@@ -302,7 +302,7 @@ class _ChartLinePainter extends CustomPainter {
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
+  void paint(final Canvas canvas, final Size size) {
     Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
     final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;

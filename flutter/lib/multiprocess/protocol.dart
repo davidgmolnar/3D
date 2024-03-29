@@ -8,7 +8,7 @@ const int _fragmentLength = 8000;
 
 class _FragmentBuffer{
   int nextBufferId = 0;
-  List<Uint8List> buffer = [];
+  final List<Uint8List> buffer;
 
   _FragmentBuffer(this.nextBufferId, this.buffer);
 }
@@ -19,17 +19,11 @@ class _FragmentBuffer{
 /// [Fragment ID 0-7]
 /// [Fragment ID 0-7]
 abstract class Protocol{
-  /*static int _nextMessageId = 0;
-  static int get _getNextMessageId {
-    _nextMessageId++;
-    return _nextMessageId %= 128;
-  }*/
-
   static final Logger _protocolLogger = Logger(mainLogPath, "PROTOCOL");
 
   static final Map<int, _FragmentBuffer> _fragmentBuffer = {};
 
-  static List<Uint8List> encode(Uint8List data){
+  static List<Uint8List> encode(final Uint8List data){
     if(data.length < _fragmentLength){
       return [Uint8List.fromList([localSocketPort - masterSocketPort,0,0,0,...data.toList()])];
     }
@@ -57,11 +51,11 @@ abstract class Protocol{
     }
   }
 
-  static Uint8List? decode(Uint8List? data){
+  static Uint8List? decode(final Uint8List? data){
     if(data == null){
       return null;
     }
-    ByteData byteData = data.buffer.asByteData();
+    final ByteData byteData = data.buffer.asByteData();
     int byte0 = byteData.getUint8(0);
     int messageID = byte0 & 0x7F;
     if(byte0 < 128){
