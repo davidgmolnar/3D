@@ -10,6 +10,7 @@ import '../data.dart';
 import '../settings.dart';
 import '../signal_container.dart';
 import '../typed_data_list_container.dart';
+import 'calculation_misc.dart';
 import 'calculation_script_parsing.dart';
 import 'constants.dart';
 import 'unit.dart';
@@ -158,8 +159,8 @@ class CalculationScriptProcessor{
         return await __twoOperandBase(inst, options, (p0, p1) => min(p0, p1), null);
       case Operation.MAX:
         return await __twoOperandBase(inst, options, (p0, p1) => max(p0, p1), null);
-      /*case Operation.IF:
-        return 5;*/
+      case Operation.IF:
+        return await __if(inst, options);
       case Operation.INTEGRATE:
         return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => p2 + (p0 + p1) / 2 * (t1 - t0) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
       /*case Operation.RCLP:
@@ -193,6 +194,34 @@ class CalculationScriptProcessor{
     return minTime;
   }
 
+  static int __commonStartTimeSafe(final FrozenInstruction inst, final CalculationOptions options){
+    int maxTime = -double.maxFinite.toInt();
+    for(final String ch in inst.operands){
+      if(!ch.startsWith('#')){
+        continue;
+      }
+      final int chMinTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.first.toInt();
+      if(chMinTime > maxTime){
+        maxTime = chMinTime;
+      }
+    }
+    return maxTime;
+  }
+
+  static int __commonEndTimeSafe(final FrozenInstruction inst, final CalculationOptions options){
+    int minTime = double.maxFinite.toInt();
+    for(final String ch in inst.operands){
+      if(!ch.startsWith('#')){
+        continue;
+      }
+      final int chMaxTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.last.toInt();
+      if(chMaxTime < minTime){
+        minTime = chMaxTime;
+      }
+    }
+    return minTime;
+  }
+
   static void __commit(final String sig, final String meas, final TypedDataListContainer<TypedData> values, final TypedDataListContainer<Uint32List> timestamps, final Unit? unit){
     if(!signalData[meas]!.containsKey(sig)){
       signalData[meas]![sig] = SignalContainer(
@@ -202,6 +231,9 @@ class CalculationScriptProcessor{
         displayName: sig
       );
     }
+
+    values.shrinkToFit();
+    timestamps.shrinkToFit();
 
     signalData[meas]![sig]!.values.clear();
     signalData[meas]![sig]!.timestamps.clear();
@@ -271,8 +303,14 @@ class CalculationScriptProcessor{
         return constParseError;
       }
 
+      final bool channelFirst = inst.operands[0].startsWith("#");
       for(int i = 0; i < signalData[options.measurement]![channelOperand]!.values.size; i++){
-        values.pushBack(op(signalData[options.measurement]![channelOperand]!.values[i], constantvalue));
+        if(channelFirst){
+          values.pushBack(op(signalData[options.measurement]![channelOperand]!.values[i], constantvalue));
+        }
+        else{
+          values.pushBack(op(constantvalue, signalData[options.measurement]![channelOperand]!.values[i]));
+        }
         timestamps.pushBack(signalData[options.measurement]![channelOperand]!.timestamps[i]);
         if(values.last.isNaN || values.last.isInfinite){
           return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
@@ -284,7 +322,7 @@ class CalculationScriptProcessor{
     }
     else if(inst.numberOfChannelParameters == 2){
       int time = __commonStartTime(inst, options);
-      int endTime = __commonEndTime(inst, options);
+      final int endTime = __commonEndTime(inst, options);
       final String op0 = inst.operands[0].substring(1);
       final String op1 = inst.operands[1].substring(1);
       int p0Index = signalData[options.measurement]![op0]!.timestamps.toList<int>().indexWhere((point) => point >= time);
@@ -333,6 +371,150 @@ class CalculationScriptProcessor{
       __commit(inst.result, options.measurement, values, timestamps, unit);
     }
 
+    return null;
+  }
+
+  static Future<LogEntry?> __if(final FrozenInstruction inst, final CalculationOptions options) async {
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+    final String op0 = inst.operands[0];
+    final String op2 = inst.operands[2];
+    final bool Function(num, num)? callback = resolveIfCallback(inst.operands[1]);
+    if(callback == null){
+      return LogEntry.error("Could not resolve which binary comparison to use in IF(), comparison was ${inst.operands[1]}");
+    }
+
+    List<bool> evaluation = [];
+    if(op0.startsWith("#") && op2.startsWith('#')){
+      int time = __commonStartTimeSafe(inst, options);
+      final int endTime = __commonEndTimeSafe(inst, options);
+      final String ch0 = op0.substring(1);
+      final String ch2 = op2.substring(1);
+      int p0Index = signalData[options.measurement]![ch0]!.timestamps.toList<int>().indexWhere((point) => point >= time);
+      int p2Index = signalData[options.measurement]![ch2]!.timestamps.toList<int>().indexWhere((point) => point >= time);
+      for(; time < endTime; time += options.sampleTimeMs){
+        while(signalData[options.measurement]![ch0]!.timestamps[p0Index] < time){
+          p0Index++;
+        }
+        while(signalData[options.measurement]![ch2]!.timestamps[p2Index] < time){
+          p2Index++;
+        }
+
+        late final num p0;
+        late final num p2;
+        if(p0Index == 0){
+          p0 = signalData[options.measurement]![ch0]!.values[p0Index];
+        }
+        else{
+          p0 = __interpAt(signalData[options.measurement]![ch0]!.values[p0Index - 1],
+                          signalData[options.measurement]![ch0]!.timestamps[p0Index - 1],
+                          signalData[options.measurement]![ch0]!.values[p0Index],
+                          signalData[options.measurement]![ch0]!.timestamps[p0Index],
+                          time);
+        }
+        
+        if(p2Index == 0){
+          p2 = signalData[options.measurement]![ch2]!.values[p2Index];
+        }
+        else{
+          p2 = __interpAt(signalData[options.measurement]![ch2]!.values[p2Index - 1],
+                          signalData[options.measurement]![ch2]!.timestamps[p2Index - 1],
+                          signalData[options.measurement]![ch2]!.values[p2Index],
+                          signalData[options.measurement]![ch2]!.timestamps[p2Index],
+                          time);
+        }
+
+        evaluation.add(callback(p0, p2));
+        timestamps.pushBack(time);
+      }
+    }
+    else if((op0.startsWith("#") && !op2.startsWith('#')) || (!op0.startsWith("#") && op2.startsWith('#'))){
+      final List<String> ops = [op0, op2];
+      final String channelOperand = ops.firstWhere((element) => element[0] == '#').substring(1);
+      final String constantOperand = ops.firstWhere((element) => element[0] != '#');
+
+      LogEntry? constParseError;
+      final num constantvalue = Const.parse(constantOperand, ((entry) {
+        constParseError = entry;
+      }));
+
+      if(constParseError != null){
+        return constParseError;
+      }
+
+      final bool channelFirst = op0.startsWith("#");
+      for(int i = 0; i < signalData[options.measurement]![channelOperand]!.values.size; i++){
+        if(channelFirst){
+          evaluation.add(callback(signalData[options.measurement]![channelOperand]!.values[i], constantvalue));
+        }
+        else{
+          evaluation.add(callback(constantvalue, signalData[options.measurement]![channelOperand]!.values[i]));
+        }
+        timestamps.pushBack(signalData[options.measurement]![channelOperand]!.timestamps[i]);
+      }
+    }
+    else{
+      return LogEntry.error("Combining two constants via script is not recommended and therefore not implemented");
+    }
+
+    final String trueResultOp = inst.operands[3];
+    final String falseResultOp = inst.operands[4];
+    final bool trueResultIsCH = trueResultOp.startsWith('#');
+    final bool falseResultIsCH = falseResultOp.startsWith('#');
+    late final num trueResultConst;
+    late final num falseResultConst;
+
+    if(!trueResultIsCH){
+      LogEntry? constParseError;
+      trueResultConst = Const.parse(trueResultOp, ((entry) {
+        constParseError = entry;
+      }));
+
+      if(constParseError != null){
+        return constParseError;
+      }
+    }
+    if(!falseResultIsCH){
+      LogEntry? constParseError;
+      falseResultConst = Const.parse(falseResultOp, ((entry) {
+        constParseError = entry;
+      }));
+
+      if(constParseError != null){
+        return constParseError;
+      }
+    }
+    for(int i = 0; i < timestamps.size; i++){
+      late final num? newValue;
+      if(evaluation[i]){
+        if(trueResultIsCH){
+          newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![trueResultOp.substring(1)]!.values,
+                                                  signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps,
+                                                  timestamps[i].toInt());
+        }
+        else{
+          newValue = trueResultConst;
+        }
+      }
+      else{
+        if(falseResultIsCH){
+          newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![falseResultOp.substring(1)]!.values,
+                                                  signalData[options.measurement]![falseResultOp.substring(1)]!.timestamps,
+                                                  timestamps[i].toInt());
+        }
+        else{
+          newValue = falseResultConst;
+        }
+      }
+      if(newValue == null){
+        return LogEntry.error("IF() execution escaped time boundaries set by data avaiable");
+      }
+      else{
+        values.pushBack(newValue);
+      }
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, null);
     return null;
   }
 

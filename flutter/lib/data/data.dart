@@ -12,7 +12,7 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<Str
   Map<String, Map<String, num>> dataAtTimeStamp = {};
   for(String meas in visibility.keys){
     for(String signal in visibility[meas]!){
-      final num? val = _binarySearchValueAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, timeStamp);
+      final num? val = binarySearchValueAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, timeStamp);
       if(val != null){
         if(!dataAtTimeStamp.keys.contains(meas)){
           dataAtTimeStamp[meas] = {};
@@ -48,7 +48,7 @@ num signalIntegral(final String meas, final String signal, final int ref, final 
   }
 }
 
-num? _binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+num? binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
   if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
