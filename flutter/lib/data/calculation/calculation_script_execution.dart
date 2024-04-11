@@ -488,9 +488,17 @@ class CalculationScriptProcessor{
       late final num? newValue;
       if(evaluation[i]){
         if(trueResultIsCH){
-          newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![trueResultOp.substring(1)]!.values,
-                                                  signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps,
-                                                  timestamps[i].toInt());
+          if(timestamps[i].toInt() > signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps.last){
+            newValue = signalData[options.measurement]![trueResultOp.substring(1)]!.values.last;
+          }
+          else if(timestamps[i].toInt() < signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps.first){
+            newValue = signalData[options.measurement]![trueResultOp.substring(1)]!.values.first;
+          }
+          else{
+            newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![trueResultOp.substring(1)]!.values,
+                                                    signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps,
+                                                    timestamps[i].toInt());
+          }
         }
         else{
           newValue = trueResultConst;
@@ -498,16 +506,24 @@ class CalculationScriptProcessor{
       }
       else{
         if(falseResultIsCH){
-          newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![falseResultOp.substring(1)]!.values,
+          if(timestamps[i].toInt() > signalData[options.measurement]![falseResultOp.substring(1)]!.timestamps.last){
+            newValue = signalData[options.measurement]![falseResultOp.substring(1)]!.values.last;
+          }
+          else if(timestamps[i].toInt() < signalData[options.measurement]![falseResultOp.substring(1)]!.timestamps.first){
+            newValue = signalData[options.measurement]![falseResultOp.substring(1)]!.values.first;
+          }
+          else{          
+            newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![falseResultOp.substring(1)]!.values,
                                                   signalData[options.measurement]![falseResultOp.substring(1)]!.timestamps,
                                                   timestamps[i].toInt());
+          }
         }
         else{
           newValue = falseResultConst;
         }
       }
       if(newValue == null){
-        return LogEntry.error("IF() execution escaped time boundaries set by data avaiable");
+        return LogEntry.error("IF() execution failed to produce output for a possibly out of range timestamp");
       }
       else{
         values.pushBack(newValue);
