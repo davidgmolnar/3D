@@ -143,9 +143,9 @@ class CalculationScriptProcessor{
         return await __oneOperandBase(inst, options, (p0) => ~p0.toInt() & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned int not
       case Operation.ABS:
         return await __oneOperandBase(inst, options, (p0) => p0.abs());
-      /*case Operation.SHIFT:
-        return 2;
-      case Operation.F:
+      case Operation.SHIFT:
+        return await __shift(inst, options);
+      /*case Operation.F:
         return 2;*/
       case Operation.NOP:
         return null;
@@ -371,6 +371,44 @@ class CalculationScriptProcessor{
       __commit(inst.result, options.measurement, values, timestamps, unit);
     }
 
+    return null;
+  }
+
+  static Future<LogEntry?> __shift(final FrozenInstruction inst, final CalculationOptions options) async {
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+
+    final String op0 = inst.operands[0];
+    final String op1 = inst.operands[1].toLowerCase();
+
+    if(!op0.startsWith('#')){
+      return LogEntry.error("The first operand of SHIFT() must be a channel");
+    }
+    final String ch = op0.substring(1);
+
+    late final int timeShiftMs;
+    if(op1.endsWith('sec')){
+      final String p = op1.substring(0, op1.length - 3).trim();
+      final double? shiftSec = double.tryParse(p);
+      if(shiftSec == null){
+        return LogEntry.error("Failed to parse $p as a shift in seconds, the full operand was $op1");
+      }
+      timeShiftMs = (shiftSec * 1000).round();
+    }
+    else{
+      final int? shiftSampleNum = int.tryParse(op1);
+      if(shiftSampleNum == null){
+        return LogEntry.error("Failed to parse $op1 as a shift in number of samples");
+      }
+      timeShiftMs = shiftSampleNum * options.sampleTimeMs;
+    }
+
+    for(int i = 0; i < signalData[options.measurement]![ch]!.values.size; i++){ // make sure to copy
+      values.pushBack(signalData[options.measurement]![ch]!.values[i]);
+      timestamps.pushBack(signalData[options.measurement]![ch]!.timestamps[i] + timeShiftMs);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);
     return null;
   }
 

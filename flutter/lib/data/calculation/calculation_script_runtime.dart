@@ -125,7 +125,7 @@ class CalculationScriptRuntime{
             return calculation;
           }
           else{
-            LogEntry entry = LogEntry.error("Invalidated previously compiled version, recompiling");
+            LogEntry entry = LogEntry.warning("Invalidated previously compiled version, recompiling");
             localLogger.add(entry);
             if(doIndication){
               progressIndication(1, entry.asString("CALCULATION"));
