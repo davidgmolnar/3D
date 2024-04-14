@@ -167,6 +167,8 @@ class CalculationScriptProcessor{
         return 2;
       case Operation.CONST:
         return 2;*/
+      case Operation.FILLFROMBOOL:
+        return await __fillFromBool(inst, options);
       default:
         throw Exception("Operation ${inst.op} execution not implemented");
     }
@@ -406,6 +408,39 @@ class CalculationScriptProcessor{
     for(int i = 0; i < signalData[options.measurement]![ch]!.values.size; i++){ // make sure to copy
       values.pushBack(signalData[options.measurement]![ch]!.values[i]);
       timestamps.pushBack(signalData[options.measurement]![ch]!.timestamps[i] + timeShiftMs);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);
+    return null;
+  }
+
+  static Future<LogEntry?> __fillFromBool(final FrozenInstruction inst, final CalculationOptions options) async {
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+
+    final String op0 = inst.operands[0];
+    final String op1 = inst.operands[1];
+
+    if(!op0.startsWith('#') || !op1.startsWith('#')){
+      return LogEntry.error("FILLFROMBOOL must have two channel parameters");
+    }
+
+    final String ch = op0.substring(1);
+    final String en = op1.substring(1);
+
+    final int startTime = __commonStartTime(inst, options);
+    final int endTime = __commonEndTime(inst, options);
+    final int startIndex = binarySearchIndexAtTimeStamp(signalData[options.measurement]![en]!.timestamps, startTime)!;
+    final int endIndex = binarySearchIndexAtTimeStamp(signalData[options.measurement]![en]!.timestamps, endTime)!;
+
+    for(int i = startIndex; i < endIndex; i++){
+      if(signalData[options.measurement]![en]!.values[i] > 0){
+        final int t = signalData[options.measurement]![en]!.timestamps[i].toInt();
+        timestamps.pushBack(t);
+        values.pushBack(binarySearchValueAtTimeStamp(signalData[options.measurement]![ch]!.values,
+                                                     signalData[options.measurement]![ch]!.timestamps,
+                                                     t)!);
+      }
     }
 
     __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);

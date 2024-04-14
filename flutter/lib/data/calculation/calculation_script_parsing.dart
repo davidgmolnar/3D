@@ -72,6 +72,8 @@ enum Operation{
   RCLP,
   // ignore: constant_identifier_names
   CONST,
+  // ignore: constant_identifier_names
+  FILLFROMBOOL,
 }
 
 extension FromString on Operation{
@@ -129,6 +131,8 @@ extension FromString on Operation{
         return Operation.RCLP;
       case "CONST":
         return Operation.CONST;
+      case "FILLFROMBOOL":
+        return Operation.FILLFROMBOOL;
       default:
         return null;
     }
@@ -185,6 +189,8 @@ extension FromString on Operation{
       case Operation.RCLP:
         return 2;
       case Operation.CONST:
+        return 2;
+      case Operation.FILLFROMBOOL:
         return 2;
       default:
         return 0;
