@@ -6,9 +6,37 @@ import 'package:dart_dbc_parser/signal/dbc_signal.dart';
 class TypedDataListContainer<T extends TypedData>{
   static const List<Type> floatLike = [Float32List, Float64List];
 
+  static Map<Type, TypedData Function(ByteBuffer, int, int)> viewCtors = {
+    Uint8List: (p0, p1, p2) => Uint8List.view(p0, p1, p2),
+    Uint16List: (p0, p1, p2) => Uint16List.view(p0, p1, p2),
+    Uint32List: (p0, p1, p2) => Uint32List.view(p0, p1, p2),
+    Uint64List: (p0, p1, p2) => Uint64List.view(p0, p1, p2),
+    Int8List: (p0, p1, p2) => Int8List.view(p0, p1, p2),
+    Int16List: (p0, p1, p2) => Int16List.view(p0, p1, p2),
+    Int32List: (p0, p1, p2) => Int32List.view(p0, p1, p2),
+    Int64List: (p0, p1, p2) => Int64List.view(p0, p1, p2),
+    Float32List: (p0, p1, p2) => Float32List.view(p0, p1, p2),
+    Float64List: (p0, p1, p2) => Float64List.view(p0, p1, p2)
+  };
+
+  static Map<Type, TypedData Function(int, int, TypedData)> realloc = {
+    Uint8List: (p0, p1, p2) => Uint8List(p0)..setRange(0, p1, (p2 as Uint8List)),
+    Uint16List: (p0, p1, p2) => Uint16List(p0)..setRange(0, p1, (p2 as Uint16List)),
+    Uint32List: (p0, p1, p2) => Uint32List(p0)..setRange(0, p1, (p2 as Uint32List)),
+    Uint64List: (p0, p1, p2) => Uint64List(p0)..setRange(0, p1, (p2 as Uint64List)),
+    Int8List: (p0, p1, p2) => Int8List(p0)..setRange(0, p1, (p2 as Int8List)),
+    Int16List: (p0, p1, p2) => Int16List(p0)..setRange(0, p1, (p2 as Int16List)),
+    Int32List: (p0, p1, p2) => Int32List(p0)..setRange(0, p1, (p2 as Int32List)),
+    Int64List: (p0, p1, p2) => Int64List(p0)..setRange(0, p1, (p2 as Int64List)),
+    Float32List: (p0, p1, p2) => Float32List(p0)..setRange(0, p1, (p2 as Float32List)),
+    Float64List: (p0, p1, p2) => Float64List(p0)..setRange(0, p1, (p2 as Float64List))
+  };
+
   late T _list;
   late int _capacity;
   int _size = 0;
+
+  // TODO a realloc és viewctor kikerülhetne final memberbe és akkor nem menet közben kell kihashelni
 
   TypedDataListContainer({
     required T list,
@@ -116,46 +144,7 @@ class TypedDataListContainer<T extends TypedData>{
   }
 
   void reserve(int newCapacity){
-    if(T == Uint8List){
-      Uint8List tmp = Uint8List(newCapacity)..setRange(0, _size, (_list as Uint8List));
-      _list = tmp as T;
-    }
-    else if(T == Uint16List){
-      Uint16List tmp = Uint16List(newCapacity)..setRange(0, _size, (_list as Uint16List));
-      _list = tmp as T;
-    }
-    else if(T == Uint32List){
-      Uint32List tmp = Uint32List(newCapacity)..setRange(0, _size, (_list as Uint32List));
-      _list = tmp as T;
-    }
-    else if(T == Uint64List){
-      Uint64List tmp = Uint64List(newCapacity)..setRange(0, _size, (_list as Uint64List));
-      _list = tmp as T;
-    }
-    else if(T == Int8List){
-      Int8List tmp = Int8List(newCapacity)..setRange(0, _size, (_list as Int8List));
-      _list = tmp as T;
-    }
-    else if(T == Int16List){
-      Int16List tmp = Int16List(newCapacity)..setRange(0, _size, (_list as Int16List));
-      _list = tmp as T;
-    }
-    else if(T == Int32List){
-      Int32List tmp = Int32List(newCapacity)..setRange(0, _size, (_list as Int32List));
-      _list = tmp as T;
-    }
-    else if(T == Int64List){
-      Int64List tmp = Int64List(newCapacity)..setRange(0, _size, (_list as Int64List));
-      _list = tmp as T;
-    }
-    else if(T == Float32List){
-      Float32List tmp = Float32List(newCapacity)..setRange(0, _size, (_list as Float32List));
-      _list = tmp as T;
-    }
-    else if(T == Float64List){
-      Float64List tmp = Float64List(newCapacity)..setRange(0, _size, (_list as Float64List));
-      _list = tmp as T;
-    }
+    _list = realloc[T]!(newCapacity, _size, _list) as T;
     _capacity = newCapacity;
   }
 
@@ -191,46 +180,7 @@ class TypedDataListContainer<T extends TypedData>{
     if(_size >= _capacity){
       return;
     }
-    if(T == Uint8List){
-      Uint8List tmp = Uint8List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Uint16List){
-      Uint16List tmp = Uint16List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Uint32List){
-      Uint32List tmp = Uint32List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Uint64List){
-      Uint64List tmp = Uint64List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Int8List){
-      Int8List tmp = Int8List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Int16List){
-      Int16List tmp = Int16List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Int32List){
-      Int32List tmp = Int32List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Int64List){
-      Int64List tmp = Int64List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Float32List){
-      Float32List tmp = Float32List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
-    else if(T == Float64List){
-      Float64List tmp = Float64List.view(_list.buffer, _list.offsetInBytes, _size);
-      _list = tmp as T;
-    }
+    _list = viewCtors[T]!(_list.buffer, _list.offsetInBytes, _size) as T;
     _capacity = _size;
   }
 

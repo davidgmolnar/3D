@@ -6,7 +6,8 @@ from util.containers import Vector, Map
 _CAL_REPO_DIR: str = "C:/Users/Lenovo/Desktop/Calfiles2021"
 _CAL_IMPORT_PATTERN: str = r"[0-9]{4}_[a-zA-Z]+.[cC]{1}[aA]{1}[lL]{1}"
 _ALREADY_IMPLEMENTED: list[str] = ["+", "-", "*", "/", "DERIVATE", "INTEGRATE", "AND", "NAND", "OR", "NOR",
-                                   "XOR", "XNOR", "NOT", "ABS", "IFEXISTS", "DELETE", "MIN", "MAX", "IF", "SHIFT"]
+                                   "XOR", "XNOR", "NOT", "ABS", "IFEXISTS", "DELETE", "MIN", "MAX", "IF", "SHIFT",
+                                   "FILLFROMBOOL"]
 
 
 class Instruction:
