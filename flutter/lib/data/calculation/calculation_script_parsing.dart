@@ -49,11 +49,27 @@ enum Operation{
   // ignore: constant_identifier_names
   ABS,
   // ignore: constant_identifier_names
+  SQRT,
+  // ignore: constant_identifier_names
   SHIFT,
   // ignore: constant_identifier_names
   POWER,
   // ignore: constant_identifier_names
   MOD,
+  // ignore: constant_identifier_names
+  SIN,
+  // ignore: constant_identifier_names
+  COS,
+  // ignore: constant_identifier_names
+  TAN,
+  // ignore: constant_identifier_names
+  ARCSIN,
+  // ignore: constant_identifier_names
+  ARCCOS,
+  // ignore: constant_identifier_names
+  ARCTAN,
+  // ignore: constant_identifier_names
+  ARCTAN2,
   // ignore: constant_identifier_names
   F,
   // ignore: constant_identifier_names
@@ -109,12 +125,28 @@ extension FromString on Operation{
         return Operation.NOT;
       case "ABS":
         return Operation.ABS;
+      case "SQRT":
+        return Operation.SQRT;
       case "SHIFT":
         return Operation.SHIFT;
       case "POWER":
         return Operation.POWER;
       case "MOD":
         return Operation.MOD;
+      case "SIN":
+        return Operation.SIN;
+      case "COS":
+        return Operation.COS;
+      case "TAN":
+        return Operation.TAN;
+      case "ARCSIN":
+        return Operation.ARCSIN;
+      case "ARCCOS":
+        return Operation.ARCCOS;
+      case "ARCTAN":
+        return Operation.ARCTAN;
+      case "ARCTAN2":
+        return Operation.ARCTAN2;
       case "F":
         return Operation.F;
       case "NOT_PARSED":
@@ -174,11 +206,27 @@ extension FromString on Operation{
         return 1;
       case Operation.ABS:
         return 1;
+      case Operation.SQRT:
+        return 1;
       case Operation.SHIFT:
         return 2;
       case Operation.POWER:
         return 2;
       case Operation.MOD:
+        return 2;
+      case Operation.SIN:
+        return 1;
+      case Operation.COS:
+        return 1;
+      case Operation.TAN:
+        return 1;
+      case Operation.ARCSIN:
+        return 1;
+      case Operation.ARCCOS:
+        return 1;
+      case Operation.ARCTAN:
+        return 1;
+      case Operation.ARCTAN2:
         return 2;
       case Operation.F:
         return 2;
@@ -510,7 +558,7 @@ class CalculationScriptParser{
 
         if(inst.numberOfChannelParameters != inst.operands.length){
           for(final String operand in inst.operands){
-            if(operand[0] != '#'){
+            if(operand[0] != '#' && inst.op != Operation.F){
               if(!Const.parsable(operand)){
                 final LogEntry entry = LogEntry.error("Constant expression '$operand' in block $blockNum cannot be parsed, if this is unexpected, notify 3D responsible");
                 script.context.add(entry);

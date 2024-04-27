@@ -7,7 +7,8 @@ _CAL_REPO_DIR: str = "C:/Users/Lenovo/Desktop/Calfiles2021"
 _CAL_IMPORT_PATTERN: str = r"[0-9]{4}_[a-zA-Z]+.[cC]{1}[aA]{1}[lL]{1}"
 _ALREADY_IMPLEMENTED: list[str] = ["+", "-", "*", "/", "DERIVATE", "INTEGRATE", "AND", "NAND", "OR", "NOR",
                                    "XOR", "XNOR", "NOT", "ABS", "IFEXISTS", "DELETE", "MIN", "MAX", "IF", "SHIFT",
-                                   "FILLFROMBOOL"]
+                                   "FILLFROMBOOL", "POWER", "MOD", "SET", "F", "SQRT", "SIN", "COS", "TAN", "ARCSIN",
+                                   "ARCCOS", "ARCTAN", "ARCTAN2"]
 
 
 class Instruction:
@@ -112,6 +113,21 @@ class CalFileTools:
         print(f"Total implemented {inum}")
         for op in implemented:
             print(f"\tImplemented: {op} count: {separated[op].length}")
+
+        canRun = Vector()
+        cannotRun = Vector()
+        for scriptName in self._calfiles.ks:
+            if self._calfiles[scriptName].every(lambda inst: inst.op in _ALREADY_IMPLEMENTED):
+                canRun.append(scriptName)
+            else:
+                cannotRun.append(scriptName)
+
+        print(f"Total scripts that can run: {canRun.length}")
+        canRun.forEach(lambda name: print(f"\t{name}"))
+        print(f"Total scripts that cannot run: {cannotRun.length}")
+        for scriptName in cannotRun:
+            print(f"\t{scriptName}")
+            self._calfiles[scriptName].where(lambda inst: inst.op not in _ALREADY_IMPLEMENTED).forEach(lambda inst: print(f"\t\t{inst.op}"))
 
 
 if __name__ == '__main__':

@@ -143,14 +143,30 @@ class CalculationScriptProcessor{
         return await __oneOperandBase(inst, options, (p0) => ~p0.toInt() & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned int not
       case Operation.ABS:
         return await __oneOperandBase(inst, options, (p0) => p0.abs());
+      case Operation.SQRT:
+        return await __oneOperandBase(inst, options, (p0) => p0 >= 0 ? sqrt(p0) : -1);
       case Operation.SHIFT:
         return await __shift(inst, options);
       case Operation.POWER:
         return await __twoOperandBase(inst, options, (p0, p1) => pow(p0, p1), null);
       case Operation.MOD:
         return await __twoOperandBase(inst, options, (p0, p1) => p0 % p1, null);
-      /*case Operation.F:
-        return 2;*/
+      case Operation.SIN:
+        return await __oneOperandBase(inst, options, (p0) => sin(p0));
+      case Operation.COS:
+        return await __oneOperandBase(inst, options, (p0) => cos(p0));
+      case Operation.TAN:
+        return await __oneOperandBase(inst, options, (p0) => tan(p0));
+      case Operation.ARCSIN:
+        return await __oneOperandBase(inst, options, (p0) => asin(p0));
+      case Operation.ARCCOS:
+        return await __oneOperandBase(inst, options, (p0) => acos(p0));
+      case Operation.ARCTAN:
+        return await __oneOperandBase(inst, options, (p0) => atan(p0));
+      case Operation.ARCTAN2:
+        return await __twoOperandBase(inst, options, (p0, p1) => atan2(p0, p1), null);
+      case Operation.F:
+        return __f(inst, options);
       case Operation.NOP:
         return null;
       case Operation.SKIPIF:
@@ -679,7 +695,28 @@ class CalculationScriptProcessor{
     return LogEntry.warning("Calls to SET() are for now ignored");
   }
 
-  // __const
+  static Future<LogEntry?> __f(final FrozenInstruction inst, final CalculationOptions options) async {
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    if(inst.numberOfChannelParameters != 1 || !inst.operands[0].startsWith('#')){
+      return LogEntry.error("The first and only the first operand of F() must be a channel");
+    }
 
-  // __f
+    final String ch = inst.operands[0].substring(1);
+    final Filter? f = Filter.tryParse(inst.operands[1]);
+    if(f == null){
+      return LogEntry.error("Failed to interpret ${inst.operands[1]} as a filter");
+    }
+
+    values.reserve(signalData[options.measurement]![ch]!.values.size);
+    f.apply(
+      signalData[options.measurement]![ch]!.values,
+      signalData[options.measurement]![ch]!.timestamps,
+      (final num newValue) {
+        values.pushBack(newValue);
+      }
+    );
+
+    __commit(inst.result, options.measurement, values, signalData[options.measurement]![ch]!.timestamps, signalData[options.measurement]![ch]!.unit);
+    return null;
+  }
 }
