@@ -51,6 +51,10 @@ enum Operation{
   // ignore: constant_identifier_names
   SHIFT,
   // ignore: constant_identifier_names
+  POWER,
+  // ignore: constant_identifier_names
+  MOD,
+  // ignore: constant_identifier_names
   F,
   // ignore: constant_identifier_names
   NOP,
@@ -107,6 +111,10 @@ extension FromString on Operation{
         return Operation.ABS;
       case "SHIFT":
         return Operation.SHIFT;
+      case "POWER":
+        return Operation.POWER;
+      case "MOD":
+        return Operation.MOD;
       case "F":
         return Operation.F;
       case "NOT_PARSED":
@@ -167,6 +175,10 @@ extension FromString on Operation{
       case Operation.ABS:
         return 1;
       case Operation.SHIFT:
+        return 2;
+      case Operation.POWER:
+        return 2;
+      case Operation.MOD:
         return 2;
       case Operation.F:
         return 2;

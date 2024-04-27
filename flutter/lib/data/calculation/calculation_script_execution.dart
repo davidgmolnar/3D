@@ -145,14 +145,18 @@ class CalculationScriptProcessor{
         return await __oneOperandBase(inst, options, (p0) => p0.abs());
       case Operation.SHIFT:
         return await __shift(inst, options);
+      case Operation.POWER:
+        return await __twoOperandBase(inst, options, (p0, p1) => pow(p0, p1), null);
+      case Operation.MOD:
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 % p1, null);
       /*case Operation.F:
         return 2;*/
       case Operation.NOP:
         return null;
       case Operation.SKIPIF:
         return null;
-      /*case Operation.SET:
-        return 1;*/
+      case Operation.SET:
+        return __set(inst, options);
       case Operation.DELETE:
         return __delete(inst, options);
       case Operation.MIN:
@@ -671,13 +675,11 @@ class CalculationScriptProcessor{
     }
   }
 
-  // __set
-
-  // __shift
+  static Future<LogEntry?> __set(final FrozenInstruction inst, final CalculationOptions options) async {
+    return LogEntry.warning("Calls to SET() are for now ignored");
+  }
 
   // __const
-
-  // __if
 
   // __f
 }
