@@ -94,6 +94,10 @@ enum Operation{
   CONST,
   // ignore: constant_identifier_names
   FILLFROMBOOL,
+  // ignore: constant_identifier_names
+  WORD,
+  // ignore: constant_identifier_names
+  LIMIT,
 }
 
 extension FromString on Operation{
@@ -173,6 +177,10 @@ extension FromString on Operation{
         return Operation.CONST;
       case "FILLFROMBOOL":
         return Operation.FILLFROMBOOL;
+      case "WORD":
+        return Operation.WORD;
+      case "LIMIT":
+        return Operation.LIMIT;
       default:
         return null;
     }
@@ -252,6 +260,10 @@ extension FromString on Operation{
         return 2;
       case Operation.FILLFROMBOOL:
         return 2;
+      case Operation.WORD:
+        return 1;
+      case Operation.LIMIT:
+        return 3;
       default:
         return 0;
     }
@@ -546,7 +558,18 @@ class CalculationScriptParser{
     int blockNum = 0;
     for(List<FrozenInstruction> blockInstructions in script.instructions){
       for(FrozenInstruction inst in blockInstructions){
-        if(inst.op.requiredParams() != inst.operands.length){
+        if(inst.op == Operation.WORD){
+          if(inst.op.requiredParams() > inst.operands.length || inst.operands.length > 3){
+            final LogEntry entry = LogEntry.error("Operation ${inst.op.name} in block $blockNum requires at least ${inst.op.requiredParams()}, at most 3 operands, ${inst.operands.length} given");
+            script.context.add(entry);
+            if(doIndication){
+              lineProgressIndication(1, entry.asString("CALCULATION"));
+              await Future.delayed(const Duration(milliseconds: 10));
+            }
+            valid = false;
+          }
+        }
+        else if(inst.op.requiredParams() != inst.operands.length){
           final LogEntry entry = LogEntry.error("Operation ${inst.op.name} in block $blockNum requires ${inst.op.requiredParams()} operands, ${inst.operands.length} given");
           script.context.add(entry);
           if(doIndication){

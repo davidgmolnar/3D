@@ -115,7 +115,6 @@ class Filter{
     else{
       _applyOnElemWindow(values, onNewValue);
     }
-    
   }
 
   num _calcWindow(final List<double> window){
@@ -145,14 +144,17 @@ class Filter{
       while(timestamps[end] < currentTime + msWindowSize / 2){
         end++;
         if(end >= timestamps.size){
+          end--;
           break;
         }
       }
-      end--;
 
       final List<double> window = [];
       for(int j = start; j < end; j++){
         window.add(values[j].toDouble());
+      }
+      if(start == end){
+        window.add(values[start].toDouble());
       }
       onNewValue(_calcWindow(window));
     }

@@ -8,7 +8,7 @@ _CAL_IMPORT_PATTERN: str = r"[0-9]{4}_[a-zA-Z]+.[cC]{1}[aA]{1}[lL]{1}"
 _ALREADY_IMPLEMENTED: list[str] = ["+", "-", "*", "/", "DERIVATE", "INTEGRATE", "AND", "NAND", "OR", "NOR",
                                    "XOR", "XNOR", "NOT", "ABS", "IFEXISTS", "DELETE", "MIN", "MAX", "IF", "SHIFT",
                                    "FILLFROMBOOL", "POWER", "MOD", "SET", "F", "SQRT", "SIN", "COS", "TAN", "ARCSIN",
-                                   "ARCCOS", "ARCTAN", "ARCTAN2"]
+                                   "ARCCOS", "ARCTAN", "ARCTAN2", "WORD", "LIMIT", "CONST", "RCLP"]
 
 
 class Instruction:

@@ -47,7 +47,7 @@ class TypedDataListContainer<T extends TypedData>{
 
   int get size => _size;
   int get capacity => _capacity;
-  Iterable get iterable => (_list as List);
+  Iterable<num> get iterable => (_list as List<num>);
   num get last => (_list as List)[size - 1];
   num get first => (_list as List)[0];
   set last(num v){

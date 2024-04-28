@@ -183,12 +183,16 @@ class CalculationScriptProcessor{
         return await __if(inst, options);
       case Operation.INTEGRATE:
         return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => p2 + (p0 + p1) / 2 * (t1 - t0) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
-      /*case Operation.RCLP:
-        return 2;
+      case Operation.RCLP:
+        return await __rclp(inst, options);
       case Operation.CONST:
-        return 2;*/
+        return await __const(inst, options);
       case Operation.FILLFROMBOOL:
         return await __fillFromBool(inst, options);
+      case Operation.WORD:
+        return await __word(inst, options);
+      case Operation.LIMIT:
+        return await __limit(inst, options);
       default:
         throw Exception("Operation ${inst.op} execution not implemented");
     }
@@ -702,6 +706,7 @@ class CalculationScriptProcessor{
     }
 
     final String ch = inst.operands[0].substring(1);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
     final Filter? f = Filter.tryParse(inst.operands[1]);
     if(f == null){
       return LogEntry.error("Failed to interpret ${inst.operands[1]} as a filter");
@@ -715,8 +720,192 @@ class CalculationScriptProcessor{
         values.pushBack(newValue);
       }
     );
+    for(final num ts in signalData[options.measurement]![ch]!.timestamps.iterable){ // need copy
+      timestamps.pushBack(ts);
+    }
 
-    __commit(inst.result, options.measurement, values, signalData[options.measurement]![ch]!.timestamps, signalData[options.measurement]![ch]!.unit);
+    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);
+    return null;
+  }
+
+  static Future<LogEntry?> __word(final FrozenInstruction inst, final CalculationOptions options) async {
+    if(inst.numberOfChannelParameters != 1 || !inst.operands[0].startsWith('#')){
+      return LogEntry.error("The first and only the first operand of F() must be a channel");
+    }
+    final String ch = inst.operands[0].substring(1);
+    final TypedDataListContainer<Uint16List> values = TypedDataListContainer(list: Uint16List(signalData[options.measurement]![ch]!.values.size));
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
+
+    late final num start;
+    late final num stop;
+    late final num step;
+    if(inst.operands.length == 1){
+      start = signalData[options.measurement]![ch]!.values.iterable.cast<num>().reduce((num value, num element) => min(value, element));
+      stop = signalData[options.measurement]![ch]!.values.iterable.cast<num>().reduce((num value, num element) => max(value, element));
+      step = (stop - start) / 65535.0;
+    }
+    else if(inst.operands.length == 2){
+      start = signalData[options.measurement]![ch]!.values.iterable.cast<num>().reduce((num value, num element) => min(value, element));
+
+      LogEntry? constParseError;
+      step = Const.parse(inst.operands[1], ((entry) {
+        constParseError = entry;
+      }));
+      if(constParseError != null){
+        return constParseError;
+      }
+
+      stop = start + 65535.0 * step;
+    }
+    else if(inst.operands.length == 3){
+      LogEntry? constParseError;
+      start = Const.parse(inst.operands[1], ((entry) {
+        constParseError = entry;
+      }));
+      if(constParseError != null){
+        return constParseError;
+      }
+
+      stop = Const.parse(inst.operands[2], ((entry) {
+        constParseError = entry;
+      }));
+      if(constParseError != null){
+        return constParseError;
+      }
+      step = (stop - start) / 65535.0;
+    }
+    else{
+      return LogEntry.error("WORD() got ${inst.operands.length} operands, expected 1,2 or 3");
+    }
+
+    for(final num value in signalData[options.measurement]![ch]!.values.iterable){
+      values.pushBack(((value.clamp(start, stop) - start) / step).round());
+    }    
+    for(final num ts in signalData[options.measurement]![ch]!.timestamps.iterable){ // need copy
+      timestamps.pushBack(ts);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, const Unit(scalar: 1, components: {}));
+    return null;
+  }
+
+  static Future<LogEntry?> __limit(final FrozenInstruction inst, final CalculationOptions options) async {
+    if(inst.numberOfChannelParameters != 1 || !inst.operands[0].startsWith('#')){
+      return LogEntry.error("The first and only the first operand of LIMIT() must be a channel");
+    }
+    if(inst.operands.length != 3){
+      return LogEntry.error("LIMIT() must be called with 3 operands");
+    }
+    final String ch = inst.operands[0].substring(1);
+    final TypedDataListContainer values = await __initializeValueContainer(ch);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
+
+    late final num start;
+    late final num stop;
+
+    LogEntry? constParseError;
+    start = Const.parse(inst.operands[1], ((entry) {
+      constParseError = entry;
+    }));
+    if(constParseError != null){
+      return constParseError;
+    }
+
+    stop = Const.parse(inst.operands[2], ((entry) {
+      constParseError = entry;
+    }));
+    if(constParseError != null){
+      return constParseError;
+    }
+
+    if(stop <= start){
+      return LogEntry.error("When calling LIMIT() the third operand must strictly be larger than the second");
+    }
+
+    for(int i = 0; i < signalData[options.measurement]![ch]!.values.size; i++){
+      values.pushBack(signalData[options.measurement]![ch]!.values[i].clamp(start, stop));
+      timestamps.pushBack(signalData[options.measurement]![ch]!.timestamps[i]);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);
+    return null;
+  }
+
+  static Future<LogEntry?> __const(final FrozenInstruction inst, final CalculationOptions options) async {
+    if(inst.operands.length != 2 || inst.numberOfChannelParameters != 0){
+      return LogEntry.error("CONST() must be called with 2 non-channel operands");
+    }
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+
+    late final num value;
+    late final num rate;
+
+    LogEntry? constParseError;
+    value = Const.parse(inst.operands[1], ((entry) {
+      constParseError = entry;
+    }));
+    if(constParseError != null){
+      return constParseError;
+    }
+
+    rate = Const.parse(inst.operands[2], ((entry) {
+      constParseError = entry;
+    }));
+    if(constParseError != null){
+      return constParseError;
+    }
+    final int dt = 1000 ~/ rate;
+
+    final List<int> totalDuration = TraceSettingsProvider.calculateMeasDuration();
+    final int expectedSize = ((totalDuration[1] - totalDuration[0]) / dt).ceil();
+    values.reserve(expectedSize);
+    timestamps.reserve(expectedSize);
+
+    for(int time = totalDuration[0]; time < totalDuration[1]; time += dt){
+      values.pushBack(value);
+      timestamps.pushBack(time);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, null);
+    return null;
+  }
+
+  static Future<LogEntry?> __rclp(final FrozenInstruction inst, final CalculationOptions options) async {
+    if(inst.operands.length != 2 || inst.numberOfChannelParameters != 1 || !inst.operands[0].startsWith('#')){
+      return LogEntry.error("RCLP() must be called with 2 operands where the first and only the first is a channel");
+    }
+    
+    final String ch = inst.operands[0].substring(1);
+    final TypedDataListContainer values = await __initializeValueContainer(inst.result);
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+
+    late final num crossFreq;
+
+    LogEntry? constParseError;
+    crossFreq = Const.parse(inst.operands[1], ((entry) {
+      constParseError = entry;
+    }));
+    if(constParseError != null){
+      return constParseError;
+    }
+
+    final Filter f = Filter(type: FilterType.AVG, isTimeWindow: true, elemWindowSize: 0, msWindowSize: 1000 / (crossFreq * 2 * pi));
+
+    values.reserve(signalData[options.measurement]![ch]!.values.size);
+    timestamps.reserve(signalData[options.measurement]![ch]!.values.size);
+    f.apply(
+      signalData[options.measurement]![ch]!.values,
+      signalData[options.measurement]![ch]!.timestamps,
+      (final num newValue) {
+        values.pushBack(newValue);
+      }
+    );
+    for(final num ts in signalData[options.measurement]![ch]!.timestamps.iterable){ // need copy
+      timestamps.pushBack(ts);
+    }
+
+    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![ch]!.unit);
     return null;
   }
 }

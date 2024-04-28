@@ -146,6 +146,26 @@ abstract class TraceSettingsProvider{
     }
   }
 
+  static List<int> calculateMeasDuration(){
+    int first = double.maxFinite.toInt();
+    int last = 0;
+
+    for(final String meas in traceSettingNotifier.value.keys){
+      for(final TraceSetting sig in traceSettingNotifier.value[meas]!){
+        final int sigFirst = signalData[meas]![sig.signal]!.timestamps.first.toInt();
+        final int sigLast = signalData[meas]![sig.signal]!.timestamps.last.toInt();
+        if(sigFirst < first){
+          first = sigFirst;
+        }
+        if(sigLast > last){
+          last = sigLast;
+        }
+      }
+    }
+
+    return [first, last];
+  }
+
   static void addEntriesFrom(final String measurement, final List<SignalContainer> signalContainers){
     traceSettingNotifier.update((traceSetting) {
       traceSetting[measurement] = signalContainers.map((signalContainer) {

@@ -96,7 +96,7 @@ int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeSt
   return searchIndex.toInt();
 }
 
-int timestampAtMax(final String meas, final String signal, final int start, final int stop){
+int timestampAtMin(final String meas, final String signal, final int start, final int stop){
   int? minIndex;
   for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
     if(signalData[meas]![signal]!.timestamps[i] < start){
@@ -113,7 +113,7 @@ int timestampAtMax(final String meas, final String signal, final int start, fina
   return signalData[meas]![signal]!.timestamps[minIndex!].toInt();
 }
 
-int timestampAtMin(final String meas, final String signal, final int start, final int stop){
+int timestampAtMax(final String meas, final String signal, final int start, final int stop){
   int? maxIndex;
   for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
     if(signalData[meas]![signal]!.timestamps[i] < start){
