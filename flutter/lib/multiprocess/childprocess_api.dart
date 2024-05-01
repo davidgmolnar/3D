@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import '../io/deserializer.dart';
-import '../io/serializer.dart';
+import '../io/exporter.dart';
+import '../io/importer.dart';
 
 const int masterSocketPort = 9999;
 int localSocketPort = masterSocketPort;
@@ -37,7 +37,7 @@ class Command{
   Command(this.childProcessPort, this.type, this.data);
 
   static Command decode(Uint8List payload){
-    final Map decoded = Serializer.jsonFromBytes(payload);
+    final Map decoded = Importer.jsonFromBytes(payload);
     return Command(decoded["port"], CommandType.values[decoded["type"]], decoded["data"]);
   }
 
@@ -47,7 +47,7 @@ class Command{
       "type": type.index,
       "data": data
     };
-    return Deserializer.jsonToBytes(payload);
+    return Exporter.jsonToBytes(payload);
   }
 }
 
@@ -112,7 +112,7 @@ class Response{
   Response(this.childProcessPort, this.type, this.data);
 
   static Response decode(Uint8List payload){
-    final Map decoded = Serializer.jsonFromBytes(payload);
+    final Map decoded = Importer.jsonFromBytes(payload);
     return Response(decoded["port"], ResponseType.values[decoded["type"]], decoded["data"]);
   }
 
@@ -122,6 +122,6 @@ class Response{
       "type": type.index,
       "data": data
     };
-    return Deserializer.jsonToBytes(payload);
+    return Exporter.jsonToBytes(payload);
   }
 }

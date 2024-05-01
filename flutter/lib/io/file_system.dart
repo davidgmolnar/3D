@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'deserializer.dart';
+import 'exporter.dart';
 import 'logger.dart';
-import 'serializer.dart';
+import 'importer.dart';
 
 abstract class FileSystem{
 
@@ -41,7 +42,7 @@ abstract class FileSystem{
     }
     final File file = await File("${_currentDirectory}Local/$path$filename").create(recursive: true);
     final RandomAccessFile access = await file.open(mode: FileMode.write);
-    await access.writeFrom(Deserializer.jsonToBytes(jsonEncodeable));
+    await access.writeFrom(Exporter.jsonToBytes(jsonEncodeable));
     await access.close();
   }
 
@@ -52,7 +53,7 @@ abstract class FileSystem{
     }
     final File file = File("${_currentDirectory}Local/$path$filename")..createSync(recursive: true);
     final RandomAccessFile access = file.openSync(mode: FileMode.write);
-    access.writeFromSync(Deserializer.jsonToBytes(jsonEncodeable));
+    access.writeFromSync(Exporter.jsonToBytes(jsonEncodeable));
     access.closeSync();
   }
 
@@ -72,7 +73,7 @@ abstract class FileSystem{
     if(deleteWhenDone){
       await file.delete();
     }
-    return Serializer.jsonFromBytes(buffer);
+    return Importer.jsonFromBytes(buffer);
   }
 
   static Map tryLoadMapFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
@@ -88,7 +89,64 @@ abstract class FileSystem{
     if(deleteWhenDone){
       file.deleteSync();
     }
-    return Serializer.jsonFromBytes(buffer);
+    return Importer.jsonFromBytes(buffer);
+  }
+
+  static Future<void> trySaveBytesToLocalAsync(final String path, final String filename, final Uint8List bytes) async {
+    if(await getCurrentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return;
+    }
+    final File file = await File("${_currentDirectory}Local/$path$filename").create(recursive: true);
+    final RandomAccessFile access = await file.open(mode: FileMode.write);
+    await access.writeFrom(bytes);
+    await access.close();
+  }
+
+  static void trySaveBytesToLocalSync(final String path, final String filename, final Uint8List bytes){
+    if(_currentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return;
+    }
+    final File file = File("${_currentDirectory}Local/$path$filename")..createSync(recursive: true);
+    final RandomAccessFile access = file.openSync(mode: FileMode.write);
+    access.writeFromSync(bytes);
+    access.closeSync();
+  }
+
+  static Future<Uint8List> tryLoadBytesFromLocalAsync(final String path, final String filename, {final bool deleteWhenDone = false}) async {
+    if(await getCurrentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return Uint8List(0);
+    }
+    final File file = File("${_currentDirectory}Local/$path$filename");
+    if(!(await file.exists())){
+      return Uint8List(0);
+    }
+    final RandomAccessFile access = await file.open(mode: FileMode.read);
+    Uint8List buffer = Uint8List(await file.length());
+    await access.readInto(buffer);
+    await access.close();
+    if(deleteWhenDone){
+      await file.delete();
+    }
+    return buffer;
+  }
+
+  static Uint8List tryLoadBytesFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
+    if(_currentDirectory == null){
+      localLogger.error("Cant determine current directory");
+      return Uint8List(0);
+    }
+    final File file = File("${_currentDirectory}Local/$path$filename");
+    if(!file.existsSync()){
+      return Uint8List(0);
+    }
+    Uint8List buffer = file.readAsBytesSync();
+    if(deleteWhenDone){
+      file.deleteSync();
+    }
+    return buffer;
   }
 
   static Future<void> tryDeleteFromLocalAsync(final String path, final String filename) async {

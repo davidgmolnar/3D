@@ -6,7 +6,7 @@ import 'package:dart_dbc_parser/signal/dbc_signal.dart';
 class TypedDataListContainer<T extends TypedData>{
   static const List<Type> floatLike = [Float32List, Float64List];
 
-  static Map<Type, TypedData Function(ByteBuffer, int, int)> viewCtors = {
+  static final Map<Type, TypedData Function(ByteBuffer, int, int)> _viewCtors = {
     Uint8List: (p0, p1, p2) => Uint8List.view(p0, p1, p2),
     Uint16List: (p0, p1, p2) => Uint16List.view(p0, p1, p2),
     Uint32List: (p0, p1, p2) => Uint32List.view(p0, p1, p2),
@@ -19,7 +19,7 @@ class TypedDataListContainer<T extends TypedData>{
     Float64List: (p0, p1, p2) => Float64List.view(p0, p1, p2)
   };
 
-  static Map<Type, TypedData Function(int, int, TypedData)> realloc = {
+  static final Map<Type, TypedData Function(int, int, TypedData)> _realloc = {
     Uint8List: (p0, p1, p2) => Uint8List(p0)..setRange(0, p1, (p2 as Uint8List)),
     Uint16List: (p0, p1, p2) => Uint16List(p0)..setRange(0, p1, (p2 as Uint16List)),
     Uint32List: (p0, p1, p2) => Uint32List(p0)..setRange(0, p1, (p2 as Uint32List)),
@@ -30,6 +30,45 @@ class TypedDataListContainer<T extends TypedData>{
     Int64List: (p0, p1, p2) => Int64List(p0)..setRange(0, p1, (p2 as Int64List)),
     Float32List: (p0, p1, p2) => Float32List(p0)..setRange(0, p1, (p2 as Float32List)),
     Float64List: (p0, p1, p2) => Float64List(p0)..setRange(0, p1, (p2 as Float64List))
+  };
+
+  static final Map<Type, TypedDataListContainer Function(TypedData)> _ctors = {
+    Uint8List: (p0) => TypedDataListContainer<Uint8List>(list: p0 as Uint8List),
+    Uint16List: (p0) => TypedDataListContainer<Uint16List>(list: p0 as Uint16List),
+    Uint32List: (p0) => TypedDataListContainer<Uint32List>(list: p0 as Uint32List),
+    Uint64List: (p0) => TypedDataListContainer<Uint64List>(list: p0 as Uint64List),
+    Int8List: (p0) => TypedDataListContainer<Int8List>(list: p0 as Int8List),
+    Int16List: (p0) => TypedDataListContainer<Int16List>(list: p0 as Int16List),
+    Int32List: (p0) => TypedDataListContainer<Int32List>(list: p0 as Int32List),
+    Int64List: (p0) => TypedDataListContainer<Int64List>(list: p0 as Int64List),
+    Float32List: (p0) => TypedDataListContainer<Float32List>(list: p0 as Float32List),
+    Float64List: (p0) => TypedDataListContainer<Float64List>(list: p0 as Float64List),
+  };
+
+  static const Map<Type, int> _typeSignatures = {
+    Uint8List: 0,
+    Uint16List: 1,
+    Uint32List: 2,
+    Uint64List: 3,
+    Int8List: 4,
+    Int16List: 5,
+    Int32List: 6,
+    Int64List: 7,
+    Float32List: 8,
+    Float64List: 9
+  };
+
+  static const Map<Type, int> _elemBytes = {
+    Uint8List: 1,
+    Uint16List: 2,
+    Uint32List: 4,
+    Uint64List: 8,
+    Int8List: 1,
+    Int16List: 2,
+    Int32List: 4,
+    Int64List: 8,
+    Float32List: 4,
+    Float64List: 8
   };
 
   late T _list;
@@ -43,6 +82,7 @@ class TypedDataListContainer<T extends TypedData>{
   }){
     _list = list;
     _capacity = list.lengthInBytes ~/ list.elementSizeInBytes;
+    _size = _capacity;
   }
 
   int get size => _size;
@@ -144,7 +184,7 @@ class TypedDataListContainer<T extends TypedData>{
   }
 
   void reserve(int newCapacity){
-    _list = realloc[T]!(newCapacity, _size, _list) as T;
+    _list = _realloc[T]!(newCapacity, _size, _list) as T;
     _capacity = newCapacity;
   }
 
@@ -180,7 +220,7 @@ class TypedDataListContainer<T extends TypedData>{
     if(_size >= _capacity){
       return;
     }
-    _list = viewCtors[T]!(_list.buffer, _list.offsetInBytes, _size) as T;
+    _list = _viewCtors[T]!(_list.buffer, _list.offsetInBytes, _size) as T;
     _capacity = _size;
   }
 
@@ -198,5 +238,28 @@ class TypedDataListContainer<T extends TypedData>{
     else{
       return (_list as List)[index] as int;
     }
+  }
+
+  Uint8List toBytes(){
+    final List<int> bytes = [];
+    final Uint64List s = Uint64List.fromList([_size]);
+    bytes.addAll(s.buffer.asUint8List(s.offsetInBytes, s.lengthInBytes));
+    bytes[7] = _typeSignatures[T]!;
+    bytes.addAll(_viewCtors[T]!(_list.buffer, _list.offsetInBytes, _size).buffer.asUint8List(_list.offsetInBytes, _elemBytes[T]! * _size));
+    return Uint8List.fromList(bytes);
+  }
+
+  static TypedDataListContainer fromBytes(final Uint8List bytes, {final int outerOffset = 0}){
+    final ByteData data = bytes.buffer.asByteData(bytes.offsetInBytes, bytes.lengthInBytes);
+    final ByteBuffer buf = bytes.buffer;
+    int point = 0;
+
+    final int desc = data.getUint64(point, Endian.host);
+    final int typeSig = (desc >> 56) & 0xFF;
+    final int elemNum = desc & 0xFFFFFFFFFFFFFF;
+    final Type t = _typeSignatures.keys.firstWhere((element) => _typeSignatures[element] == typeSig);
+    point += 8;
+    TypedData list = _viewCtors[t]!(buf, point + outerOffset, elemNum);
+    return _ctors[t]!(list);
   }
 }

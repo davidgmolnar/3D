@@ -23,7 +23,7 @@ class LoadContext{
   });
 }
 
-abstract class Serializer {
+abstract class Importer {
 
   static Utf8Decoder utf8Decoder = const Utf8Decoder();
 
@@ -154,11 +154,12 @@ abstract class Serializer {
           lineProgressIndication(0, entry.asString(localLogger.loggerName));
           await Future.delayed(const Duration(milliseconds: 10));
         }
+        return LoadContext(storage: {}, context: context, filePath: file.absolute.path);
       }
 
       late final DBCDatabase can;
       if(!dbcFail){
-        can = await DBCDatabase.loadFromFile(dbcPaths!.map((e) => File(e)).toList());
+        can = await DBCDatabase.loadFromFile(dbcPaths.map((e) => File(e)).toList());
         if(can.database.isEmpty){
           dbcFail = true;
           final LogEntry entry = LogEntry.warning("Failed to load DBC database, cant efficiently store measurement");

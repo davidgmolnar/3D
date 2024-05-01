@@ -6,14 +6,14 @@ import '../../ui/theme/theme.dart';
 import '../startup.dart';
 import '../window_type.dart';
 
-class ChartApp extends StatefulWidget {
-  const ChartApp({super.key});
+class CustomChartApp extends StatefulWidget {
+  const CustomChartApp({super.key});
 
   @override
-  State<ChartApp> createState() => _ChartAppState();
+  State<CustomChartApp> createState() => _CustomChartAppState();
 }
 
-class _ChartAppState extends State<ChartApp> with WindowListener{
+class _CustomChartAppState extends State<CustomChartApp> with WindowListener{
   @override
   void initState() {
     StyleManager.updater = _update;
@@ -32,7 +32,7 @@ class _ChartAppState extends State<ChartApp> with WindowListener{
       title: StyleManager.title ?? windowTypeTitle[windowType]!,
       scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
-      home: const ChartScreen(),
+      home: const CustomChartScreen(),
     );
   }
 
@@ -42,8 +42,8 @@ class _ChartAppState extends State<ChartApp> with WindowListener{
   }
 }
 
-class ChartScreen extends StatelessWidget{
-  const ChartScreen({super.key});
+class CustomChartScreen extends StatelessWidget{
+  const CustomChartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

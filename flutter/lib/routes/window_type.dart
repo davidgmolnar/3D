@@ -4,7 +4,7 @@ enum WindowType{
   INITIAL,
   MAIN_WINDOW,
   SETTINGS,
-  TIME_SERIES_CHART,
+  CUSTOM_CHART,
   MAP_CHART,
   LOG
 }
@@ -21,7 +21,7 @@ extension FromString on WindowType{
       case "SETTINGS":
         return WindowType.SETTINGS;
       case "TIME_SERIES_CHART":
-        return WindowType.TIME_SERIES_CHART;
+        return WindowType.CUSTOM_CHART;
       case "MAP_CHART":
         return WindowType.MAP_CHART;
       case "LOG":

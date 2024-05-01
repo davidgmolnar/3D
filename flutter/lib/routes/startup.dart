@@ -16,14 +16,14 @@ import 'log/screen.dart';
 import 'main_window/screen.dart';
 import 'map_chart/screen.dart';
 import 'settings/screen.dart';
-import 'time_series_chart/screen.dart';
+import 'custom_chart/screen.dart';
 import 'window_type.dart';
 
 Map<WindowType,String> windowTypeTitle = {
   WindowType.INITIAL: "Loading",
   WindowType.MAIN_WINDOW: "3D Log Analyzer",
   WindowType.SETTINGS: "Settings",
-  WindowType.TIME_SERIES_CHART: "Chart",
+  WindowType.CUSTOM_CHART: "Chart",
   WindowType.MAP_CHART: "Map",
   WindowType.LOG: "Log",
 };
@@ -77,8 +77,8 @@ void runSelectedApp() async {
   else if(windowType == WindowType.MAP_CHART){
     runApp(const MapApp());
   }
-  else if(windowType == WindowType.TIME_SERIES_CHART){
-    runApp(const ChartApp());
+  else if(windowType == WindowType.CUSTOM_CHART){
+    runApp(const CustomChartApp());
   }
   else if(windowType == WindowType.SETTINGS){
     runApp(const SettingApp());

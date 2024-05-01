@@ -9,7 +9,7 @@ import '../data/settings.dart';
 import '../data/signal_container.dart';
 import '../io/file_system.dart';
 import '../io/logger.dart';
-import '../io/serializer.dart';
+import '../io/importer.dart';
 import '../routes/startup.dart';
 import '../routes/window_type.dart';
 import '../ui/charts/chart_logic/chart_controller.dart';
@@ -116,7 +116,7 @@ abstract class ChildProcessController{
       case ResponseFinishableType.IMPORT_LOG:
         for(String id in finishedTask.data.keys){
           final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
-          LoadContext result = await Serializer.loadLogFile(File(finishedTask.data[id]["path"]),
+          LoadContext result = await Importer.loadLogFile(File(finishedTask.data[id]["path"]),
             lineProgressIndication: (final double linePercentage, final String? entry) {
               sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
                 "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
@@ -125,8 +125,10 @@ abstract class ChildProcessController{
               }));
             }, indicationCount: 100
           );
-          signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
-          TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+          if(result.storage != null){
+            signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
+            TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+          }
           localLogger.addAll(result.context);
         }
         return; // no kill

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-abstract class Deserializer {
+abstract class Exporter {
 
   static Utf8Encoder utf8Decoder = const Utf8Encoder();
 

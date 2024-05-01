@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:characters/characters.dart';
 
 import '../../io/logger.dart';
-import '../../io/serializer.dart';
+import '../../io/importer.dart';
 import 'constants.dart';
 
 enum ParserState{
@@ -367,7 +367,7 @@ class CalculationScriptParser{
 
     final List<int> bytes = (await file.readAsBytes()).toList();
     final originalLength = bytes.length;
-    final String str = Serializer.safeUTF8Decode(bytes);
+    final String str = Importer.safeUTF8Decode(bytes);
     final decodedLength = str.length;
 
     if(originalLength != decodedLength){
