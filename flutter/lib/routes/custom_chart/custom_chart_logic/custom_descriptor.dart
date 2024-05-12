@@ -11,8 +11,8 @@ import '../../window_type.dart';
 
 abstract class CustomDescriptor{
 
-  void saveChannel();
-  void loadChannel();
+  void saveChannels();
+  void loadChannels();
 
   @override
   int get hashCode;
@@ -22,55 +22,60 @@ abstract class CustomDescriptor{
 
 class CustomTimeseriesChartDescriptor implements CustomDescriptor{
   final String measurement;
-  final String signal;
+  final List<String> signals;
 
-  const CustomTimeseriesChartDescriptor({required this.measurement, required this.signal});
+  const CustomTimeseriesChartDescriptor({required this.measurement, required this.signals});
 
-  static CustomTimeseriesChartDescriptor? from({required final String m, required final String s}){
-    if(signalData.containsKey(m) && signalData[m]!.containsKey(s)){
-      return CustomTimeseriesChartDescriptor(measurement: m, signal: s);
+  static CustomTimeseriesChartDescriptor? from({required final String m, required final List<String> s}){
+    if(signalData.containsKey(m) && s.every((signal) => signalData[m]!.containsKey(signal))){
+      return CustomTimeseriesChartDescriptor(measurement: m, signals: s);
     }
     return null;
   }
 
   @override
-  void saveChannel(){
+  void saveChannels(){
     if(windowType != WindowType.MAIN_WINDOW){
       localLogger.error("CustomTimeseriesChartDescriptor.saveChannel was called on a non-main process");
       return;
     }
-    FileSystem.trySaveBytesToLocalSync(
-      FileSystem.channelDir,
-      "${measurement}_$signal.3DCHANNEL",
-      signalData[measurement]![signal]!.toBytes()
-    );
+    for(final String signal in signals){
+      FileSystem.trySaveBytesToLocalSync(
+        FileSystem.channelDir,
+        "${measurement}_$signal.3DCHANNEL",
+        signalData[measurement]![signal]!.toBytes()
+      );
+    }
   }
 
   @override
-  void loadChannel(){
+  void loadChannels(){
     if(windowType != WindowType.CUSTOM_CHART){
       localLogger.error("CustomTimeseriesChartDescriptor.loadChannel was called on a non-customchart process");
       return;
     }
-    final Uint8List bytes = FileSystem.tryLoadBytesFromLocalSync(
-      FileSystem.channelDir,
-      "${measurement}_$signal.3DCHANNEL",
-      deleteWhenDone: true
-    );
-    if(bytes.isEmpty){
-      localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL");
-      return;
-    }
+    
+    for(final String signal in signals){
+      final Uint8List bytes = FileSystem.tryLoadBytesFromLocalSync(
+        FileSystem.channelDir,
+        "${measurement}_$signal.3DCHANNEL",
+        deleteWhenDone: false
+      );
+      if(bytes.isEmpty){
+        localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL");
+        continue;
+      }
 
-    final SignalContainer sig = SignalContainer.fromBytes(bytes);
-    signalData[measurement]![signal] = sig;
+      final SignalContainer sig = SignalContainer.fromBytes(bytes);
+      signalData[measurement]![signal] = sig;
+    }
   }
 
   @override
-  int get hashCode => measurement.hashCode ^ signal.hashCode;
+  int get hashCode => measurement.hashCode ^ signals.hashCode;
 
   @override
   bool operator==(covariant CustomTimeseriesChartDescriptor other){
-    return other.measurement == measurement && other.signal == signal;
+    return other.measurement == measurement && other.signals == signals;
   }
 }

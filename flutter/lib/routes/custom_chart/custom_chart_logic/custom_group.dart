@@ -15,7 +15,7 @@ abstract class CustomGroup<T extends CustomDescriptor>{
   
   CustomGroup({required this.sharingGroup, required this.name, required this.numRow, required this.numCol});
 
-  bool add({required final String m, required final String s});
+  bool add({required final String m, required final List<String> s});
   
   void save();
   void saveChannels();
@@ -39,7 +39,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
   CustomTimeseriesChartGroup({required this.sharingGroup, required this.name, required this.numRow, required this.numCol});
 
   @override
-  bool add({required final String m, required final String s}){
+  bool add({required final String m, required final List<String> s}){
     final CustomTimeseriesChartDescriptor? custom = CustomTimeseriesChartDescriptor.from(m: m, s: s);
     if(custom != null && !elements.contains(custom) && numRow * numCol > elements.length){
       elements.add(custom);
@@ -52,7 +52,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
   @override
   void saveChannels(){
     for(final CustomTimeseriesChartDescriptor element in elements){
-      element.saveChannel();
+      element.saveChannels();
     }
   }
 
@@ -60,7 +60,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
   @override
   void loadChannels(){
     for(final CustomTimeseriesChartDescriptor element in elements){
-      element.loadChannel();
+      element.loadChannels();
     }
   }
 
@@ -71,7 +71,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
       "group": sharingGroup,
       "numRow": numRow,
       "numCol": numCol,
-      "elements": elements.map((e) => {"meas": e.measurement, "sig": e.signal}).toList()
+      "elements": elements.map((e) => {"meas": e.measurement, "sig": e.signals}).toList()
     };
   }
 

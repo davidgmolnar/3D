@@ -66,7 +66,7 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
   final TextEditingController _numCol = TextEditingController();
 
   final List<String?> _meas = [];
-  final List<String?> _signal = [];
+  final List<List<String?>> _signals = [];
 
   bool canFillElements = false;
 
@@ -76,12 +76,12 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
     int prevLen = _meas.length;
     canFillElements = maybeRow != null && maybeCol != null && maybeRow <= 4 && maybeCol <= 4;
     _meas.clear();
-    _signal.clear();
+    _signals.clear();
     if(canFillElements){
       int elemNum = maybeRow! * maybeCol!;
       for(int i = 0; i < elemNum; i++){
         _meas.add(null);
-        _signal.add(null);
+        _signals.add([null]);
       }
     }
 
@@ -105,11 +105,11 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
 
     bool fail = false;
     for(int i = 0; i < _meas.length; i++){
-      if(_meas[i] == null || _signal[i] == null){
+      if(_meas[i] == null || _signals[i].any((element) => element == null)){
         showErrorWithoutContext("Element at index $i was not filled out");
       }
-      else if(!group.add(m: _meas[i]!, s: _signal[i]!)){
-        showErrorWithoutContext("Could not add ${_meas[i]}/${_signal[i]} as it was already added");
+      else if(!group.add(m: _meas[i]!, s: _signals[i].whereType<String>().toList())){
+        showErrorWithoutContext("Could not add ${_meas[i]}/${_signals[i]} as it was already added");
         fail = true;
       }
     }
@@ -214,20 +214,23 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
           SizedBox(
             height: min(600, MediaQuery.of(context).size.height) - 151 - 4 * StyleManager.globalStyle.padding,
             child: ListView.builder(
+              cacheExtent: 1000,
               itemCount: _meas.length,
-              itemExtent: 50 + 2 * StyleManager.globalStyle.padding,
               itemBuilder: (context, index) {
                 int rowNum = index ~/ int.parse(_numRow.text);
                 int colNum = index % int.parse(_numRow.text);
                 return Padding(
                   padding: EdgeInsets.all(StyleManager.globalStyle.padding),
                   child: SizedBox(
-                    height: 50,
+                    height: 50.0 * _signals[index].length + 50,
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Text("$rowNum:$colNum"),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: StyleManager.globalStyle.padding + 4),
+                          child: Text("$rowNum:$colNum", style: StyleManager.subTitleStyle,),
+                        ),
                         SizedBox(
                           width: 100,
                           child: DropdownButton<String>(
@@ -240,17 +243,44 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
                             },
                           ),
                         ),
-                        SizedBox(
-                          width: 300,
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _signal[index],
-                            items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...?signalData[_meas[index]]?.keys.map((signal) => DropdownMenuItem<String>(value: signal, child: Text(signal)))],
-                            onChanged: (value) {
-                              _signal[index] = value;
-                              setState(() {});
-                            },
-                          ),
+                        Column(
+                          children: [
+                            for(int i = 0; i < _signals[index].length; i++)
+                              SizedBox(
+                                width: 300,
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: _signals[index][i],
+                                  items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...?signalData[_meas[index]]?.keys.map((signal) => DropdownMenuItem<String>(value: signal, child: Text(signal)))],
+                                  onChanged: (value) {
+                                    _signals[index][i] = value;
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    _signals[index].add(null);
+                                    setState(() {});
+                                  },
+                                  icon: Icon(Icons.add, color: StyleManager.globalStyle.primaryColor,)
+                                ),
+                                IconButton(
+                                  onPressed: () {
+                                    if(_signals[index].length == 1){
+                                      return;
+                                    }
+                                    _signals[index].removeLast();
+                                    setState(() {});
+                                  }, 
+                                  icon: Icon(Icons.remove, color: StyleManager.globalStyle.primaryColor,)
+                                ),
+                              ],
+                            )
+                          ]
                         ),
                       ],
                     )
