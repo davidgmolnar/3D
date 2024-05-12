@@ -5,6 +5,7 @@ import '../../../data/settings.dart';
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
+import '../../../ui/dialogs/chart_grid_setup_dialog.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
 import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
@@ -23,6 +24,7 @@ class MainWindowToolbar extends StatelessWidget {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
+
   static void _importCustomChartWindow (){}
 
   static void _exportLogWindow (){}
@@ -31,16 +33,39 @@ class MainWindowToolbar extends StatelessWidget {
     int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calculation", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
+
   static void _traceEditorWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(1000,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
   }
+
+  static void _chartGridSetup (){
+    if(mainWindowNavigatorKey.currentContext == null){
+      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      return;
+    }
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return const DialogBase(
+        title: "Chart grid setup",
+        dialog: ChartGridSetupDialog(),
+        minWidth: 600,
+        maxHeight: 600,
+      );
+    });
+  }
+
+  static void _characteristicsSetup (){
+    
+  }
+
   static void _calfileCreatorWindow (){/* builtin kontextuális warningok pl ha ifexistben van channel majd később másik blockban újra van használva a channel meg ilyenek*/}
+
   static void _settingsWindow () async {
     int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.SETTINGS)));
   }
+
   static void _editParametersDialog (){
     if(mainWindowNavigatorKey.currentContext == null){
       localLogger.error("Could not show EditParametersDialog because mainWindowNavigatorKey.currentContext was somehow null");
@@ -54,6 +79,7 @@ class MainWindowToolbar extends StatelessWidget {
       );
     });
   }
+
   // ignore: non_constant_identifier_names
   static void _DBCMenuDialog (){
     if(mainWindowNavigatorKey.currentContext == null){
@@ -79,7 +105,10 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
     ToolbarItem(iconData: Icons.calculate, onPressed: _calfileRunnerWindow),
     ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
-    ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [], iconHeight: toolbarItemSize, invertColors: false,),
+    ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [
+      ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
+      ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+    ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
     ToolbarItemWithDropdown(iconData: Icons.settings, dropdownItems: [
       ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),

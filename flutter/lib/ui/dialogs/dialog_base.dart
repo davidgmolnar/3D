@@ -39,8 +39,9 @@ class DialogBase extends StatelessWidget{
   final Widget dialog;
   final double minWidth;
   final double? maxWidth;
+  final double? maxHeight;
 
-  const DialogBase({super.key, required this.title, required this.dialog, required this.minWidth, this.maxWidth});
+  const DialogBase({super.key, required this.title, required this.dialog, required this.minWidth, this.maxWidth, this.maxHeight});
   
   @override
   Widget build(BuildContext context) {
@@ -52,6 +53,7 @@ class DialogBase extends StatelessWidget{
     return Dialog(
       elevation: 10,
       child: Container(
+        height: maxHeight == null ? size.height : min(maxHeight!, size.height),
         width: width,
         decoration: BoxDecoration(
           border: Border.all(color: StyleManager.globalStyle.primaryColor, width: 1),

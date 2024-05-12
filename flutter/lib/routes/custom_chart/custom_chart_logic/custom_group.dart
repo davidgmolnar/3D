@@ -1,0 +1,116 @@
+import '../../../io/file_system.dart';
+import '../../../io/logger.dart';
+import 'custom_descriptor.dart';
+
+//////////
+/// 1-2-4-8 custom chart egy gridben, 1x1, 2x1, 2x2, 4x2  sor x oszlop
+/// ChartShownDuration + cursor sharing group
+
+abstract class CustomGroup<T extends CustomDescriptor>{
+  final String name;
+  final int sharingGroup;
+  final int numRow;
+  final int numCol;
+  final List<T> elements = [];
+  
+  CustomGroup({required this.sharingGroup, required this.name, required this.numRow, required this.numCol});
+
+  bool add({required final String m, required final String s});
+  
+  void save();
+  void saveChannels();
+  void loadChannels();
+
+  Map toJson();
+}
+
+class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDescriptor>{
+  @override
+  final String name;
+  @override
+  final int sharingGroup;
+  @override
+  final int numRow;
+  @override
+  final int numCol;
+  @override
+  final List<CustomTimeseriesChartDescriptor> elements = [];
+
+  CustomTimeseriesChartGroup({required this.sharingGroup, required this.name, required this.numRow, required this.numCol});
+
+  @override
+  bool add({required final String m, required final String s}){
+    final CustomTimeseriesChartDescriptor? custom = CustomTimeseriesChartDescriptor.from(m: m, s: s);
+    if(custom != null && !elements.contains(custom) && numRow * numCol > elements.length){
+      elements.add(custom);
+      return true;
+    }
+    return false;
+  }
+
+
+  @override
+  void saveChannels(){
+    for(final CustomTimeseriesChartDescriptor element in elements){
+      element.saveChannel();
+    }
+  }
+
+
+  @override
+  void loadChannels(){
+    for(final CustomTimeseriesChartDescriptor element in elements){
+      element.loadChannel();
+    }
+  }
+
+
+  @override
+  Map toJson(){
+    return {
+      "group": sharingGroup,
+      "numRow": numRow,
+      "numCol": numCol,
+      "elements": elements.map((e) => {"meas": e.measurement, "sig": e.signal}).toList()
+    };
+  }
+
+  static CustomTimeseriesChartGroup? fromJson(final Map json, final String name){
+    if(!json.containsKey("group") || json["group"] is! int){
+      return null;
+    }
+    if(!json.containsKey("numRow") || json["numRow"] is! int || json["numRow"] > 4){
+      return null;
+    }
+    if(!json.containsKey("numCol") || json["numCol"] is! int || json["numCol"] > 4){
+      return null;
+    }
+    if(!json.containsKey("elements") || json["elements"] is! List){
+      return null;
+    }
+    if((json["elements"] as List).any((element) => element is! Map)){
+      return null;
+    }
+    final CustomTimeseriesChartGroup group = CustomTimeseriesChartGroup(sharingGroup: json["group"], name: name, numRow: json["numRow"], numCol: json["numCol"]);
+    for(final Map e in json["elements"]){
+      if(!group.add(m: e["meas"], s: e["sig"])){
+        localLogger.warning("Failed to include an element when parsing a CustomChartGroup");
+      }
+    }
+    return group;
+  }
+  
+  @override
+  void save() {
+    FileSystem.trySaveMapToLocalSync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", toJson());
+  }
+
+  Future<CustomTimeseriesChartGroup?> load(final String name) async {
+    final Map json = await FileSystem.tryLoadMapFromLocalAsync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", deleteWhenDone: false);
+    return fromJson(json, name);
+  }
+}
+
+// TODO characteristics
+// one xaxis channel
+// multiple yaxis channels

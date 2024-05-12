@@ -115,7 +115,7 @@ class CalculationScriptProcessor{
   }
 
   static Future<LogEntry?> __doInstruction(FrozenInstruction inst, CalculationOptions options) async {
-    // TODO olyanok nincsenek megcsinálva h pl összeadsz fokot radiánnal akkor az jól jöjjön ki
+    // TODO unit constraints and result units, and proper unit conversion
     switch (inst.op) {
       case Operation.ADD:
         return await __twoOperandBase(inst, options, (p0, p1) => p0 + p1, null);

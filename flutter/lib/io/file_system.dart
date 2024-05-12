@@ -9,6 +9,9 @@ abstract class FileSystem{
 
   static String? _currentDirectory;
 
+  static String get customTimeSeriesGroupDir => "CustomTimeSeriesGroups/";
+  static String get channelDir => "Channels/";
+
   static Future<String?> get getCurrentDirectory async {
     if(_currentDirectory != null){
       return _currentDirectory;

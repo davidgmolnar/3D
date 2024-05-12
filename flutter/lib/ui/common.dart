@@ -38,3 +38,12 @@ ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showInfo(BuildContext 
     )
   );
 }
+
+ScaffoldFeatureController<SnackBar, SnackBarClosedReason> showInfoWithoutContext(String message){
+  return snackbarKey.currentState!.showSnackBar(
+    SnackBar(
+      content: Text(message, style: StyleManager.subTitleStyle,),
+      backgroundColor: Colors.green,
+    )
+  );
+}

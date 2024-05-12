@@ -9,40 +9,51 @@ import '../../window_type.dart';
 ///////
 /// Ez csak time-series adat. A karakterisztikák meg gps-trackek a map_chartban lesznek
 
-const String _channelDir = "Channels/";
+abstract class CustomDescriptor{
 
-class CustomChartDescriptor{
+  void saveChannel();
+  void loadChannel();
+
+  @override
+  int get hashCode;
+  @override
+  bool operator==(covariant CustomTimeseriesChartDescriptor other);
+}
+
+class CustomTimeseriesChartDescriptor implements CustomDescriptor{
   final String measurement;
   final String signal;
 
-  const CustomChartDescriptor({required this.measurement, required this.signal});
+  const CustomTimeseriesChartDescriptor({required this.measurement, required this.signal});
 
-  static CustomChartDescriptor? from({required final String m, required final String s}){
+  static CustomTimeseriesChartDescriptor? from({required final String m, required final String s}){
     if(signalData.containsKey(m) && signalData[m]!.containsKey(s)){
-      return CustomChartDescriptor(measurement: m, signal: s);
+      return CustomTimeseriesChartDescriptor(measurement: m, signal: s);
     }
     return null;
   }
 
+  @override
   void saveChannel(){
     if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomChartDescriptor.saveChannel was called on a non-main process");
+      localLogger.error("CustomTimeseriesChartDescriptor.saveChannel was called on a non-main process");
       return;
     }
     FileSystem.trySaveBytesToLocalSync(
-      _channelDir,
+      FileSystem.channelDir,
       "${measurement}_$signal.3DCHANNEL",
       signalData[measurement]![signal]!.toBytes()
     );
   }
 
+  @override
   void loadChannel(){
     if(windowType != WindowType.CUSTOM_CHART){
-      localLogger.error("CustomChartDescriptor.loadChannel was called on a non-customchart process");
+      localLogger.error("CustomTimeseriesChartDescriptor.loadChannel was called on a non-customchart process");
       return;
     }
     final Uint8List bytes = FileSystem.tryLoadBytesFromLocalSync(
-      _channelDir,
+      FileSystem.channelDir,
       "${measurement}_$signal.3DCHANNEL",
       deleteWhenDone: true
     );
@@ -53,5 +64,13 @@ class CustomChartDescriptor{
 
     final SignalContainer sig = SignalContainer.fromBytes(bytes);
     signalData[measurement]![signal] = sig;
+  }
+
+  @override
+  int get hashCode => measurement.hashCode ^ signal.hashCode;
+
+  @override
+  bool operator==(covariant CustomTimeseriesChartDescriptor other){
+    return other.measurement == measurement && other.signal == signal;
   }
 }
