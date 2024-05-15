@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
 import '../../io/file_system.dart';
+import '../../io/importer.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_group.dart';
 import '../common.dart';
 import '../input_widgets/sliders.dart';
@@ -19,10 +20,12 @@ class ChartGridSetupDialog extends StatefulWidget {
 
 class _ChartGridSetupState extends State<ChartGridSetupDialog> {
   bool createNew = true;
+  List<FileSystemEntity> chartGridFiles = [];
 
   @override
   void initState() {
-    createNew = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir).isEmpty;
+    chartGridFiles = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir);
+    createNew = chartGridFiles.isEmpty;
     super.initState();
   }
 
@@ -45,7 +48,7 @@ class _ChartGridSetupState extends State<ChartGridSetupDialog> {
             createNew ?
               const ChartGridCreate()
               :
-              const ChartGridLoad()
+              ChartGridLoad(chartGridFiles: chartGridFiles)
           ],
         );
       },
@@ -329,10 +332,68 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
 }
 
 class ChartGridLoad extends StatelessWidget {
-  const ChartGridLoad({super.key});
+  const ChartGridLoad({super.key, required this.chartGridFiles});
+
+  final List<FileSystemEntity> chartGridFiles;
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return SizedBox(
+      height: min(600, MediaQuery.of(context).size.height) - 151 - 4 * StyleManager.globalStyle.padding,
+      child: ListView.builder(
+        cacheExtent: 1000,
+        itemCount: chartGridFiles.length,
+        itemBuilder: (context, index) {
+          return ChartGridElementCard(file: chartGridFiles[index]);
+        }
+      ),
+    );
+  }
+}
+
+class ChartGridElementCard extends StatefulWidget {
+  const ChartGridElementCard({super.key, required this.file});
+
+  final FileSystemEntity file;
+
+  @override
+  State<ChartGridElementCard> createState() => _ChartGridElementCardState();
+}
+
+class _ChartGridElementCardState extends State<ChartGridElementCard> {
+  late final CustomTimeseriesChartGroup? group;
+  bool opened = false;
+
+  @override
+  void initState() {
+    Map json = Importer.jsonFromBytes(
+      File(widget.file.path).readAsBytesSync()
+    );
+    group = CustomTimeseriesChartGroup.fromJson(json, widget.file.uri.path.split('/').last.split('.').first);
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if(group == null){
+      return Center(
+        child: Text("Error when parsing ${widget.file.path}", style: StyleManager.textStyle,),
+      );
+    }
+
+    if(opened){
+      // Name
+      // row x col
+      // shevron down to open in detail
+      // delete button
+      // return
+    }
+
+    // Name
+    // row x col
+    // shevron up to close detail
+    // delete button
+    // every group diplayed
+
   }
 }
