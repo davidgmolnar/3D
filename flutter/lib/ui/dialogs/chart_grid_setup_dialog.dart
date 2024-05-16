@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../data/data.dart';
 import '../../io/file_system.dart';
 import '../../io/importer.dart';
+import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_group.dart';
 import '../common.dart';
 import '../input_widgets/sliders.dart';
@@ -20,12 +21,10 @@ class ChartGridSetupDialog extends StatefulWidget {
 
 class _ChartGridSetupState extends State<ChartGridSetupDialog> {
   bool createNew = true;
-  List<FileSystemEntity> chartGridFiles = [];
 
   @override
   void initState() {
-    chartGridFiles = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir);
-    createNew = chartGridFiles.isEmpty;
+    createNew = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir).isEmpty;
     super.initState();
   }
 
@@ -48,7 +47,7 @@ class _ChartGridSetupState extends State<ChartGridSetupDialog> {
             createNew ?
               const ChartGridCreate()
               :
-              ChartGridLoad(chartGridFiles: chartGridFiles)
+              const ChartGridLoad()
           ],
         );
       },
@@ -137,12 +136,7 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
       return;
     }
 
-    group.saveChannels();
-    // for each element
-    //    ChildProcessController.addConnection
-    //    send windowsetupinfo
-    //    send descriptor
-
+    group.launch();
   }
 
   void _clear(){
@@ -331,20 +325,41 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
   }
 }
 
-class ChartGridLoad extends StatelessWidget {
-  const ChartGridLoad({super.key, required this.chartGridFiles});
+class ChartGridLoad extends StatefulWidget {
+  const ChartGridLoad({super.key});
 
-  final List<FileSystemEntity> chartGridFiles;
+  @override
+  State<ChartGridLoad> createState() => _ChartGridLoadState();
+}
+
+class _ChartGridLoadState extends State<ChartGridLoad> {
+  List<FileSystemEntity> chartGridFiles = [];
+
+  @override
+  void initState() {
+    chartGridFiles = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: min(600, MediaQuery.of(context).size.height) - 151 - 4 * StyleManager.globalStyle.padding,
+      height: min(600, MediaQuery.of(context).size.height) - 100 - 4 * StyleManager.globalStyle.padding,
       child: ListView.builder(
         cacheExtent: 1000,
         itemCount: chartGridFiles.length,
         itemBuilder: (context, index) {
-          return ChartGridElementCard(file: chartGridFiles[index]);
+          return Container(
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(width: 1, color: StyleManager.globalStyle.secondaryColor))),
+            child: ChartGridElementCard(
+              file: chartGridFiles[index],
+              onDeleted: () {
+                chartGridFiles[index].deleteSync();
+                chartGridFiles.removeAt(index);
+                setState(() {});
+              },
+            ),
+          );
         }
       ),
     );
@@ -352,9 +367,10 @@ class ChartGridLoad extends StatelessWidget {
 }
 
 class ChartGridElementCard extends StatefulWidget {
-  const ChartGridElementCard({super.key, required this.file});
+  const ChartGridElementCard({super.key, required this.file, required this.onDeleted});
 
   final FileSystemEntity file;
+  final VoidCallback onDeleted;
 
   @override
   State<ChartGridElementCard> createState() => _ChartGridElementCardState();
@@ -381,19 +397,95 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
       );
     }
 
-    if(opened){
-      // Name
-      // row x col
-      // shevron down to open in detail
-      // delete button
-      // return
+    if(!opened){
+      return Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+            child: Text(group!.name, style: StyleManager.subTitleStyle,),
+          ),
+          const Spacer(),
+          Padding(
+            padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+            child: Text("${group!.numRow} x ${group!.numCol} grid", style: StyleManager.textStyle,),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: (){
+              opened = true;
+              setState(() {});
+            },
+            icon: Icon(Icons.keyboard_arrow_down_rounded, color: StyleManager.globalStyle.primaryColor,)
+          ),
+          IconButton(
+            onPressed: (){
+              group!.launch();
+            },
+            icon: Icon(Icons.play_arrow_rounded, color: StyleManager.globalStyle.primaryColor,)
+          ),
+          IconButton(
+            onPressed: widget.onDeleted,
+            icon: Icon(Icons.delete, color: StyleManager.globalStyle.primaryColor,)
+          ),
+        ],
+      );
     }
 
-    // Name
-    // row x col
-    // shevron up to close detail
-    // delete button
-    // every group diplayed
+    return Column(
+      children: [
+        Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+              child: Text(group!.name, style: StyleManager.subTitleStyle,),
+            ),
+            const Spacer(),
+            Padding(
+              padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+              child: Text("${group!.numRow} x ${group!.numCol} grid", style: StyleManager.textStyle,),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: (){
+                opened = false;
+                setState(() {});
+              },
+              icon: Icon(Icons.keyboard_arrow_up_rounded, color: StyleManager.globalStyle.primaryColor,)
+            ),
+            IconButton(
+              onPressed: (){
+                group!.launch();
+              },
+              icon: Icon(Icons.play_arrow_rounded, color: StyleManager.globalStyle.primaryColor,)
+            ),
+            IconButton(
+              onPressed: widget.onDeleted,
+              icon: Icon(Icons.delete, color: StyleManager.globalStyle.primaryColor,)
+            ),
+          ],
+        ),
+        for(final CustomTimeseriesChartDescriptor element in group!.elements)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                child: Text(element.measurement, style: StyleManager.textStyle,),
+              ),
+              const Spacer(),
+              Column(
+                children: [
+                  for(final String sig in element.signals)
+                    Padding(
+                      padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                      child: Text(sig, style: StyleManager.textStyle,),
+                    ),
+                ],
+              )
+            ],
+          ),
+      ],
+    );
 
   }
 }

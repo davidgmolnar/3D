@@ -20,6 +20,8 @@ abstract class CustomGroup<T extends CustomDescriptor>{
   void save();
   void saveChannels();
   void loadChannels();
+  
+  void launch();
 
   Map toJson();
 }
@@ -64,6 +66,15 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
     }
   }
 
+  @override
+  void launch(){
+    saveChannels();
+    // TODO
+    // for each element
+    //    ChildProcessController.addConnection
+    //    send windowsetupinfo
+    //    send descriptor
+  }
 
   @override
   Map toJson(){
@@ -93,7 +104,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
     }
     final CustomTimeseriesChartGroup group = CustomTimeseriesChartGroup(sharingGroup: json["group"], name: name, numRow: json["numRow"], numCol: json["numCol"]);
     for(final Map e in json["elements"]){
-      if(!group.add(m: e["meas"], s: e["sig"])){
+      if(!group.add(m: e["meas"], s: e["sig"].cast<String>())){
         localLogger.warning("Failed to include an element when parsing a CustomChartGroup");
       }
     }
