@@ -20,7 +20,7 @@ extension FromString on WindowType{
         return WindowType.MAIN_WINDOW;
       case "SETTINGS":
         return WindowType.SETTINGS;
-      case "TIME_SERIES_CHART":
+      case "CUSTOM_CHART":
         return WindowType.CUSTOM_CHART;
       case "MAP_CHART":
         return WindowType.MAP_CHART;

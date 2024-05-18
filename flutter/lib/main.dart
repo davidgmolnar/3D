@@ -1,9 +1,9 @@
-import 'dart:io';
+/*import 'dart:io';
 
 import 'data/data.dart';
 import 'data/settings.dart';
 import 'data/signal_container.dart';
-import 'io/importer.dart';
+import 'io/importer.dart';*/
 import 'routes/startup.dart';
 
 void main(List<String> args) async {
@@ -11,7 +11,7 @@ void main(List<String> args) async {
     return;
   }
 
-  if(args.isEmpty){
+  /*if(args.isEmpty){
     SettingsProvider.loadFromDisk();
     String measurementAlias = "test";
     LoadContext result = await Importer.loadLogFile(File("C:\\Users\\Lenovo\\Desktop\\3D_Test\\test.csv"));
@@ -20,7 +20,7 @@ void main(List<String> args) async {
     //TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
     //TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_Cell_ID";}).isVisible = true;
     //TraceSettingsProvider.traceSettingNotifier.value[measurementAlias]!.firstWhere((element) {return element.signal == "HV_ECU_Heartbeat";}).isVisible = true;
-  }
+  }*/
 
   runSelectedApp();
 }

@@ -109,7 +109,7 @@ abstract class TraceSettingsProvider{
         value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
         
         _postUpdate(measurement);
-        _reCalculateVisibleDuration();
+        reCalculateVisibleDuration();
       });
     }
   }
@@ -122,7 +122,7 @@ abstract class TraceSettingsProvider{
     }
   }
 
-  static void _reCalculateVisibleDuration(){
+  static void reCalculateVisibleDuration(){
     final Map<String, List<String>> vis = visibleSignals;
     int first = double.maxFinite.toInt();
     int last = 0;
@@ -181,7 +181,7 @@ abstract class TraceSettingsProvider{
       ).toList();
       
       _postUpdate(measurement);
-      _reCalculateVisibleDuration();
+      reCalculateVisibleDuration();
     });
   }
 
@@ -216,7 +216,7 @@ abstract class TraceSettingsProvider{
       }
       
       _postUpdate(measurement);
-      _reCalculateVisibleDuration();
+      reCalculateVisibleDuration();
     });
   }
 

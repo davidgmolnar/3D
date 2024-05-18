@@ -180,7 +180,7 @@ abstract class ChildProcessController{
   }
 
   static Future<int> addConnection(WindowType type, WindowSetupInfo windowSetupInfo) async {
-    final int port = _activeChildProcesses.isEmpty ? localSocketPort + 1 : _findFirstAvailablePort();
+    final int port = _findFirstAvailablePort();
     String? dir = await FileSystem.getCurrentDirectory;
     if(dir == null){
       return -1;
@@ -188,7 +188,7 @@ abstract class ChildProcessController{
     await FileSystem.trySaveMapToLocalAsync("", "${port}_setup.3D", windowSetupInfo.asJson);
     Process.run("${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],);
     _newConnections[port] = type;
-    localLogger.info("Started ${type.name}");
+    localLogger.info("Started ${type.name} on $port");
     return port;
   }
 

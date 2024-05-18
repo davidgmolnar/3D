@@ -92,7 +92,6 @@ void runSelectedApp() async {
       appWindow.title = windowSetup!.title;
       appWindow.size = windowSetup!.size;
       appWindow.position = windowSetup!.position;
-      appWindow.alignment = Alignment.center;
     }
     else{
       appWindow.title = windowTypeTitle[windowType]!;
@@ -133,6 +132,7 @@ Future<void> postStartup(var root) async {
     localLogger.error("Failed to load window setup file");
   }
   if(windowType == WindowType.MAIN_WINDOW){
+    appWindow.maximize();
     await ChildProcessController.start();
   }
   else{

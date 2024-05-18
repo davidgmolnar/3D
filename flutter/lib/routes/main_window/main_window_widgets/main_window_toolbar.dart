@@ -20,8 +20,12 @@ import '../screen.dart';
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
+  static Offset _getCenterOffset(final Size size){
+    return WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.center(Offset.zero) - size.center(Offset.zero);
+  }
+
   static void _importLogWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Import Log", const Size(1000,700), _getCenterOffset(const Size(1000,700))));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.IMPORT)));
   }
 
@@ -30,12 +34,12 @@ class MainWindowToolbar extends StatelessWidget {
   static void _exportLogWindow (){}
 
   static void _calfileRunnerWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calculation", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.LOG, WindowSetupInfo("Calculation", const Size(1000,700), _getCenterOffset(const Size(1000,700))));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setLogWindowTypePayload(LogWindowType.CALCULATION)));
   }
 
   static void _traceEditorWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(1000,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Trace Editor", const Size(1000,700), _getCenterOffset(const Size(1000,700))));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.TRACE_EDITOR)));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsTraceEditorSetupPayload(TraceSettingsProvider.toJsonFormattable)));
   }
@@ -62,7 +66,7 @@ class MainWindowToolbar extends StatelessWidget {
   static void _calfileCreatorWindow (){/* builtin kontextuális warningok pl ha ifexistben van channel majd később másik blockban újra van használva a channel meg ilyenek*/}
 
   static void _settingsWindow () async {
-    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), const Offset(0,0)));
+    int port = await ChildProcessController.addConnection(WindowType.SETTINGS, WindowSetupInfo("Settings", const Size(500,700), _getCenterOffset(const Size(500,700))));
     ChildProcessController.sendTo(Command(port, CommandType.DATA, setSettingsWindowTypePayload(SettingsWindowType.SETTINGS)));
   }
 

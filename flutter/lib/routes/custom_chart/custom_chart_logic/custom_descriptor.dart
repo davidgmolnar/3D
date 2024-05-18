@@ -27,10 +27,7 @@ class CustomTimeseriesChartDescriptor implements CustomDescriptor{
   const CustomTimeseriesChartDescriptor({required this.measurement, required this.signals});
 
   static CustomTimeseriesChartDescriptor? from({required final String m, required final List<String> s}){
-    if(signalData.containsKey(m) && s.every((signal) => signalData[m]!.containsKey(signal))){
-      return CustomTimeseriesChartDescriptor(measurement: m, signals: s);
-    }
-    return null;
+    return CustomTimeseriesChartDescriptor(measurement: m, signals: s);
   }
 
   @override
@@ -65,6 +62,7 @@ class CustomTimeseriesChartDescriptor implements CustomDescriptor{
         localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL");
         continue;
       }
+      localLogger.info("Imported channel file: ${measurement}_$signal.3DCHANNEL");
 
       final SignalContainer sig = SignalContainer.fromBytes(bytes);
       signalData[measurement]![signal] = sig;

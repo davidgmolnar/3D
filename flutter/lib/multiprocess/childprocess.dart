@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../data/settings.dart';
 import '../io/logger.dart';
+import '../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../routes/log/log_logic/log_window_action_type.dart';
 import '../routes/settings/settings_logic/settings_window_type.dart';
 import '../routes/window_type.dart';
@@ -74,6 +75,9 @@ abstract class ChildProcess{
         break;
       case WindowType.SETTINGS:
         settingsHandleDataReceived(data);
+        break;
+      case WindowType.CUSTOM_CHART:
+        customChartHandleDataReceived(data);
         break;
       default:
         localLogger.error("Data interpretation not implemented for WindowType.${windowType.name}");

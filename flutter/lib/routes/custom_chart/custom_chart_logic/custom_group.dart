@@ -1,5 +1,12 @@
+import 'package:flutter/material.dart';
+
 import '../../../io/file_system.dart';
 import '../../../io/logger.dart';
+import '../../../multiprocess/childprocess_api.dart';
+import '../../../multiprocess/childprocess_controller.dart';
+import '../../startup.dart';
+import '../../window_type.dart';
+import 'custom_chart_window_type.dart';
 import 'custom_descriptor.dart';
 
 //////////
@@ -26,7 +33,7 @@ abstract class CustomGroup<T extends CustomDescriptor>{
   Map toJson();
 }
 
-class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDescriptor>{
+class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDescriptor>{  // TODO a way to edit measurement
   @override
   final String name;
   @override
@@ -67,13 +74,45 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
   }
 
   @override
-  void launch(){
+  Future<void> launch() async {
     saveChannels();
-    // TODO
-    // for each element
-    //    ChildProcessController.addConnection
-    //    send windowsetupinfo
-    //    send descriptor
+    if(windowType != WindowType.MAIN_WINDOW){
+      localLogger.error("CustomTimeseriesChartGroup.launch was called on a non-main process");
+      return;
+    }
+
+    final Size screenSize = WidgetsBinding.instance.platformDispatcher.views.first.physicalSize;
+    final Size elementSize = Size(screenSize.width / numCol, screenSize.height / numRow);
+    for(int i = 0; i < elements.length; i++){
+      final int col = i ~/ numRow;
+      final int row = i % numRow;
+      final Offset position = Offset(
+        screenSize.width / numCol * col,
+        screenSize.height / numRow * row
+      );
+      final int port = await ChildProcessController.addConnection(
+        WindowType.CUSTOM_CHART,
+        WindowSetupInfo("$name - R$row - C$col",
+                        elementSize,
+                        position
+        )
+      );
+      ChildProcessController.sendTo(Command(
+        port,
+        CommandType.DATA,
+        setCustomChartWindowTypePayload(CustomChartWindowType.GRID)
+      ));
+      ChildProcessController.sendTo(Command(
+        port,
+        CommandType.DATA,
+        setCustomChartDescriptorPayload(
+          name,
+          i
+        )
+      ));
+
+      await Future.delayed(const Duration(milliseconds: 10));
+    }
   }
 
   @override
@@ -116,7 +155,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
     FileSystem.trySaveMapToLocalSync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", toJson());
   }
 
-  Future<CustomTimeseriesChartGroup?> load(final String name) async {
+  static Future<CustomTimeseriesChartGroup?> load(final String name) async {
     final Map json = await FileSystem.tryLoadMapFromLocalAsync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", deleteWhenDone: false);
     return fromJson(json, name);
   }
