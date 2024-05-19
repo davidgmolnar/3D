@@ -146,41 +146,46 @@ void customChartHandleDataReceived(Map data) async {
 }
 
 void _handleSharingGroupData(Map data){
-  if(!isInSharingGroup){
-    return;
+  if(customChartWindowType == CustomChartWindowType.GRID){
+    if(!isInSharingGroup){
+      return;
+    }
+    if(data['sharing_group'] != customTimeseriesChartGroup?.sharingGroup){
+      return;
+    }
+    switch(SharingGroupEvent.values[data['type']]){
+      case SharingGroupEvent.SHOWN_DURATION_CHANGE:
+        ChartController.shownDurationNotifier.update((value) {
+          value.timeOffset = data['offset'];
+          value.timeDuration = data['duration'];
+        });
+        break;
+      case SharingGroupEvent.MARKER_ADD:
+        final int timestamp = data['atTimestamp'];
+        final Map<String, Map<String, num>> values = cursorDataAtTimeStamp(timestamp, cursorInfoNotifier.value.visibility);
+        cursorInfoNotifier.update((cursorInfo) {
+          cursorInfo.cursors.add(CursorData.fromCurrent(timestamp, values));
+        });
+        break;
+      case SharingGroupEvent.MARKER_DELETE:
+        cursorInfoNotifier.update((cursorInfo) {
+          final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !cursorInfo.cursors[data['cursorIndex']].isDelta && cursorInfo.cursors.length > 1;
+          cursorInfo.cursors.removeAt(data['cursorIndex']);
+          
+          if(flipOneDelta){
+            cursorInfo.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
+          }
+        });
+        break;
+      case SharingGroupEvent.MARKER_MOVE:
+        cursorInfoNotifier.update((cursorInfo) {
+          cursorInfo.cursors[data['cursorIndex']].timeStamp = data['newTimestamp'];
+          cursorInfo.cursors[data['cursorIndex']].values = cursorDataAtTimeStamp(data['newTimestamp'], cursorInfo.visibility);
+        });
+        break;
+    }
   }
-  if(data['sharing_group'] != customTimeseriesChartGroup?.sharingGroup){
-    return;
-  }
-  switch(SharingGroupEvent.values[data['type']]){
-    case SharingGroupEvent.SHOWN_DURATION_CHANGE:
-      ChartController.shownDurationNotifier.update((value) {
-        value.timeOffset = data['offset'];
-        value.timeDuration = data['duration'];
-      });
-      break;
-    case SharingGroupEvent.MARKER_ADD:
-      final int timestamp = data['atTimestamp'];
-      final Map<String, Map<String, num>> values = cursorDataAtTimeStamp(timestamp, cursorInfoNotifier.value.visibility);
-      cursorInfoNotifier.update((cursorInfo) {
-        cursorInfo.cursors.add(CursorData.fromCurrent(timestamp, values));
-      });
-      break;
-    case SharingGroupEvent.MARKER_DELETE:
-      cursorInfoNotifier.update((cursorInfo) {
-        final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !cursorInfo.cursors[data['cursorIndex']].isDelta && cursorInfo.cursors.length > 1;
-        cursorInfo.cursors.removeAt(data['cursorIndex']);
-        
-        if(flipOneDelta){
-          cursorInfo.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
-        }
-      });
-      break;
-    case SharingGroupEvent.MARKER_MOVE:
-      cursorInfoNotifier.update((cursorInfo) {
-        cursorInfo.cursors[data['cursorIndex']].timeStamp = data['newTimestamp'];
-        cursorInfo.cursors[data['cursorIndex']].values = cursorDataAtTimeStamp(data['newTimestamp'], cursorInfo.visibility);
-      });
-      break;
+  else{
+    localLogger.error("CustomChartWindowInstruction.SHARING_GROUP_DATA not implemented for CustomChartWindowType.${customChartWindowType.name}");
   }
 }

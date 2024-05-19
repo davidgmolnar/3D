@@ -20,7 +20,7 @@ import '../screen.dart';
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
-  static Offset _getCenterOffset(final Size size){
+  static Offset getCenterOffset(final Size size){
     return WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.center(Offset.zero) - size.center(Offset.zero);
   }
 
