@@ -101,6 +101,10 @@ abstract class ChildProcess{
     }
   }
 
+  static void sendCustomChartUpdate(Map data){
+    send(Response(localSocketPort, ResponseType.CUSTOM_CHART_FORWARD, data));
+  }
+
   static void triggerSettingsUpdateInMaster(){
     _sock?.send(_settingsUpdateSignal, InternetAddress.loopbackIPv4, masterSocketPort);
   }

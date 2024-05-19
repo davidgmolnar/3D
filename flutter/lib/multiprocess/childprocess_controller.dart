@@ -62,6 +62,10 @@ abstract class ChildProcessController{
                 _handleFinished(response.childProcessPort, response.data);
                 break;
 
+              case ResponseType.CUSTOM_CHART_FORWARD:
+                _sendToCustomChartsExcept(response.data, response.childProcessPort);
+                break;
+
               case ResponseType.UPDATE_SETTINGS:
                 SettingsProvider.loadFromDisk();
                 for(final int port in _activeChildProcesses.keys){
@@ -195,6 +199,13 @@ abstract class ChildProcessController{
   static void triggerSettingsUpdateInChildProcesses(){
     for(final int port in _activeChildProcesses.keys){
       final Command command = Command(port, CommandType.UPDATE_SETTINGS, {});
+      sendTo(command);
+    }
+  }
+
+  static void _sendToCustomChartsExcept(final Map payload, final int exceptPort){
+    for(final int port in _activeChildProcesses.keys.where((port) => _activeChildProcesses[port]! == WindowType.CUSTOM_CHART && port != exceptPort)){
+      final Command command = Command(port, CommandType.DATA, payload);
       sendTo(command);
     }
   }

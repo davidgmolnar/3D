@@ -1,5 +1,8 @@
 import '../../../data/settings_classes.dart';
 import '../../../data/updateable_valuenotifier.dart';
+import '../../../multiprocess/childprocess.dart';
+import '../../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../../../routes/window_type.dart';
 import '../chart_area.dart';
 import '../../../data/settings.dart';
 
@@ -48,6 +51,8 @@ abstract class ChartController{
       shown.timeOffset += delta;
       shown.timeDuration -= delta * 2;
     });
+
+    _maybeUpdateChartGrid();
   }
 
   static set moveInTime(double horizontalDragUpdateDelta){
@@ -55,6 +60,14 @@ abstract class ChartController{
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
       shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
     });
+
+    _maybeUpdateChartGrid();
+  }
+
+  static void _maybeUpdateChartGrid(){
+    if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+      ChildProcess.sendCustomChartUpdate(setCustomChartShownDurationPayload(shownDurationNotifier.value));
+    }
   }
 
   static set moveInFullChannelTime(double horizontalDragUpdateDelta){
@@ -62,6 +75,8 @@ abstract class ChartController{
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * TraceSettingsProvider.fullVisibleTime * _dragMultiplierHorizontal;
       shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
     });
+    
+    _maybeUpdateChartGrid();
   }
 
   static double verticalDragDelta(double delta, double range){

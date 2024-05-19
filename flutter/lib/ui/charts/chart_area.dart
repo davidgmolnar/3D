@@ -8,6 +8,9 @@ import 'package:ml_linalg/vector.dart';
 import '../../data/data.dart';
 import '../../data/settings.dart';
 import '../../io/logger.dart';
+import '../../multiprocess/childprocess.dart';
+import '../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../../routes/window_type.dart';
 import '../theme/theme.dart';
 import 'chart_logic/axis_data.dart';
 import 'chart_logic/chart_controller.dart';
@@ -259,6 +262,9 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
           cursorInfoNotifier.update((cursorInfo) {
             cursorInfo.cursors.add(CursorData.fromCurrent(timeStamp, values));
           });
+          if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+            ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerAddPayload(timeStamp));
+          }
         },
         behavior: HitTestBehavior.opaque,
         child: Stack(

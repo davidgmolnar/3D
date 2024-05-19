@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../../data/data.dart';
 import '../../data/settings.dart';
 import '../../data/updateable_valuenotifier.dart';
+import '../../multiprocess/childprocess.dart';
+import '../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../../routes/window_type.dart';
 import '../input_widgets/buttons.dart';
 import '../input_widgets/sliders.dart';
 import '../theme/theme.dart';
@@ -166,6 +169,9 @@ class CursorTooltip extends StatelessWidget {
                       if(flipOneDelta){
                         value.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
                       }
+                      if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+                        ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerRemovePayload(cursorIndex));
+                      }
                     });
                   },
                   icon: const Icon(Icons.close, size: 20),
@@ -263,6 +269,10 @@ class Cursor extends StatelessWidget {
             cursorInfoNotifier.update((cursorInfo) {
               cursorInfo.cursors[cursorIndex].timeStamp += ChartController.moveInCursonTime(details.delta.dx);
               cursorInfo.cursors[cursorIndex].values = cursorDataAtTimeStamp(cursorInfo.cursors[cursorIndex].timeStamp, cursorInfo.visibility);
+
+              if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+                ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerMovePayload(cursorIndex, cursorInfo.cursors[cursorIndex].timeStamp));
+              }
             });
           },
           child: SizedBox(

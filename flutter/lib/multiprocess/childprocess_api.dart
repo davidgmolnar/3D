@@ -57,6 +57,8 @@ enum ResponseType{
   // ignore: constant_identifier_names
   DATA,
   // ignore: constant_identifier_names
+  CUSTOM_CHART_FORWARD,
+  // ignore: constant_identifier_names
   UPDATE_SETTINGS,
   // ignore: constant_identifier_names
   FINISHED,
