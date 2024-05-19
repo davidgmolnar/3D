@@ -8,9 +8,11 @@ import '../../io/file_system.dart';
 import '../../io/importer.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_group.dart';
+import '../../routes/main_window/screen.dart';
 import '../common.dart';
 import '../input_widgets/sliders.dart';
 import '../theme/theme.dart';
+import 'dialog_base.dart';
 
 class ChartGridSetupDialog extends StatefulWidget {
   const ChartGridSetupDialog({super.key});
@@ -307,7 +309,7 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
               ),
               TextButton(
                 onPressed: _start,
-                child: Text("Start", style: StyleManager.subTitleStyle.copyWith(color: StyleManager.globalStyle.primaryColor)),
+                child: Text("Launch", style: StyleManager.subTitleStyle.copyWith(color: StyleManager.globalStyle.primaryColor)),
               ),
               TextButton(
                 onPressed: _clear,
@@ -389,6 +391,37 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
     super.initState();
   }
 
+  void _onSelected(BuildContext context){
+    List<List<String>> usableMeasurements = [];
+    for(final CustomTimeseriesChartDescriptor element in group!.elements){
+      usableMeasurements.add(
+        signalData.keys.where((meas) => element.signals.every((signal) => signalData[meas]?.containsKey(signal) ?? false)).toList()
+      );
+    }
+
+    if(usableMeasurements.any((element) => element.isEmpty)){
+      showError(context, "This Chart Grid cannot be launched due to missing channels");
+      return;
+    }
+    if(usableMeasurements.every((element) => element.length == 1)){
+      for(int i = 0; i < usableMeasurements.length; i++){
+        group!.elements[i] = CustomTimeseriesChartDescriptor(measurement: usableMeasurements[i].first, signals: group!.elements[i].signals);
+      }
+      group!.launch();
+      return;
+    }
+
+    Navigator.of(context).pop();
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return DialogBase(
+        title: "Chart grid launch",
+        dialog: ChartGridLaunchSelected(group: group!, usableMeasurements: usableMeasurements),
+        minWidth: 600,
+        maxHeight: 600,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if(group == null){
@@ -418,9 +451,7 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
             icon: Icon(Icons.keyboard_arrow_down_rounded, color: StyleManager.globalStyle.primaryColor,)
           ),
           IconButton(
-            onPressed: (){
-              group!.launch();
-            },
+            onPressed: () => _onSelected(context),
             icon: Icon(Icons.play_arrow_rounded, color: StyleManager.globalStyle.primaryColor,)
           ),
           IconButton(
@@ -453,9 +484,7 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
               icon: Icon(Icons.keyboard_arrow_up_rounded, color: StyleManager.globalStyle.primaryColor,)
             ),
             IconButton(
-              onPressed: (){
-                group!.launch();
-              },
+              onPressed: () => _onSelected(context),
               icon: Icon(Icons.play_arrow_rounded, color: StyleManager.globalStyle.primaryColor,)
             ),
             IconButton(
@@ -487,5 +516,106 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
       ],
     );
 
+  }
+}
+
+class ChartGridLaunchSelected extends StatefulWidget {
+  const ChartGridLaunchSelected({super.key, required this.group, required this.usableMeasurements});
+
+  final CustomTimeseriesChartGroup group;
+  final List<List<String>> usableMeasurements;
+
+  @override
+  State<ChartGridLaunchSelected> createState() => _ChartGridLaunchSelectedState();
+}
+
+class _ChartGridLaunchSelectedState extends State<ChartGridLaunchSelected> {
+  late final List<String?> chosenMeasurements;
+
+  @override
+  void initState() {
+    chosenMeasurements = List.filled(widget.usableMeasurements.length, null);
+    super.initState();
+  }
+
+  void _tryLaunch(BuildContext context){
+    if(chosenMeasurements.any((element) => element == null)){
+      showError(context, "Not all measurements have been set");
+      return;
+    }
+    for(int i = 0; i < chosenMeasurements.length; i++){
+      widget.group.elements[i] = CustomTimeseriesChartDescriptor(measurement: chosenMeasurements[i]!, signals: widget.group.elements[i].signals);
+    }
+    widget.group.launch();
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+              child: Text(widget.group.name, style: StyleManager.subTitleStyle,),
+            ),
+            const Spacer(),
+            Padding(
+              padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+              child: Text("${widget.group.numRow} x ${widget.group.numCol} grid", style: StyleManager.textStyle,),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: () => _tryLaunch(context),
+              icon: Icon(Icons.play_arrow_rounded, color: StyleManager.globalStyle.primaryColor,)
+            ),
+            IconButton(
+              onPressed: (){
+                Navigator.of(context).pop();
+                showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+                  return const DialogBase(
+                    title: "Chart grid setup",
+                    dialog: ChartGridSetupDialog(),
+                    minWidth: 600,
+                    maxHeight: 600,
+                  );
+                });
+              },
+              icon: Icon(Icons.keyboard_arrow_left_rounded, color: StyleManager.globalStyle.primaryColor,)
+            ),
+          ],
+        ),
+        for(int i = 0; i < chosenMeasurements.length; i++)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 100,
+                padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: chosenMeasurements[i],
+                  items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...signalData.keys.map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas)))],
+                  onChanged: (value) {
+                    chosenMeasurements[i] = value;
+                    setState(() {});
+                  },
+                ),
+              ),
+              const Spacer(),
+              Column(
+                children: [
+                  for(final String sig in widget.group.elements[i].signals)
+                    Padding(
+                      padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                      child: Text(sig, style: StyleManager.textStyle,),
+                    ),
+                ],
+              )
+            ],
+          ),
+      ],
+    );
   }
 }

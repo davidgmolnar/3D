@@ -75,6 +75,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
 
   @override
   Future<void> launch() async {
+    save();
     saveChannels();
     if(windowType != WindowType.MAIN_WINDOW){
       localLogger.error("CustomTimeseriesChartGroup.launch was called on a non-main process");
