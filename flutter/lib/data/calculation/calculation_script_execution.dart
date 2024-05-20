@@ -706,13 +706,14 @@ class CalculationScriptProcessor{
     }
 
     final String ch = inst.operands[0].substring(1);
-    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
     final Filter? f = Filter.tryParse(inst.operands[1]);
     if(f == null){
       return LogEntry.error("Failed to interpret ${inst.operands[1]} as a filter");
     }
 
     values.reserve(signalData[options.measurement]![ch]!.values.size);
+    timestamps.reserve(signalData[options.measurement]![ch]!.values.size);
     f.apply(
       signalData[options.measurement]![ch]!.values,
       signalData[options.measurement]![ch]!.timestamps,

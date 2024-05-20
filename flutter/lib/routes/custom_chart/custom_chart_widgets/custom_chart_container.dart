@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../ui/characteristics/characteristics_container.dart';
 import '../../../ui/charts/main_window_chart.dart';
 import '../../../ui/theme/theme.dart';
 import '../custom_chart_logic/custom_chart_window_type.dart';
@@ -34,7 +33,16 @@ class CustomChartContainer extends StatelessWidget {
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
       case CustomChartWindowType.CHARACTERISTICS:
-        child = const CharacteristicsContainer();
+        child = ListView(
+          children: const [
+            Column(
+              children: [
+                CustomChartToolbar(),
+                ChartContainer()
+              ],
+            )
+          ],
+        );
         break;
       default:
     }

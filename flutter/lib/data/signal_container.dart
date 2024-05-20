@@ -7,7 +7,7 @@ import 'typed_data_list_container.dart';
 
 class SignalContainer{
   TypedDataListContainer values;
-  TypedDataListContainer<Uint32List> timestamps;
+  TypedDataListContainer timestamps;
   final String dbcName;
   String displayName;
   Unit? unit;

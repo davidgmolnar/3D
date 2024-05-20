@@ -192,8 +192,6 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
     
     save();
     saveChannels();
-
-    // when loaded, create point(base at t, comp interpolated at t) lists for each compchannel, sort these by x, and create a Path
     
     final int port = await ChildProcessController.addConnection(
       WindowType.CUSTOM_CHART,

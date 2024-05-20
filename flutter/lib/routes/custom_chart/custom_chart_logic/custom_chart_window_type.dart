@@ -2,6 +2,7 @@ import '../../../data/data.dart';
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
 import '../../../io/logger.dart';
+import '../../../ui/charts/chart_logic/characteristics.dart';
 import '../../../ui/charts/chart_logic/chart_controller.dart';
 import '../../../ui/charts/cursor_displays.dart';
 import '../../../ui/theme/theme.dart';
@@ -95,6 +96,8 @@ CustomTimeseriesChartGroup? customTimeseriesChartGroup;
 int? customTimeseriesChartGroupIndex;
 bool isInSharingGroup = true;
 
+CustomCharacteristicsDescriptor? customCharacteristics;
+
 void customChartHandleDataReceived(Map data) async {
   localLogger.info("Data received from master");
   switch (CustomChartWindowInstruction.values[data['instruction']]) {
@@ -131,7 +134,32 @@ void customChartHandleDataReceived(Map data) async {
           TraceSettingsProvider.traceSettingNotifier.update((value) { });
         }
       }
-      
+      else if(customChartWindowType == CustomChartWindowType.CHARACTERISTICS){
+        customCharacteristics = await CustomCharacteristicsDescriptor.load(data["filename"]);
+        if(customCharacteristics == null){
+          localLogger.error("Failed to load descriptor data");
+          customChartWindowType = CustomChartWindowType.ERROR;
+          StyleManager.updater();
+        }
+        else{
+          localLogger.info("Loaded descriptor file for ${customCharacteristics!.name}");
+          signalData[customCharacteristics!.measurement] = {};
+          customCharacteristics!.loadChannels();
+          
+          CharacteristicsProcessor.process();
+
+          TraceSettingsProvider.updateEntriesFrom(customCharacteristics!.measurement, customCharacteristics!.compSignals);
+          for(final TraceSetting element in TraceSettingsProvider.traceSettingNotifier.value[customCharacteristics!.measurement]!){
+            element.isVisible = true;
+          }
+          TraceSettingsProvider.reCalculateVisibleDuration();
+          ChartController.shownDurationNotifier.update((value) {
+            value.timeOffset = TraceSettingsProvider.firstVisibleTimestamp;
+            value.timeDuration = TraceSettingsProvider.lastVisibleTimestamp - value.timeOffset;
+          });
+          TraceSettingsProvider.traceSettingNotifier.update((value) { });
+        }
+      }
       else{
         localLogger.error("Loading descriptor file is not implemented for ${customChartWindowType.name}");
       }

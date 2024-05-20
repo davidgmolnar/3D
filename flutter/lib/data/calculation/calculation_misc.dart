@@ -108,7 +108,7 @@ class Filter{
     return Filter(type: type, isTimeWindow: true, elemWindowSize: 0, msWindowSize: maybeTimeWindowSize * 1000);
   }
 
-  void apply(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<Uint32List> timestamps, final void Function(num) onNewValue){
+  void apply(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timestamps, final void Function(num) onNewValue){
     if(isTimeWindow){
       _applyOnTimeWindow(values, timestamps, onNewValue);
     }
@@ -131,7 +131,7 @@ class Filter{
     }
   }
 
-  void _applyOnTimeWindow(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<Uint32List> timestamps, final void Function(num) onNewValue){
+  void _applyOnTimeWindow(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timestamps, final void Function(num) onNewValue){
     int start = 0;
     int end = 0;
 
