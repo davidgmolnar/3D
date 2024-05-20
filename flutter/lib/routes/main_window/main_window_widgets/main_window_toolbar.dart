@@ -5,6 +5,7 @@ import '../../../data/settings.dart';
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
+import '../../../ui/dialogs/characteristics_setup_dialog.dart';
 import '../../../ui/dialogs/chart_grid_setup_dialog.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
 import '../../../ui/dialogs/dialog_base.dart';
@@ -20,7 +21,7 @@ import '../screen.dart';
 class MainWindowToolbar extends StatelessWidget {
   const MainWindowToolbar({super.key});
 
-  static Offset getCenterOffset(final Size size){
+  static Offset _getCenterOffset(final Size size){
     return WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.center(Offset.zero) - size.center(Offset.zero);
   }
 
@@ -60,7 +61,18 @@ class MainWindowToolbar extends StatelessWidget {
   }
 
   static void _characteristicsSetup (){
-    
+    if(mainWindowNavigatorKey.currentContext == null){
+      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      return;
+    }
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return const DialogBase(
+        title: "Characteristics setup",
+        dialog: CharacteristicsSetupDialog(),
+        minWidth: 600,
+        maxHeight: 600,
+      );
+    });
   }
 
   static void _calfileCreatorWindow (){/* builtin kontextuális warningok pl ha ifexistben van channel majd később másik blockban újra van használva a channel meg ilyenek*/}

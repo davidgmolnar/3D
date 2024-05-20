@@ -596,7 +596,7 @@ class _ChartGridLaunchSelectedState extends State<ChartGridLaunchSelected> {
                 child: DropdownButton<String>(
                   isExpanded: true,
                   value: chosenMeasurements[i],
-                  items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...signalData.keys.map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas)))],
+                  items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...widget.usableMeasurements[i].map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas)))],
                   onChanged: (value) {
                     chosenMeasurements[i] = value;
                     setState(() {});

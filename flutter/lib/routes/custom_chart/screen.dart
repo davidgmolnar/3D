@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../../ui/charts/main_window_chart.dart';
 import '../../ui/common.dart';
 import '../../ui/theme/theme.dart';
 import '../../ui/window/window_titlebar.dart';
 import '../startup.dart';
 import '../window_type.dart';
-import 'custom_chart_widgets/custom_chart_toolbar.dart';
+import 'custom_chart_widgets/custom_chart_container.dart';
 
 class CustomChartApp extends StatefulWidget {
   const CustomChartApp({super.key});
@@ -50,22 +49,13 @@ class CustomChartScreen extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            const CustomWindowTitleBar(),
+            CustomWindowTitleBar(),
             Expanded(
-              child: ListView(
-                children: const [
-                  Column( // TODO innentől ez egy customChartWindowType switch és egy külön widget legyen
-                    children: [
-                      CustomChartToolbar(),
-                      ChartContainer()
-                    ],
-                  )
-                ],
-              ),
+              child: CustomChartContainer()
             ),
           ],
         ),

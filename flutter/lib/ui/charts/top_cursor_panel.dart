@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
+import '../../multiprocess/childprocess.dart';
+import '../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../../routes/window_type.dart';
 import '../common.dart';
 import '../input_widgets/buttons.dart';
 import '../theme/theme.dart';
@@ -147,20 +150,25 @@ class CursorFunctionsDisplay extends StatefulWidget {
     ToolbarDropdownItem(text: "Min Search", onPressed: _cursorMinSearch),
   ];
 
-  static void _cursorPeakSearch(){
+  static void _cursorPeakSearch(){  // TODO chart grid sharing
     cursorInfoNotifier.update((value) {
       final List<String> parts = valueDescription.split('|');
       final ChartShowDuration shown = ChartController.shownDurationNotifier.value;
       value.cursors[CursorFunctionsDisplay.selected].timeStamp = timestampAtMax(parts[0], parts[1], shown.timeOffset, shown.timeOffset + shown.timeDuration);
       value.cursors[CursorFunctionsDisplay.selected].values = cursorDataAtTimeStamp(value.cursors[CursorFunctionsDisplay.selected].timeStamp, value.visibility);
+
+      if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerMovePayload(CursorFunctionsDisplay.selected, value.cursors[CursorFunctionsDisplay.selected].timeStamp));
+      }
     });
+
   }
 
   /*static void _cursorNextPeak(){
     
   }*/
 
-  static void _cursorPeakToPeak(){
+  static void _cursorPeakToPeak(){  // TODO chart grid sharing
     if(!cursorInfoNotifier.value.cursors[CursorFunctionsDisplay.selected].isDelta){
       showErrorWithoutContext("Selected marker has to be a delta one");
       return;
@@ -173,15 +181,24 @@ class CursorFunctionsDisplay extends StatefulWidget {
       value.cursors[CursorFunctionsDisplay.selected].values = cursorDataAtTimeStamp(value.cursors[CursorFunctionsDisplay.selected].timeStamp, value.visibility);
       value.cursors[absIndex].timeStamp = timestampAtMin(parts[0], parts[1], shown.timeOffset, shown.timeOffset + shown.timeDuration);
       value.cursors[absIndex].values = cursorDataAtTimeStamp(value.cursors[absIndex].timeStamp, value.visibility);
+
+      if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerMovePayload(CursorFunctionsDisplay.selected, value.cursors[CursorFunctionsDisplay.selected].timeStamp));
+        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerMovePayload(absIndex, value.cursors[absIndex].timeStamp));
+      }
     });
   }
 
-  static void _cursorMinSearch(){
+  static void _cursorMinSearch(){  // TODO chart grid sharing
     cursorInfoNotifier.update((value) {
       final List<String> parts = valueDescription.split('|');
       final ChartShowDuration shown = ChartController.shownDurationNotifier.value;
       value.cursors[CursorFunctionsDisplay.selected].timeStamp = timestampAtMin(parts[0], parts[1], shown.timeOffset, shown.timeOffset + shown.timeDuration);
       value.cursors[CursorFunctionsDisplay.selected].values = cursorDataAtTimeStamp(value.cursors[CursorFunctionsDisplay.selected].timeStamp, value.visibility);
+
+      if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerMovePayload(CursorFunctionsDisplay.selected, value.cursors[CursorFunctionsDisplay.selected].timeStamp));
+      }
     });
   }
 

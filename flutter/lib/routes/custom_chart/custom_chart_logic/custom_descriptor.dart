@@ -171,16 +171,16 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
     if((json["comp_signals"] as List).any((element) => element is! String)){
       return null;
     }
-    final CustomCharacteristicsDescriptor char = CustomCharacteristicsDescriptor(name: name, measurement: json["meas"], baseSignal: json["base_signal"], compSignals: json["comp_signals"]);
+    final CustomCharacteristicsDescriptor char = CustomCharacteristicsDescriptor(name: name, measurement: json["meas"], baseSignal: json["base_signal"], compSignals: json["comp_signals"].cast<String>());
     return char;
   }
 
   void save(){
-    FileSystem.trySaveMapToLocalSync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", toJson());
+    FileSystem.trySaveMapToLocalSync(FileSystem.customCharacteristicsGroupDir, "$name.3DCCG", toJson());
   }
 
   static Future<CustomCharacteristicsDescriptor?> load(final String name) async {
-    final Map json = await FileSystem.tryLoadMapFromLocalAsync(FileSystem.customTimeSeriesGroupDir, "$name.3DCTCG", deleteWhenDone: false);
+    final Map json = await FileSystem.tryLoadMapFromLocalAsync(FileSystem.customCharacteristicsGroupDir, "$name.3DCCG", deleteWhenDone: false);
     return fromJson(json, name);
   }
 
@@ -192,6 +192,8 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
     
     save();
     saveChannels();
+
+    // when loaded, create point(base at t, comp interpolated at t) lists for each compchannel, sort these by x, and create a Path
     
     final int port = await ChildProcessController.addConnection(
       WindowType.CUSTOM_CHART,

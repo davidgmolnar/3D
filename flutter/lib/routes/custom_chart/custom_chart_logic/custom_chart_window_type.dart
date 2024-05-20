@@ -42,7 +42,7 @@ Map setCustomChartShownDurationPayload(final ChartShowDuration showDuration) => 
   }
 };
 
-Map setCustomChartSMarkerAddPayload(final int atTimestamp) => {
+Map setCustomChartMarkerAddPayload(final int atTimestamp) => {
   'instruction': CustomChartWindowInstruction.SHARING_GROUP_DATA.index,
   'data': {
     'type': SharingGroupEvent.MARKER_ADD.index,
@@ -51,7 +51,7 @@ Map setCustomChartSMarkerAddPayload(final int atTimestamp) => {
   }
 };
 
-Map setCustomChartSMarkerRemovePayload(final int cursorIndex) => {
+Map setCustomChartMarkerRemovePayload(final int cursorIndex) => {
   'instruction': CustomChartWindowInstruction.SHARING_GROUP_DATA.index,
   'data': {
     'type': SharingGroupEvent.MARKER_DELETE.index,
@@ -60,7 +60,7 @@ Map setCustomChartSMarkerRemovePayload(final int cursorIndex) => {
   }
 };
 
-Map setCustomChartSMarkerMovePayload(final int cursorIndex, final int newTimestamp) => {
+Map setCustomChartMarkerMovePayload(final int cursorIndex, final int newTimestamp) => {
   'instruction': CustomChartWindowInstruction.SHARING_GROUP_DATA.index,
   'data': {
     'type': SharingGroupEvent.MARKER_MOVE.index,

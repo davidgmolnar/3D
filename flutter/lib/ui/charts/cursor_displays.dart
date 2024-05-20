@@ -170,7 +170,7 @@ class CursorTooltip extends StatelessWidget {
                         value.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
                       }
                       if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
-                        ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerRemovePayload(cursorIndex));
+                        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerRemovePayload(cursorIndex));
                       }
                     });
                   },
@@ -271,7 +271,7 @@ class Cursor extends StatelessWidget {
               cursorInfo.cursors[cursorIndex].values = cursorDataAtTimeStamp(cursorInfo.cursors[cursorIndex].timeStamp, cursorInfo.visibility);
 
               if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
-                ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerMovePayload(cursorIndex, cursorInfo.cursors[cursorIndex].timeStamp));
+                ChildProcess.sendCustomChartUpdate(setCustomChartMarkerMovePayload(cursorIndex, cursorInfo.cursors[cursorIndex].timeStamp));
               }
             });
           },

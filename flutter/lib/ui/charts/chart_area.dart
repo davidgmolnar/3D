@@ -263,7 +263,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
             cursorInfo.cursors.add(CursorData.fromCurrent(timeStamp, values));
           });
           if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
-            ChildProcess.sendCustomChartUpdate(setCustomChartSMarkerAddPayload(timeStamp));
+            ChildProcess.sendCustomChartUpdate(setCustomChartMarkerAddPayload(timeStamp));
           }
         },
         behavior: HitTestBehavior.opaque,
