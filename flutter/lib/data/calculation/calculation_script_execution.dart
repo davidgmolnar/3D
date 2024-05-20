@@ -734,8 +734,10 @@ class CalculationScriptProcessor{
       return LogEntry.error("The first and only the first operand of F() must be a channel");
     }
     final String ch = inst.operands[0].substring(1);
-    final TypedDataListContainer<Uint16List> values = TypedDataListContainer(list: Uint16List(signalData[options.measurement]![ch]!.values.size));
-    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
+    final TypedDataListContainer<Uint16List> values = TypedDataListContainer(list: Uint16List(0));
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+    values.reserve(signalData[options.measurement]![ch]!.values.size);
+    timestamps.reserve(signalData[options.measurement]![ch]!.values.size);
 
     late final num start;
     late final num stop;
@@ -799,7 +801,8 @@ class CalculationScriptProcessor{
     }
     final String ch = inst.operands[0].substring(1);
     final TypedDataListContainer values = await __initializeValueContainer(ch);
-    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(signalData[options.measurement]![ch]!.values.size));
+    final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
+    timestamps.reserve(signalData[options.measurement]![ch]!.values.size);
 
     late final num start;
     late final num stop;
