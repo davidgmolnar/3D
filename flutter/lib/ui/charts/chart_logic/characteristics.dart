@@ -13,7 +13,7 @@ import 'chart_controller.dart';
 abstract class CharacteristicsProcessor{
   static num _interpAt(final num y1, final num t1, final num y2, final num t2, final num t){
     if(t1 <= t2){
-      if(t == t1){
+      if(t == t1 || t1 == t2){
         return y1;
       }
       else if(t == t2){
@@ -45,12 +45,12 @@ abstract class CharacteristicsProcessor{
     }
 
     for(final String sig in customCharacteristics!.compSignals){
-      final List<Offset> resampledChannel = [];
+      List<Offset> resampledChannel = [];
 
       final int firstCommonTimeBaseIndex = _commonStartTimeBaseIndex(customCharacteristics!.measurement, customCharacteristics!.baseSignal, sig);
       final int lastCommonTimeBaseIndex = _commonEndTimeBaseIndex(customCharacteristics!.measurement, customCharacteristics!.baseSignal, sig);
 
-      int compIndex = signalData[customCharacteristics!.measurement]![sig]!.timestamps.toList<int>()
+      int compIndex = signalData[customCharacteristics!.measurement]![sig]!.timestamps.toList()
         .lastIndexWhere((point) => point < signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps[firstCommonTimeBaseIndex]);
 
       for(int baseIndex = firstCommonTimeBaseIndex; baseIndex < lastCommonTimeBaseIndex; baseIndex++){
@@ -70,7 +70,7 @@ abstract class CharacteristicsProcessor{
           signalData[customCharacteristics!.measurement]![sig]!.values[compIndex],
           signalData[customCharacteristics!.measurement]![sig]!.timestamps[compIndex],
           signalData[customCharacteristics!.measurement]![sig]!.values[compIndex + 1],
-          signalData[customCharacteristics!.measurement]![sig]!.timestamps[compIndex  +1],
+          signalData[customCharacteristics!.measurement]![sig]!.timestamps[compIndex  + 1],
           signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps[baseIndex]
         );
 
@@ -79,8 +79,41 @@ abstract class CharacteristicsProcessor{
           compValue.toDouble()
         ));
       }
-      // TODO do the same but append base resampled to comp, then sort and everything else is as usual -> the repeating-value-import-optimization can then be re-added
-      
+
+      final int firstCommonTimeCompIndex = _commonStartTimeBaseIndex(customCharacteristics!.measurement, sig, customCharacteristics!.baseSignal);
+      final int lastCommonTimeCompIndex = _commonEndTimeBaseIndex(customCharacteristics!.measurement, sig, customCharacteristics!.baseSignal);
+
+      int baseIndex = signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps.toList()
+        .lastIndexWhere((point) => point < signalData[customCharacteristics!.measurement]![sig]!.timestamps[firstCommonTimeCompIndex]);
+
+      for(int compIndex = firstCommonTimeCompIndex; compIndex < lastCommonTimeCompIndex; compIndex++){
+        final num compValue = signalData[customCharacteristics!.measurement]![sig]!.values[compIndex];
+        final num compTime = signalData[customCharacteristics!.measurement]![sig]!.timestamps[compIndex];
+
+        while(baseIndex + 1 < signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values.size || signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps[baseIndex + 1] < compTime){
+          baseIndex++;
+          break;
+        }
+
+        if(baseIndex + 1 >= signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values.size){
+          break;
+        }
+
+        final num baseValue = _interpAt(
+          signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values[baseIndex],
+          signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps[baseIndex],
+          signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values[baseIndex + 1],
+          signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.timestamps[baseIndex  + 1],
+          signalData[customCharacteristics!.measurement]![sig]!.timestamps[compIndex]
+        );
+
+        resampledChannel.add(Offset(
+          baseValue.toDouble(),
+          compValue.toDouble()
+        ));
+      }
+
+      resampledChannel = resampledChannel.toSet().toList(); // keep unique
       resampledChannel.sort((final Offset a, final Offset b) => a.dx.compareTo(b.dx));
 
       TypedDataListContainer<Float32List> newValues = TypedDataListContainer<Float32List>(list: Float32List.fromList(resampledChannel.map((e) => e.dy).toList()));
@@ -102,8 +135,6 @@ abstract class CharacteristicsProcessor{
         value.data[customCharacteristics!.measurement]![sig] = ChartDrawMode.SCATTER;
       }
     });
-
-    localLogger.info(ChartController.drawModesNotifier.value.data.toString());
 
     ChartController.shownDurationNotifier.update((value) {
       value.timeOffset = signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values.first.toDouble();

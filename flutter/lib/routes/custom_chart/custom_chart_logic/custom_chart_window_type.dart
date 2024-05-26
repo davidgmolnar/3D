@@ -158,6 +158,7 @@ void customChartHandleDataReceived(Map data) async {
             value.timeDuration = TraceSettingsProvider.lastVisibleTimestamp - value.timeOffset;
           });
           TraceSettingsProvider.traceSettingNotifier.update((value) { });
+          localLogger.info("Finished setup for ${customCharacteristics!.name}");
         }
       }
       else{

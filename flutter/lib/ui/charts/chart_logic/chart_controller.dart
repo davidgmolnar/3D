@@ -73,7 +73,7 @@ abstract class ChartController{
   static set moveInTime(double horizontalDragUpdateDelta){
     shownDurationNotifier.update((shown) {
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
-      shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
+      shown.timeOffset -= delta;
     });
 
     _maybeUpdateChartGrid();
@@ -88,7 +88,7 @@ abstract class ChartController{
   static set moveInFullChannelTime(double horizontalDragUpdateDelta){
     shownDurationNotifier.update((shown) {
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * TraceSettingsProvider.fullVisibleTime * _dragMultiplierHorizontal;
-      shown.timeOffset -= delta > 0 ? delta.ceil() : delta.floor();
+      shown.timeOffset -= delta;
     });
     
     _maybeUpdateChartGrid();
