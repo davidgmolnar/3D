@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
+import '../../ui/notifications/notification_widgets.dart';
 import '../../ui/theme/theme.dart';
 import '../../ui/window/window_titlebar.dart';
 import '../startup.dart';
@@ -58,9 +59,15 @@ class MainWindowScreen extends StatelessWidget{
           children: [
             const CustomWindowTitleBar(),
             Expanded(
-              child: ListView(
-                children: const [
-                  MainWindowLayout()
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ListView(
+                    children: const [
+                      MainWindowLayout()
+                    ],
+                  ),
+                  const NotificationOverlay(),
                 ],
               ),
             ),
