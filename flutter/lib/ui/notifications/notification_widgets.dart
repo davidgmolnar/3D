@@ -30,9 +30,6 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
   @override
   void initState() {
     noti.NotificationController.register(onNotificationAdded);
-    onNotificationAdded(noti.Notification.decaying(LogEntry.info("Lorem ipsum"), 2000));
-    onNotificationAdded(noti.Notification.decaying(LogEntry.warning("Lorem ipsum"), 4000));
-    onNotificationAdded(noti.Notification.decaying(LogEntry.error("Lorem ipsum"), 8000));
     super.initState();
   }
 
@@ -43,8 +40,10 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
     if(noti.isDecaying){
       Future.delayed(Duration(milliseconds: noti.durationMs),
         (){
-          controllers[notiKey]!.setLeft(_notificationWidth + 100);
-          setState(() {});
+          if(controllers.containsKey(notiKey)){
+            controllers[notiKey]!.setLeft(_notificationWidth + 100);
+            setState(() {});
+          }
         }
       );
     }
@@ -53,6 +52,9 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
   }
 
   void removeAt(final int removeKey){
+    if(!controllers.containsKey(removeKey)){
+      return;
+    }
     final double remTopOffset = controllers[removeKey]!.getTop();
 
     for(final int notiKey in notifications.keys){
@@ -183,7 +185,7 @@ class _NotificationContainerState extends State<NotificationContainer> {
                 Padding(
                   padding: EdgeInsets.all(StyleManager.globalStyle.padding),
                   child: Text(widget.notification.entry.message,
-                    maxLines: 5,
+                    maxLines: 4,
                     overflow: TextOverflow.clip,
                   )
                 )

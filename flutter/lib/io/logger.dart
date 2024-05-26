@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../ui/notifications/notification_logic.dart';
+
 const String mainLogPath = "./Logs/3D.log";
 Logger localLogger = Logger(mainLogPath, "Initial Logger");
 
@@ -83,32 +85,32 @@ class Logger{
     }));
   }
 
-  void info(final String message){
+  void info(final String message, {final bool doNoti = true}){
     if(!_isActive){
       return;
     }
-    add(LogEntry(message, LogLevel.INFO, DateTime.now()));
+    add(LogEntry(message, LogLevel.INFO, DateTime.now()), doNoti: doNoti);
   }
 
-  void warning(final String message){
+  void warning(final String message, {final bool doNoti = true}){
     if(!_isActive){
       return;
     }
-    add(LogEntry(message, LogLevel.WARNING, DateTime.now()));
+    add(LogEntry(message, LogLevel.WARNING, DateTime.now()), doNoti: doNoti);
   }
 
-  void error(final String message){
+  void error(final String message, {final bool doNoti = true}){
     if(!_isActive){
       return;
     }
-    add(LogEntry(message, LogLevel.ERROR, DateTime.now()));
+    add(LogEntry(message, LogLevel.ERROR, DateTime.now()), doNoti: doNoti);
   }
 
-  void critical(final String message){
+  void critical(final String message, {final bool doNoti = true}){
     if(!_isActive){
       return;
     }
-    add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()));
+    add(LogEntry(message, LogLevel.CRITICAL, DateTime.now()), doNoti: doNoti);
   }
 
   void addAll(final List<LogEntry> entries){
@@ -118,9 +120,12 @@ class Logger{
     }
   }
 
-  void add(final LogEntry entry){
+  void add(final LogEntry entry, {final bool doNoti = false}){
     _buffer.add(entry);
     __wake();
+    if(doNoti){
+      NotificationController.add(Notification(entry: entry, durationMs: 10000, isDecaying: entry.level.index <= 1));
+    }
   }
 
   Future<void> __flush() async {
