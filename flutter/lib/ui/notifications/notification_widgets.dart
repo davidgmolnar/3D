@@ -25,40 +25,26 @@ class NotificationOverlay extends StatefulWidget {
 
 class _NotificationOverlayState extends State<NotificationOverlay> {
   final Map<int, noti.Notification> notifications = {};
-  final Map<int, double> topOffsets = {};
-  final Map<int, double> leftOffsets = {};
-  final Map<int, int> decayScheduler = {};
+  final Map<int, noti.PositionController> controllers = {};
 
   @override
   void initState() {
     noti.NotificationController.register(onNotificationAdded);
     onNotificationAdded(noti.Notification.decaying(LogEntry.info("Lorem ipsum"), 2000));
     onNotificationAdded(noti.Notification.decaying(LogEntry.warning("Lorem ipsum"), 4000));
-    onNotificationAdded(noti.Notification.decaying(LogEntry.error("Lorem ipsum"), 6000));
+    onNotificationAdded(noti.Notification.decaying(LogEntry.error("Lorem ipsum"), 8000));
     super.initState();
   }
 
   void onNotificationAdded(final noti.Notification noti){
     int notiKey = notifications.isEmpty ? 0 : notifications.keys.last + 1;
     notifications[notiKey] = noti;
-    if(topOffsets.isEmpty){
-      topOffsets[notiKey] = 0;
-    }
-    else{
-      topOffsets[notiKey] = topOffsets.values.last + _notificationHeight;
-    }
-    topOffsets[notiKey] = topOffsets[notiKey]! + StyleManager.globalStyle.padding;
-    leftOffsets[notiKey] = 0;
-
+    
     if(noti.isDecaying){
-      int decayKey = decayScheduler.isEmpty ? 0 : decayScheduler.keys.last + 1;
-      decayScheduler[decayKey] = notiKey;
       Future.delayed(Duration(milliseconds: noti.durationMs),
         (){
-          if(decayScheduler.containsKey(decayKey)){
-            leftOffsets[decayScheduler[decayKey]!] = _notificationWidth + 100;
-            setState(() {});
-          }
+          controllers[notiKey]!.setLeft(_notificationWidth + 100);
+          setState(() {});
         }
       );
     }
@@ -67,28 +53,19 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
   }
 
   void removeAt(final int removeKey){
-    final noti.Notification? removed = notifications.remove(removeKey);
-    if(removed == null){
-      return;
-    }
-    final double remTopOffset = topOffsets.remove(removeKey)!;
-    leftOffsets.remove(removeKey);
-
-    int? maybeIsScheduled;
-    for(final int decayKey in decayScheduler.keys){
-      if(decayScheduler[decayKey]! == removeKey){
-        maybeIsScheduled = decayKey;
-      }
-    }
-
-    if(maybeIsScheduled != null){
-      decayScheduler.remove(maybeIsScheduled);
-    }
+    final double remTopOffset = controllers[removeKey]!.getTop();
 
     for(final int notiKey in notifications.keys){
-      if(topOffsets[notiKey]! > remTopOffset){
-        topOffsets[notiKey] = topOffsets[notiKey]! - _notificationHeight - StyleManager.globalStyle.padding;
+      if(controllers[notiKey]!.getTop() > remTopOffset){
+        final double newTop = controllers[notiKey]!.getTop() - _notificationHeight - StyleManager.globalStyle.padding;
+        controllers[notiKey]!.setTop(newTop);
       }
+    }
+
+    if(controllers.values.every((controller) => controller.getLeft() != 0)){
+      notifications.clear();
+      controllers.clear();
+      setState(() {});
     }
   }
 
@@ -102,25 +79,16 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
         child: Stack(
           children: [
             for(final int notiKey in notifications.keys)
-              AnimatedPositioned(
-                top: topOffsets[notiKey],
-                left: leftOffsets[notiKey],
-                duration: const Duration(milliseconds: 500),
-                curve: Curves.easeInOut,
-                onEnd: () {
-                  if(leftOffsets[notiKey] != 0){
-                    leftOffsets[notiKey] = 0;
-                    removeAt(notiKey);
-                    setState(() {});
-                  }
-                },
-                child: NotificationContainer(
-                  notification: notifications[notiKey]!,
-                  onRemoved: (){
-                    leftOffsets[notiKey] = _notificationWidth + 100;
-                    setState(() {});
-                  }
-                ),
+              NotificationContainer(
+                notification: notifications[notiKey]!,
+                onInitialized: (controller){
+                  controllers[notiKey] = controller;
+                  controller.setTop((_notificationHeight + StyleManager.globalStyle.padding) * notifications.keys.toList().indexOf(notiKey));
+                  },
+                onRemoved: (){
+                  removeAt(notiKey);
+                  setState(() {});
+                }
               ),
           ],
         ),
@@ -136,48 +104,94 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
 }
 
 class NotificationContainer extends StatefulWidget {
-  const NotificationContainer({super.key, required this.notification, required this.onRemoved});
+  const NotificationContainer({super.key, required this.notification, required this.onRemoved, required this.onInitialized});
 
   final noti.Notification notification;
   final VoidCallback onRemoved;
+  final Function(noti.PositionController) onInitialized;
 
   @override
   State<NotificationContainer> createState() => _NotificationContainerState();
 }
 
 class _NotificationContainerState extends State<NotificationContainer> {
+  double _top = 0;
+  double _left = 0;
+
+  @override
+  void initState() {
+    widget.onInitialized(noti.PositionController(getTop: getTop, getLeft: getLeft, setTop: setTop, setLeft: setLeft));
+    super.initState();
+  }
+
+  double getTop(){
+    return _top;
+  }
+
+  double getLeft(){
+    return _left;
+  }
+
+  void setTop(final double top){
+    _top = top;
+    setState(() {});
+  }
+
+  void setLeft(final double left){
+    _left = left;
+    setState(() {});
+  }
+  
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: _notificationHeight,
-      width: _notificationWidth,
-      color: _levelColors[widget.notification.entry.level]!,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                child: Text(widget.notification.entry.level.name, style: StyleManager.subTitleStyle,),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: (){
-                  widget.onRemoved();
-                },
-                icon: Icon(Icons.close, color: StyleManager.globalStyle.primaryColor,)
-              )
-            ],
+    return Stack(
+      children: [
+        AnimatedPositioned(
+          top: _top,
+          left: _left,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          onEnd: () {
+            if(_left != 0){
+              widget.onRemoved();
+              setState(() {});
+            }
+          },
+          child: Container(
+            height: _notificationHeight,
+            width: _notificationWidth,
+            color: _levelColors[widget.notification.entry.level]!,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                      child: Text(widget.notification.entry.level.name, style: StyleManager.subTitleStyle,),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: (){
+                        _left = _notificationWidth + 100;
+                        setState(() {});
+                      },
+                      icon: Icon(Icons.close, color: StyleManager.globalStyle.primaryColor,)
+                    )
+                  ],
+                ),
+                Padding(
+                  padding: EdgeInsets.all(StyleManager.globalStyle.padding),
+                  child: Text(widget.notification.entry.message,
+                    maxLines: 5,
+                    overflow: TextOverflow.clip,
+                  )
+                )
+              ],
+            ),
           ),
-          Padding(
-            padding: EdgeInsets.all(StyleManager.globalStyle.padding),
-            child: Text(widget.notification.entry.message,
-              maxLines: 5,
-              overflow: TextOverflow.clip,
-            )
-          )
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

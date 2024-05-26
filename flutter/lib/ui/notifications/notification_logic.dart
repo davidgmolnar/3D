@@ -44,3 +44,12 @@ abstract class NotificationController{
     }
   }
 }
+
+class PositionController{
+  final double Function() getTop;
+  final double Function() getLeft;
+  final void Function(double) setTop;
+  final void Function(double) setLeft;
+
+  const PositionController({required this.getTop, required this.getLeft, required this.setTop, required this.setLeft});
+}
