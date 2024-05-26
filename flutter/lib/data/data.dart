@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import '../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../routes/window_type.dart';
 import 'signal_container.dart';
 import 'typed_data_list_container.dart';
 
@@ -8,7 +10,7 @@ Map<String, Map<String, SignalContainer>> signalData = {};
 
 Map<String, List<String>> get measurementSignalMap => signalData.map((key, value) => MapEntry(key, value.keys.toList()));
 
-Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<String, List<String>> visibility) {
+Map<String, Map<String, num>> cursorDataAtTimeStamp(final double timeStamp, Map<String, List<String>> visibility) {
   Map<String, Map<String, num>> dataAtTimeStamp = {};
   for(String meas in visibility.keys){
     for(String signal in visibility[meas]!){
@@ -24,7 +26,7 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final int timeStamp, Map<Str
   return dataAtTimeStamp;
 }
 
-num signalIntegral(final String meas, final String signal, final int ref, final int stop){
+num signalIntegral(final String meas, final String signal, final double ref, final double stop){
   final int inc = ref < stop ? 1 : -1;
   int? currIndex = binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.timestamps, ref);
   if(currIndex == null){
@@ -37,7 +39,11 @@ num signalIntegral(final String meas, final String signal, final int ref, final 
     num nextVal = signalData[meas]![signal]!.values[currIndex + inc];
     num nextTs = signalData[meas]![signal]!.timestamps[currIndex + inc];
     while(ref < stop ? nextTs <= stop : nextTs >= stop){
-      sum += ((currVal + nextVal) / 2) * (currTs - nextTs).abs() / 1000.0; // ms to s
+      num valueInc = ((currVal + nextVal) / 2) * (currTs - nextTs).abs();
+      if(windowType != WindowType.CUSTOM_CHART || customChartWindowType != CustomChartWindowType.CHARACTERISTICS){
+        valueInc /= 1000.0; // ms to s
+      }
+      sum += valueInc;
       currIndex = currIndex! + inc;
       currVal = signalData[meas]![signal]!.values[currIndex];
       currTs = signalData[meas]![signal]!.timestamps[currIndex];
@@ -48,7 +54,7 @@ num signalIntegral(final String meas, final String signal, final int ref, final 
   }
 }
 
-num? binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+num? binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final double timeStamp){
   if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
@@ -72,7 +78,7 @@ num? binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values
   return values[searchIndex.toInt()];
 }
 
-int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeStamps, final int timeStamp){
+int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeStamps, final double timeStamp){
   if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;
   }
@@ -96,7 +102,7 @@ int? binarySearchIndexAtTimeStamp(final TypedDataListContainer<TypedData> timeSt
   return searchIndex.toInt();
 }
 
-int timestampAtMin(final String meas, final String signal, final int start, final int stop){
+double timestampAtMin(final String meas, final String signal, final double start, final double stop){
   int? minIndex;
   for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
     if(signalData[meas]![signal]!.timestamps[i] < start){
@@ -110,10 +116,10 @@ int timestampAtMin(final String meas, final String signal, final int start, fina
       minIndex = i;
     }
   }
-  return signalData[meas]![signal]!.timestamps[minIndex!].toInt();
+  return signalData[meas]![signal]!.timestamps[minIndex!].toDouble();
 }
 
-int timestampAtMax(final String meas, final String signal, final int start, final int stop){
+double timestampAtMax(final String meas, final String signal, final double start, final double stop){
   int? maxIndex;
   for(int i = 0; i < signalData[meas]![signal]!.values.size; i++){
     if(signalData[meas]![signal]!.timestamps[i] < start){
@@ -127,7 +133,7 @@ int timestampAtMax(final String meas, final String signal, final int start, fina
       maxIndex = i;
     }
   }
-  return signalData[meas]![signal]!.timestamps[maxIndex!].toInt();
+  return signalData[meas]![signal]!.timestamps[maxIndex!].toDouble();
 }
 
 String representNumber(String ret, {final int maxDigit = 10}){

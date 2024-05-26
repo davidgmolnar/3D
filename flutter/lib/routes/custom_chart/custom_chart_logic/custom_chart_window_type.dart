@@ -43,7 +43,7 @@ Map setCustomChartShownDurationPayload(final ChartShowDuration showDuration) => 
   }
 };
 
-Map setCustomChartMarkerAddPayload(final int atTimestamp) => {
+Map setCustomChartMarkerAddPayload(final double atTimestamp) => {
   'instruction': CustomChartWindowInstruction.SHARING_GROUP_DATA.index,
   'data': {
     'type': SharingGroupEvent.MARKER_ADD.index,
@@ -61,7 +61,7 @@ Map setCustomChartMarkerRemovePayload(final int cursorIndex) => {
   }
 };
 
-Map setCustomChartMarkerMovePayload(final int cursorIndex, final int newTimestamp) => {
+Map setCustomChartMarkerMovePayload(final int cursorIndex, final double newTimestamp) => {
   'instruction': CustomChartWindowInstruction.SHARING_GROUP_DATA.index,
   'data': {
     'type': SharingGroupEvent.MARKER_MOVE.index,
@@ -189,7 +189,7 @@ void _handleSharingGroupData(Map data){
         });
         break;
       case SharingGroupEvent.MARKER_ADD:
-        final int timestamp = data['atTimestamp'];
+        final double timestamp = data['atTimestamp'];
         final Map<String, Map<String, num>> values = cursorDataAtTimeStamp(timestamp, cursorInfoNotifier.value.visibility);
         cursorInfoNotifier.update((cursorInfo) {
           cursorInfo.cursors.add(CursorData.fromCurrent(timestamp, values));

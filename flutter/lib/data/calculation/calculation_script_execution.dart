@@ -198,10 +198,10 @@ class CalculationScriptProcessor{
     }
   }
 
-  static int __commonStartTime(final FrozenInstruction inst, final CalculationOptions options){
-    int maxTime = -double.maxFinite.toInt();
+  static double __commonStartTime(final FrozenInstruction inst, final CalculationOptions options){
+    double maxTime = -double.maxFinite;
     for(final String ch in inst.operands){
-      final int chMinTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.first.toInt();
+      final double chMinTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.first.toDouble();
       if(chMinTime > maxTime){
         maxTime = chMinTime;
       }
@@ -209,10 +209,10 @@ class CalculationScriptProcessor{
     return maxTime;
   }
 
-  static int __commonEndTime(final FrozenInstruction inst, final CalculationOptions options){
-    int minTime = double.maxFinite.toInt();
+  static double __commonEndTime(final FrozenInstruction inst, final CalculationOptions options){
+    double minTime = double.maxFinite;
     for(final String ch in inst.operands){
-      final int chMaxTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.last.toInt();
+      final double chMaxTime = signalData[options.measurement]![ch.substring(1)]!.timestamps.last.toDouble();
       if(chMaxTime < minTime){
         minTime = chMaxTime;
       }
@@ -347,8 +347,8 @@ class CalculationScriptProcessor{
       
     }
     else if(inst.numberOfChannelParameters == 2){
-      int time = __commonStartTime(inst, options);
-      final int endTime = __commonEndTime(inst, options);
+      double time = __commonStartTime(inst, options);
+      final double endTime = __commonEndTime(inst, options);
       final String op0 = inst.operands[0].substring(1);
       final String op1 = inst.operands[1].substring(1);
       int p0Index = signalData[options.measurement]![op0]!.timestamps.toList<int>().indexWhere((point) => point >= time);
@@ -452,14 +452,14 @@ class CalculationScriptProcessor{
     final String ch = op0.substring(1);
     final String en = op1.substring(1);
 
-    final int startTime = __commonStartTime(inst, options);
-    final int endTime = __commonEndTime(inst, options);
+    final double startTime = __commonStartTime(inst, options);
+    final double endTime = __commonEndTime(inst, options);
     final int startIndex = binarySearchIndexAtTimeStamp(signalData[options.measurement]![en]!.timestamps, startTime)!;
     final int endIndex = binarySearchIndexAtTimeStamp(signalData[options.measurement]![en]!.timestamps, endTime)!;
 
     for(int i = startIndex; i < endIndex; i++){
       if(signalData[options.measurement]![en]!.values[i] > 0){
-        final int t = signalData[options.measurement]![en]!.timestamps[i].toInt();
+        final double t = signalData[options.measurement]![en]!.timestamps[i].toDouble();
         timestamps.pushBack(t);
         values.pushBack(binarySearchValueAtTimeStamp(signalData[options.measurement]![ch]!.values,
                                                      signalData[options.measurement]![ch]!.timestamps,
@@ -594,7 +594,7 @@ class CalculationScriptProcessor{
           else{
             newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![trueResultOp.substring(1)]!.values,
                                                     signalData[options.measurement]![trueResultOp.substring(1)]!.timestamps,
-                                                    timestamps[i].toInt());
+                                                    timestamps[i].toDouble());
           }
         }
         else{
@@ -612,7 +612,7 @@ class CalculationScriptProcessor{
           else{          
             newValue = binarySearchValueAtTimeStamp(signalData[options.measurement]![falseResultOp.substring(1)]!.values,
                                                   signalData[options.measurement]![falseResultOp.substring(1)]!.timestamps,
-                                                  timestamps[i].toInt());
+                                                  timestamps[i].toDouble());
           }
         }
         else{

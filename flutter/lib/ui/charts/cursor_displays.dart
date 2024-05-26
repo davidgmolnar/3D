@@ -29,7 +29,7 @@ const Map<DeltaDisplayType, String> deltaDisplayTypeNames = {
 };
 
 class CursorData{
-  int timeStamp;
+  double timeStamp;
   Map<String, Map<String, num>> values;
   bool isDelta;
   int? deltaTarget;
@@ -42,7 +42,7 @@ class CursorData{
     required this.deltaTarget,
   });
 
-  factory CursorData.fromCurrent(final int timeStamp, final Map<String, Map<String, num>> values){
+  factory CursorData.fromCurrent(final double timeStamp, final Map<String, Map<String, num>> values){
     return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null);
   }
 }
@@ -76,7 +76,10 @@ class CursorInfo{
           ret[meas]![signal] = cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!;
         }
         else if(cursors[index].deltaType == DeltaDisplayType.DERIVATE){
-          ret[meas]![signal] = (cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!) / (cursors[index].timeStamp - cursors[absIdx].timeStamp) * 1000.0; // 1/ms to 1/s
+          ret[meas]![signal] = (cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!) / (cursors[index].timeStamp - cursors[absIdx].timeStamp);
+          if(windowType != WindowType.CUSTOM_CHART || customChartWindowType != CustomChartWindowType.CHARACTERISTICS){
+            ret[meas]![signal] = ret[meas]![signal]! * 1000.0; // 1/ms to 1/s
+          }
         }
         else if(cursors[index].deltaType == DeltaDisplayType.INTEGRAL){
           ret[meas]![signal] = signalIntegral(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp);
@@ -86,7 +89,7 @@ class CursorInfo{
     return ret;
   }
 
-  int dt(final int index){
+  double dt(final int index){
     if(!cursors[index].isDelta){
       return 0;
     }

@@ -8,6 +8,7 @@ import '../../../data/typed_data_list_container.dart';
 import '../../../io/logger.dart';
 import '../../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../../../routes/window_type.dart';
+import 'chart_controller.dart';
 
 abstract class CharacteristicsProcessor{
   static num _interpAt(final num y1, final num t1, final num y2, final num t2, final num t){
@@ -78,19 +79,35 @@ abstract class CharacteristicsProcessor{
           compValue.toDouble()
         ));
       }
+      // TODO do the same but append base resampled to comp, then sort and everything else is as usual -> the repeating-value-import-optimization can then be re-added
+      
+      resampledChannel.sort((final Offset a, final Offset b) => a.dx.compareTo(b.dx));
 
       TypedDataListContainer<Float32List> newValues = TypedDataListContainer<Float32List>(list: Float32List.fromList(resampledChannel.map((e) => e.dy).toList()));
       TypedDataListContainer<Float32List> newTime = TypedDataListContainer<Float32List>(list: Float32List.fromList(resampledChannel.map((e) => e.dx).toList()));
 
+      signalData[customCharacteristics!.measurement]![sig]!.values.clear();
       signalData[customCharacteristics!.measurement]![sig]!.values = newValues;
+      signalData[customCharacteristics!.measurement]![sig]!.timestamps.clear();
       signalData[customCharacteristics!.measurement]![sig]!.timestamps = newTime;
       signalData[customCharacteristics!.measurement]![sig]!.unit = unitDiv(
         signalData[customCharacteristics!.measurement]![sig]!.unit,
         signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.unit
       );
     }
-    
-    // set chartcontroller drawmode to scatter (default line tho)
-    // set all tracesettings to max span and min offset among tracesettings
+
+    ChartController.drawModesNotifier.update((value) {
+      value.data[customCharacteristics!.measurement] = {};
+      for(final String sig in customCharacteristics!.compSignals){
+        value.data[customCharacteristics!.measurement]![sig] = ChartDrawMode.SCATTER;
+      }
+    });
+
+    localLogger.info(ChartController.drawModesNotifier.value.data.toString());
+
+    ChartController.shownDurationNotifier.update((value) {
+      value.timeOffset = signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values.first.toDouble();
+      value.timeDuration = signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.values.last.toDouble();
+    });
   }
 }

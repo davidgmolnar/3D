@@ -10,8 +10,8 @@ const int _scrollMultiplierHorizontal = 1; // setting
 const int _dragMultiplierHorizontal = 1; // setting
 
 class ChartShowDuration{ // TODO lehet mégiscsak double kéne ez legyen
-  int timeOffset;
-  int timeDuration;
+  double timeOffset;
+  double timeDuration;
 
   ChartShowDuration({required this.timeDuration, required this.timeOffset});
 
@@ -24,8 +24,29 @@ class ChartShowDuration{ // TODO lehet mégiscsak double kéne ez legyen
   int get hashCode => timeOffset.hashCode ^ timeDuration.hashCode;
 }
 
+enum ChartDrawMode{
+  // ignore: constant_identifier_names
+  LINE,
+  // ignore: constant_identifier_names
+  SCATTER,
+}
+
+class ChartDrawModes{
+  final Map<String, Map<String, ChartDrawMode>> data;
+
+  ChartDrawModes({required this.data});
+
+  ChartDrawMode getMode(String measurement, String signal) {
+    if(data.containsKey(measurement) && data[measurement]!.containsKey(signal)){
+      return data[measurement]![signal]!;
+    }
+    return ChartDrawMode.LINE;
+  }
+}
+
 abstract class ChartController{
   static final UpdateableValueNotifier<ChartShowDuration> shownDurationNotifier = UpdateableValueNotifier<ChartShowDuration>(ChartShowDuration(timeOffset: 0, timeDuration: 1000));
+  static final UpdateableValueNotifier<ChartDrawModes> drawModesNotifier = UpdateableValueNotifier<ChartDrawModes>(ChartDrawModes(data: {}));
 
   static double _chartAreaWidth = 0;
   static double get chartWidth => _chartAreaWidth;
@@ -39,13 +60,7 @@ abstract class ChartController{
   }
 
   static set zoomInTime(double pointerSignalScrollDelta){
-    int delta = (shownDurationNotifier.value.timeDuration * 1e-3 * pointerSignalScrollDelta * _scrollMultiplierHorizontal).toInt();
-    if(shownDurationNotifier.value.timeDuration <= 150 && pointerSignalScrollDelta > 0){
-      return;
-    }
-    if(shownDurationNotifier.value.timeDuration <= 150 && pointerSignalScrollDelta < 0){
-      delta = -1;
-    }
+    double delta = (shownDurationNotifier.value.timeDuration * 1e-3 * pointerSignalScrollDelta * _scrollMultiplierHorizontal);
 
     shownDurationNotifier.update((shown) {
       shown.timeOffset += delta;
@@ -83,9 +98,9 @@ abstract class ChartController{
     return delta / _chartAreaHeight * range;
   }
 
-  static int moveInCursonTime(double horizontalDragUpdateDelta){
+  static double moveInCursonTime(double horizontalDragUpdateDelta){
     final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shownDurationNotifier.value.timeDuration * _dragMultiplierHorizontal;
-    return delta > 0 ? delta.ceil() : delta.floor();
+    return delta;
   }
 
   static ScalingInfo scalingFor(String measurement, String signal){
@@ -102,14 +117,14 @@ abstract class ChartController{
     );
   }
 
-  static double? timeStampToPosition(final int timestamp) {
+  static double? timeStampToPosition(final double timestamp) {
     if(timestamp > shownDurationNotifier.value.timeOffset && timestamp < shownDurationNotifier.value.timeDuration + shownDurationNotifier.value.timeOffset){
       return (timestamp - shownDurationNotifier.value.timeOffset) / shownDurationNotifier.value.timeDuration * _chartAreaWidth;
     }
     return null;
   }
 
-  static int positionToTimeStamp(final double position){
-    return (position / _chartAreaWidth * shownDurationNotifier.value.timeDuration).toInt() + shownDurationNotifier.value.timeOffset;
+  static double positionToTimeStamp(final double position){
+    return (position / _chartAreaWidth * shownDurationNotifier.value.timeDuration) + shownDurationNotifier.value.timeOffset;
   }
 }

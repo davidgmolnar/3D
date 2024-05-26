@@ -35,6 +35,10 @@ class SignalContainer{
     bytes.addAll(vs.buffer.asUint8List(vs.offsetInBytes, vs.lengthInBytes));
     bytes.addAll(v);
 
+    while(bytes.length % 8 != 0){
+      bytes.add(0);
+    }
+
     bytes.addAll(ts.buffer.asUint8List(ts.offsetInBytes, ts.lengthInBytes));
     bytes.addAll(t);
     
@@ -59,6 +63,10 @@ class SignalContainer{
     final Uint8List vData = buf.asUint8List(point, vSize);
     final TypedDataListContainer values = TypedDataListContainer.fromBytes(vData, outerOffset: point);
     point += vSize;
+
+    while(point % 8 != 0){
+      point++;
+    }
 
     final int tSize = data.getUint64(point, Endian.host);
     point += 8;

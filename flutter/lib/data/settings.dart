@@ -85,10 +85,10 @@ abstract class TraceSettingsProvider{
   static int _maxScalingGroup = 0;
   static int _newColorIndex = 0;
 
-  static int firstVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset;
-  static int lastVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset + ChartController.shownDurationNotifier.value.timeDuration;
+  static double firstVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset;
+  static double lastVisibleTimestamp = ChartController.shownDurationNotifier.value.timeOffset + ChartController.shownDurationNotifier.value.timeDuration;
 
-  static int get fullVisibleTime => lastVisibleTimestamp - firstVisibleTimestamp;
+  static double get fullVisibleTime => lastVisibleTimestamp - firstVisibleTimestamp;
 
   static List<Color> colorBank = [
     Colors.red,
@@ -124,13 +124,13 @@ abstract class TraceSettingsProvider{
 
   static void reCalculateVisibleDuration(){
     final Map<String, List<String>> vis = visibleSignals;
-    int first = double.maxFinite.toInt();
-    int last = 0;
+    double first = double.maxFinite;
+    double last = 0;
 
     for(final String meas in vis.keys){
       for(final String sig in vis[meas]!){
-        final int sigFirst = signalData[meas]![sig]!.timestamps.first.toInt();
-        final int sigLast = signalData[meas]![sig]!.timestamps.last.toInt();
+        final double sigFirst = signalData[meas]![sig]!.timestamps.first.toDouble();
+        final double sigLast = signalData[meas]![sig]!.timestamps.last.toDouble();
         if(sigFirst < first){
           first = sigFirst;
         }

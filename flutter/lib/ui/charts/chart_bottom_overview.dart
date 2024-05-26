@@ -39,8 +39,8 @@ class ChartBottomOverviewFrame extends StatefulWidget {
 
 class _ChartBottomOverviewFrameState extends State<ChartBottomOverviewFrame> {
   ChartShowDuration? prevShowDuration;
-  int? prevFirstVisibleTimestamp;
-  int? prevLastVisibleTimestamp;
+  double? prevFirstVisibleTimestamp;
+  double? prevLastVisibleTimestamp;
 
   @override
   void initState() {

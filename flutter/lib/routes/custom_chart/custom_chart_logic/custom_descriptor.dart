@@ -92,8 +92,8 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
 
   @override
   void loadChannels() {
-    if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomCharacteristicsDescriptor.loadChannel was called on a non-main process");
+    if(windowType != WindowType.CUSTOM_CHART){
+      localLogger.error("CustomCharacteristicsDescriptor.loadChannel was called on a non-customchart process");
       return;
     }
 

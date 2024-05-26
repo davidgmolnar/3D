@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -20,8 +21,8 @@ import 'top_cursor_panel.dart';
 
 class ScalingInfo{
   final double timeScale;
-  final int timeDuration;
-  final int timeOffset;
+  final double timeDuration;
+  final double timeOffset;
   final double valueScale;
   final double valueRange;
   final double valueOffset;
@@ -83,6 +84,8 @@ class PlotPoint{
 }
 
 class _PlotContext{
+  final String measurement;
+  final String signal;
   ScalingInfo scalingInfo;
   bool hadChange;
   Vector y = Vector.empty();
@@ -90,6 +93,8 @@ class _PlotContext{
   Color color;
 
   _PlotContext({
+    required this.measurement,
+    required this.signal,
     required this.scalingInfo,
     required this.hadChange,
     required this.color
@@ -231,6 +236,8 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         }
         else{
           dataSeen[measurement]![signal] = _PlotContext(
+            measurement: measurement,
+            signal: signal,
             scalingInfo: ChartController.scalingFor(measurement, signal)..fillIndexes(null, measurement, signal),
             hadChange: true,
             color: TraceSettingsProvider.traceSettingNotifier.value[measurement]!.firstWhere((element) => element.signal == signal).color
@@ -257,7 +264,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         },
         onSecondaryTapDown: (details) async {
           final Map<String, List<String>> visibility = dataSeen.map((key, value) => MapEntry(key, value.keys.toList()));
-          final int timeStamp = ChartController.positionToTimeStamp(details.localPosition.dx);
+          final double timeStamp = ChartController.positionToTimeStamp(details.localPosition.dx);
           final Map<String, Map<String, num>> values = cursorDataAtTimeStamp(timeStamp, visibility);
           cursorInfoNotifier.update((cursorInfo) {
             cursorInfo.cursors.add(CursorData.fromCurrent(timeStamp, values));
@@ -309,26 +316,52 @@ class _ChartLinePainter extends CustomPainter {
 
   @override
   void paint(final Canvas canvas, final Size size) {
-    Path path = Path();
     final Paint paint = _chartLinePaint..color = plotContext.color;
     final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;
     final int increment = max((end - plotContext.scalingInfo.startIndex) ~/ 100000, 1);
-    for(int i = plotContext.scalingInfo.startIndex; i < end; i += increment){
-      if(i == plotContext.scalingInfo.startIndex){
-        canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
-        canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
-        canvas.translate(0, -size.height);
-        path.moveTo(plotContext.x[i], plotContext.y[i]);
-        continue;
+    final ChartDrawMode drawMode = ChartController.drawModesNotifier.value.getMode(plotContext.measurement, plotContext.signal);
+    
+    if(drawMode == ChartDrawMode.LINE){
+      Path path = Path();
+      for(int i = plotContext.scalingInfo.startIndex; i < end; i += increment){
+        if(i == plotContext.scalingInfo.startIndex){
+          canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+          canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
+          canvas.translate(0, -size.height);
+          path.moveTo(plotContext.x[i], plotContext.y[i]);
+          continue;
+        }
+        try{
+          path.lineTo(plotContext.x[i], plotContext.y[i]);
+        } on RangeError{
+          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
+          break;
+        }
       }
-      try{
-        path.lineTo(plotContext.x[i], plotContext.y[i]);
-      } on RangeError{
-        localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
-        break;
-      }
+      canvas.drawPath(path, paint);
     }
-    canvas.drawPath(path, paint);
+    else if(drawMode == ChartDrawMode.SCATTER){
+      final Paint pointPaint = _chartLinePaint..strokeCap = StrokeCap.round;
+      List<Offset> points = [];
+      for(int i = plotContext.scalingInfo.startIndex; i < end; i += increment){
+        if(i == plotContext.scalingInfo.startIndex){
+          canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+          canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
+          canvas.translate(0, -size.height);
+          continue;
+        }
+        try{
+          points.add(Offset(plotContext.x[i], plotContext.y[i]));
+        } on RangeError{
+          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
+          break;
+        }
+      }
+      canvas.drawPoints(PointMode.points, points, pointPaint);
+    }
+    else{
+      localLogger.error("Not implemented chart painting for chartDrawMode ${drawMode.name}");
+    }
   }
   
   @override
