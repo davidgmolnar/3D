@@ -32,7 +32,6 @@ class _SettingAppState extends State<SettingApp> with WindowListener{
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: StyleManager.title ?? windowTypeTitle[windowType]!,
-      scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const SettingScreen(),
     );

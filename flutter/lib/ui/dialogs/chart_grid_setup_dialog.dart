@@ -6,11 +6,12 @@ import 'package:flutter/material.dart';
 import '../../data/data.dart';
 import '../../io/file_system.dart';
 import '../../io/importer.dart';
+import '../../io/logger.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_group.dart';
 import '../../routes/main_window/screen.dart';
-import '../common.dart';
 import '../input_widgets/sliders.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 import 'dialog_base.dart';
 
@@ -96,11 +97,11 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
 
   CustomTimeseriesChartGroup? _save({bool isStarting = false}){
     if(_name.text.isEmpty){
-      showErrorWithoutContext("Please specify a name");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify a name"), 5000));
       return null;
     }
     if(!canFillElements){
-      showErrorWithoutContext("Please specify row and col numbers");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify row and col numbers"), 5000));
       return null;
     }
     List<FileSystemEntity> groups = FileSystem.tryListElementsInLocalSync(FileSystem.customTimeSeriesGroupDir);
@@ -110,10 +111,10 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
     bool fail = false;
     for(int i = 0; i < _meas.length; i++){
       if(_meas[i] == null || _signals[i].any((element) => element == null)){
-        showErrorWithoutContext("Element at index $i was not filled out");
+        noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Element at index $i was not filled out"), 5000));
       }
       else if(!group.add(m: _meas[i]!, s: _signals[i].whereType<String>().toList())){
-        showErrorWithoutContext("Could not add ${_meas[i]}/${_signals[i]} as it was already added");
+        noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Could not add ${_meas[i]}/${_signals[i]} as it was already added"), 5000));
         fail = true;
       }
     }
@@ -122,12 +123,12 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
       return null;
     }
     if(groups.any((element) => element.uri.path.split('/').last.split('.').first == _name.text)){
-      showErrorWithoutContext("A group with name ${_name.text} already exists");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("A group with name ${_name.text} already exists"), 5000));
       return null;
     }
     group.save();
     if(!isStarting){
-      showInfoWithoutContext("Group successfully saved");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Group successfully saved"), 5000));
     }
     return group;
   }
@@ -182,7 +183,7 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
                   onChanged: (value) {
                     int? maybeInt = int.tryParse(value);
                     if(value.isNotEmpty && (maybeInt == null || maybeInt > 4)){
-                      showError(context, "Invalid row count. Row count must be an integer in range (0: 4]");
+                      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Invalid row count. Row count must be an integer in range (0: 4]"), 5000));
                     }
                     _checkRowCol();
                   },
@@ -199,7 +200,7 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
                   onChanged: (value) {
                     int? maybeInt = int.tryParse(value);
                     if(value.isNotEmpty && (maybeInt == null || maybeInt > 4)){
-                      showError(context, "Invalid col count. Row count must be an integer in range (0: 4]");
+                      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Invalid col count. Col count must be an integer in range (0: 4]"), 5000));
                     }
                     _checkRowCol();
                   },
@@ -400,7 +401,7 @@ class _ChartGridElementCardState extends State<ChartGridElementCard> {
     }
 
     if(usableMeasurements.any((element) => element.isEmpty)){
-      showError(context, "This Chart Grid cannot be launched due to missing channels");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("This Chart Grid cannot be launched due to missing channels"), 5000));
       return;
     }
     if(usableMeasurements.every((element) => element.length == 1)){
@@ -540,7 +541,7 @@ class _ChartGridLaunchSelectedState extends State<ChartGridLaunchSelected> {
 
   void _tryLaunch(BuildContext context){
     if(chosenMeasurements.any((element) => element == null)){
-      showError(context, "Not all measurements have been set");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Not all measurements have been set"), 5000));
       return;
     }
     for(int i = 0; i < chosenMeasurements.length; i++){

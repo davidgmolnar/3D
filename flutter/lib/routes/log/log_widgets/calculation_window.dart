@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:log_analyser/extensions.dart';
 
-import '../../../ui/common.dart';
+import '../../../io/logger.dart';
 import '../../../ui/input_widgets/buttons.dart';
 import '../../../ui/input_widgets/text_fields.dart';
+import '../../../ui/notifications/notification_logic.dart' as noti;
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
 import '../log_logic/calculation_io_controller.dart';
@@ -139,18 +140,18 @@ class _CalculationWindowState extends State<CalculationWindow> {
                               return;
                             }
                             if(CalculationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
-                              showError(context, "Nothing was selected");
+                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Nothing was selected"), 5000));
                               return;
                             }
                             if(CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement == "Please select measurement"){
-                              showError(context, "A measurement must be selected");
+                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("A measurement must be selected"), 5000));
                               return;
                             }
                             CalculationIoController.calIOInfoNotifier.value.processing = true;
                             try{
                               CalculationIoController.sendFilesToMaster();
                             }catch(exc){
-                              showError(context, "Error when starting calfile execution: ${exc.toString()}");
+                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Error when starting calfile execution: ${exc.toString()}"), 5000));
                             }
                             setState(() {});
                             CalculationIoController.calIOInfoNotifier.update((value) {});
@@ -160,7 +161,7 @@ class _CalculationWindowState extends State<CalculationWindow> {
                         ),
                         IconButton(
                           onPressed: (){
-                            showError(context, "This feature is WIP");
+                            noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("This feature is WIP"), 5000));
                             return;
                             /*if(CalculationIoController.calIOInfoNotifier.value.processing){
                               return;
@@ -184,7 +185,7 @@ class _CalculationWindowState extends State<CalculationWindow> {
                         ),
                         IconButton(
                           onPressed: (){
-                            showError(context, "This feature is WIP");
+                            noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("This feature is WIP"), 5000));
                             return;
                           },
                           icon: Icon(FontAwesomeIcons.arrowRightToBracket, color: StyleManager.globalStyle.primaryColor,),

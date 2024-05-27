@@ -30,7 +30,6 @@ class _MapAppState extends State<MapApp> with WindowListener{
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: StyleManager.title ?? windowTypeTitle[windowType]!,
-      scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const MapScreen(),
     );

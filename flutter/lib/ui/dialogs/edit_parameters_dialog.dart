@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../data/calculation/const_eval.dart';
 import '../../data/calculation/constants.dart';
-import '../common.dart';
+import '../../io/logger.dart';
 import '../input_widgets/text_fields.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 
 class EditSingleParameter extends StatelessWidget {
@@ -39,7 +40,7 @@ class EditSingleParameter extends StatelessWidget {
 
               final Evaluation maybeEval = ConstEval.run(p0);
               if(maybeEval.failResult != null){
-                showError(context, maybeEval.failResult!);
+                noti.NotificationController.add(noti.Notification.decaying(LogEntry.error(maybeEval.failResult!), 10000));
                 return null;
               }
               else{
@@ -109,8 +110,8 @@ class _EditParametersDialogState extends State<EditParametersDialog> {
                   width: 200),
                 TextButton(
                   onPressed: (){
-                    if(Const.parameters.keys.contains(newParameter.toUpperCase())){
-                      showError(context, "Parameter already exists");
+                    if(Const.parameters.keys.contains(newParameter.toUpperCase())){                      
+                      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Parameter already exists"), 10000));
                       return;
                     }
                     Const.addParameter(newParameter, 0);

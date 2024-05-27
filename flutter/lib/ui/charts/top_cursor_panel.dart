@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
+import '../../io/logger.dart';
 import '../../multiprocess/childprocess.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../../routes/window_type.dart';
-import '../common.dart';
 import '../input_widgets/buttons.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 import '../toolbar/toolbar_item.dart';
 import 'chart_logic/chart_controller.dart';
@@ -170,7 +171,7 @@ class CursorFunctionsDisplay extends StatefulWidget {
 
   static void _cursorPeakToPeak(){  // TODO chart grid sharing
     if(!cursorInfoNotifier.value.cursors[CursorFunctionsDisplay.selected].isDelta){
-      showErrorWithoutContext("Selected marker has to be a delta one");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Selected marker has to be a delta one"), 5000));
       return;
     }
     cursorInfoNotifier.update((value) {

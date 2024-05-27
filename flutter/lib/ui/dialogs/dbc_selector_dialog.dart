@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/settings.dart';
 import '../../io/logger.dart';
-import '../common.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 import 'dialog_base.dart';
 
@@ -60,8 +60,7 @@ class DBCSelectorDialogState extends State<DBCSelectorDialog> {
                             localLogger.info("Added new files into DBC database");
                           }
                           else{
-                            // ignore: use_build_context_synchronously
-                            showError(context, "DBC structure for ${result.paths[i]!.split('\\').last} is either not valid or this file was already added");
+                            noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("DBC structure for ${result.paths[i]!.split('\\').last} is either not valid or this file was already added"), 10000));
                           }
                         }
                         catch (exc) {

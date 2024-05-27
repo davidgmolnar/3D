@@ -6,11 +6,12 @@ import '../../../data/calculation/calculation_script_execution.dart';
 import '../../../data/calculation/calculation_script_parsing.dart';
 import '../../../data/calculation/calculation_script_runtime.dart';
 import '../../../data/updateable_valuenotifier.dart';
+import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
-import '../../../ui/common.dart';
 import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
+import '../../../ui/notifications/notification_logic.dart' as noti;
 
 class CalculationIOInfo{
   String? processingFile;
@@ -103,7 +104,7 @@ class CalculationIoController{
   }
 
   static void compileAll(BuildContext context){
-    showError(context, "This feature is WIP");
+    noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("This feature is WIP"), 5000));
   }
 
   static void editParameters(BuildContext context){

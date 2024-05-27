@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:log_analyser/extensions.dart';
 
 import '../../../data/settings.dart';
-import '../../../ui/common.dart';
+import '../../../io/logger.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
 import '../../../ui/dialogs/dialog_base.dart';
+import '../../../ui/notifications/notification_logic.dart' as noti;
 import '../../../ui/theme/theme.dart';
 import '../log_logic/log_io_controller.dart';
 import 'log_container.dart';
@@ -115,8 +116,7 @@ class _LogImportState extends State<LogImport> {
                             });
                             dbcPaths = SettingsProvider.get("dbc.pathlist")?.selection;
                             if(dbcPaths == null || dbcPaths.isEmpty){
-                              // ignore: use_build_context_synchronously
-                              showError(context, "You must select a DBC file to import a binary log");
+                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("You must select a DBC file to import a log"), 5000));
                               // ignore: use_build_context_synchronously
                               await showDialog<Widget>(context: context, builder: (BuildContext context){
                                 return const DialogBase(
@@ -138,14 +138,14 @@ class _LogImportState extends State<LogImport> {
                           return;
                         }
                         if(LogIOInfoController.logIOInfoNotifier.value.selectedPaths.isEmpty){
-                          showError(context, "Nothing was selected");
+                          noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Nothing was selected"), 5000));
                           return;
                         }
                         LogIOInfoController.logIOInfoNotifier.value.processing = true;
                         try{
                           LogIOInfoController.sendFilesToMaster();
                         }catch(exc){
-                          showError(context, "Error when importing: ${exc.toString()}");
+                          noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Error when importing: ${exc.toString()}"), 5000));
                         }
                         setState(() {});
                         LogIOInfoController.logIOInfoNotifier.update((value) {});

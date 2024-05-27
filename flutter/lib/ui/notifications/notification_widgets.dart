@@ -6,7 +6,7 @@ import '../../io/logger.dart';
 import '../theme/theme.dart';
 import 'notification_logic.dart' as noti;
 
-const double _notificationHeight = 150;
+const double _notificationHeight = 100;
 const double _notificationWidth = 400;
 
 final Map<LogLevel, Color> _levelColors = {
@@ -76,7 +76,7 @@ class _NotificationOverlayState extends State<NotificationOverlay> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       child: SizedBox(
-        height: min(MediaQuery.of(context).size.height, notifications.length * _notificationHeight),
+        height: min(MediaQuery.of(context).size.height, notifications.length * (_notificationHeight + StyleManager.globalStyle.padding)),
         width: _notificationWidth,
         child: Stack(
           children: [
@@ -163,7 +163,10 @@ class _NotificationContainerState extends State<NotificationContainer> {
           child: Container(
             height: _notificationHeight,
             width: _notificationWidth,
-            color: _levelColors[widget.notification.entry.level]!,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: _levelColors[widget.notification.entry.level]!
+            ),
             child: Column(
               children: [
                 Row(
@@ -185,7 +188,7 @@ class _NotificationContainerState extends State<NotificationContainer> {
                 Padding(
                   padding: EdgeInsets.all(StyleManager.globalStyle.padding),
                   child: Text(widget.notification.entry.message,
-                    maxLines: 4,
+                    maxLines: 2,
                     overflow: TextOverflow.clip,
                   )
                 )

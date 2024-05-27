@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../io/logger.dart';
-import '../common.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 
 class ToggleableTextField<T> extends StatefulWidget{
@@ -30,7 +30,7 @@ class _ToggleableTextFieldState<T> extends State<ToggleableTextField<T>> {
   void _onPressed(){
     final T? parsedValue = widget.parser(_controller.text);
     if(parsedValue == null){
-      showError(context, "Value could not be parsed: $parsedValue");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Value could not be parsed: $parsedValue"), 10000));
       return;
     }
     value = parsedValue.toString();

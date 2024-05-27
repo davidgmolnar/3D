@@ -6,10 +6,11 @@ import 'package:flutter/material.dart';
 import '../../data/data.dart';
 import '../../io/file_system.dart';
 import '../../io/importer.dart';
+import '../../io/logger.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/main_window/screen.dart';
-import '../common.dart';
 import '../input_widgets/sliders.dart';
+import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
 import 'dialog_base.dart';
 
@@ -74,31 +75,31 @@ class _CharacteristicsCreateState extends State<CharacteristicsCreate> {
 
   CustomCharacteristicsDescriptor? _save({bool isStarting = false}){
     if(_name.text.isEmpty){
-      showErrorWithoutContext("Please specify a name");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify a name"), 5000));
       return null;
     }
     if(_meas == null){
-      showErrorWithoutContext("Please specify a measurement");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify a measurement"), 5000));
       return null;
     }
     if(_baseSignal == null){
-      showErrorWithoutContext("Please specify a base signal");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify a base signal"), 5000));
       return null;
     }
     if(_compSignals.isEmpty || _compSignals.any((element) => element == null)){
-      showErrorWithoutContext("Please specify all comparison signals");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Please specify all comparison signals"), 5000));
       return null;
     }
 
     CustomCharacteristicsDescriptor group = CustomCharacteristicsDescriptor(name: _name.text, measurement: _meas!, baseSignal: _baseSignal!, compSignals: _compSignals.cast<String>());
     
     if(FileSystem.tryListElementsInLocalSync(FileSystem.customCharacteristicsGroupDir).any((element) => element.uri.path.split('/').last.split('.').first == _name.text)){
-      showErrorWithoutContext("A group with name ${_name.text} already exists");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("A group with name ${_name.text} already exists"), 5000));
       return null;
     }
     group.save();
     if(!isStarting){
-      showInfoWithoutContext("Group successfully saved");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Group successfully saved"), 5000));
     }
     return group;
   }
@@ -334,7 +335,7 @@ class _CharacteristicsCardState extends State<CharacteristicsCard> {
     List<String> usableMeasurements = signalData.keys.where((meas) => [char!.baseSignal, ...char!.compSignals].every((signal) => signalData[meas]?.containsKey(signal) ?? false)).toList();
 
     if(usableMeasurements.isEmpty){
-      showError(context, "This Characteristics cannot be launched due to missing channels");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("This Characteristics cannot be launched due to missing channels"), 5000));
       return;
     }
     if(usableMeasurements.length == 1){
@@ -464,7 +465,7 @@ class _CharacteristicsLaunchSelectedState extends State<CharacteristicsLaunchSel
 
   void _tryLaunch(BuildContext context){
     if(chosenMeasurement == null){
-      showError(context, "The measurement was not set");
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("The measurement was not set"), 5000));
       return;
     }
     CustomCharacteristicsDescriptor modif = CustomCharacteristicsDescriptor(name: widget.char.name, measurement: chosenMeasurement!, baseSignal: widget.char.baseSignal, compSignals: widget.char.compSignals);

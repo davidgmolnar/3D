@@ -32,7 +32,6 @@ class _CustomChartAppState extends State<CustomChartApp> with WindowListener{
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: StyleManager.title ?? windowTypeTitle[windowType]!,
-      scaffoldMessengerKey: snackbarKey,
       theme: StyleManager.getThemeData(context),
       home: const CustomChartScreen(),
     );
