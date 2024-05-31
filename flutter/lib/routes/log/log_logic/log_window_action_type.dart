@@ -30,25 +30,25 @@ enum LogWindowInstruction{
 LogWindowType logWindowType = LogWindowType.INITIAL;
 
 void logHandleDataReceived(Map data){
-  localLogger.info("Data received from master");
+  localLogger.info("Data received from master", doNoti: false);
   switch (LogWindowInstruction.values[data['instruction']]) {
     case LogWindowInstruction.SET_TYPE:
       logWindowType = LogWindowType.values[data['type']];
-      localLogger.info("LogWindowType changed to ${logWindowType.name}");
+      localLogger.info("LogWindowType changed to ${logWindowType.name}", doNoti: false);
       StyleManager.updater();
       break;
     default:
-      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}");
+      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}", doNoti: false);
   }
 }
 
 void logHandlePeriodicUpdateReceived(Map data){
-  localLogger.info("Periodic update received from master");
+  localLogger.info("Periodic update received from master", doNoti: false);
   switch (PeriodicUpdateType.values[data['type']]) {
     case PeriodicUpdateType.IO_LINE_PERCENTAGE:
       try{
         if(logWindowType != LogWindowType.IMPORT && logWindowType != LogWindowType.EXPORT && logWindowType != LogWindowType.CALCULATION){
-          localLogger.warning("PeriodicUpdateType.IO_LINE_PERCENTAGE was received but this window was neither a LogWindowType.IMPORT or LogWindowType.EXPORT");
+          localLogger.warning("PeriodicUpdateType.IO_LINE_PERCENTAGE was received but this window was neither a LogWindowType.IMPORT or LogWindowType.EXPORT", doNoti: false);
           return;
         }
         final double linePercentage = data['value'].toDouble();
@@ -70,10 +70,10 @@ void logHandlePeriodicUpdateReceived(Map data){
           }
         }
       }catch(exc){
-        localLogger.error("PeriodicUpdateType.IO_LINE_PERCENTAGE exception $exc");
+        localLogger.error("PeriodicUpdateType.IO_LINE_PERCENTAGE exception $exc", doNoti: false);
       }
       break;
     default:
-      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}");
+      localLogger.error("LogWindowInstruction not implemented for LogWindowInstruction.${LogWindowInstruction.values[data['instruction']].name}", doNoti: false);
   }
 }

@@ -47,7 +47,7 @@ class MainWindowToolbar extends StatelessWidget {
 
   static void _chartGridSetup (){
     if(mainWindowNavigatorKey.currentContext == null){
-      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
       return;
     }
     showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
@@ -62,7 +62,7 @@ class MainWindowToolbar extends StatelessWidget {
 
   static void _characteristicsSetup (){
     if(mainWindowNavigatorKey.currentContext == null){
-      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      localLogger.error("Could not show ChartGridSetupDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
       return;
     }
     showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
@@ -84,7 +84,7 @@ class MainWindowToolbar extends StatelessWidget {
 
   static void _editParametersDialog (){
     if(mainWindowNavigatorKey.currentContext == null){
-      localLogger.error("Could not show EditParametersDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      localLogger.error("Could not show EditParametersDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
       return;
     }
     showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
@@ -99,7 +99,7 @@ class MainWindowToolbar extends StatelessWidget {
   // ignore: non_constant_identifier_names
   static void _DBCMenuDialog (){
     if(mainWindowNavigatorKey.currentContext == null){
-      localLogger.error("Could not show DBCSelectorDialog because mainWindowNavigatorKey.currentContext was somehow null");
+      localLogger.error("Could not show DBCSelectorDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
       return;
     }
     showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){

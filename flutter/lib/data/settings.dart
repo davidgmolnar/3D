@@ -196,7 +196,7 @@ abstract class TraceSettingsProvider{
       }
       for(final String sig in signals){
         if(!signalData[measurement]!.containsKey(sig)){
-          localLogger.error("Skipping signal $sig from updating as it does not exist in measurement $measurement");
+          localLogger.error("Skipping signal $sig from updating as it does not exist in measurement $measurement", doNoti: false);
           continue;
         }
 

@@ -25,7 +25,7 @@ abstract class ChildProcess{
   }
 
   static void _init() {
-    localLogger.info("ChildProcess started listening");
+    localLogger.info("ChildProcess started listening", doNoti: false);
     _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = Protocol.decode(_sock?.receive()?.data);
@@ -38,7 +38,7 @@ abstract class ChildProcess{
                 break;
 
               case CommandType.KILL:
-                localLogger.info("Controller killed this childprocess, stopping");
+                localLogger.info("Controller killed this childprocess, stopping", doNoti: false);
                 await localLogger.stop();
                 exit(0);
 
@@ -51,11 +51,11 @@ abstract class ChildProcess{
                 break;
 
               default:
-                localLogger.error("Childprocess on port ${command.childProcessPort} received an undefined message");
+                localLogger.error("Childprocess on port ${command.childProcessPort} received an undefined message", doNoti: false);
             }
           }
           catch (exc){
-            localLogger.error("Undefined message received ${exc.toString()}");
+            localLogger.error("Undefined message received ${exc.toString()}", doNoti: false);
           }
         }
       }
@@ -80,7 +80,7 @@ abstract class ChildProcess{
         customChartHandleDataReceived(data);
         break;
       default:
-        localLogger.error("Data interpretation not implemented for WindowType.${windowType.name}");
+        localLogger.error("Data interpretation not implemented for WindowType.${windowType.name}", doNoti: false);
     }
   }
 
@@ -90,7 +90,7 @@ abstract class ChildProcess{
         logHandlePeriodicUpdateReceived(data);
         break;
       default:
-        localLogger.error("Periodic update interpretation not implemented for WindowType.${windowType.name}");
+        localLogger.error("Periodic update interpretation not implemented for WindowType.${windowType.name}", doNoti: false);
     }
   }
 

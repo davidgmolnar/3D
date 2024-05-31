@@ -13,7 +13,6 @@ class SettingsBottomBar extends StatelessWidget{
 
   @override
   Widget build(BuildContext context) {
-    try{
     return Container(
       height: settingsBottomBarHeight,
       decoration: BoxDecoration(border: Border(top: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))),
@@ -26,10 +25,6 @@ class SettingsBottomBar extends StatelessWidget{
         ]
       )
     );
-    }catch(e){
-      localLogger.info("err");
-      return Container();
-    }
   }
 
 }

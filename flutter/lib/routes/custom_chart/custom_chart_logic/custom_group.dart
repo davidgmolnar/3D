@@ -78,7 +78,7 @@ class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDes
     save();
     saveChannels();
     if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomTimeseriesChartGroup.launch was called on a non-main process");
+      localLogger.error("CustomTimeseriesChartGroup.launch was called on a non-main process", doNoti: false);
       return;
     }
 

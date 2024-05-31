@@ -33,25 +33,25 @@ enum SettingsWindowInstruction{
 SettingsWindowType settingsWindowType = SettingsWindowType.INITIAL;
 
 void settingsHandleDataReceived(Map data){
-  localLogger.info("Data received from master");
+  localLogger.info("Data received from master", doNoti: false);
   switch (SettingsWindowInstruction.values[data['instruction']]) {
     case SettingsWindowInstruction.SET_TYPE:
       settingsWindowType = SettingsWindowType.values[data['type']];
-      localLogger.info("SettingsWindowType changed to ${settingsWindowType.name}");
+      localLogger.info("SettingsWindowType changed to ${settingsWindowType.name}", doNoti: false);
       StyleManager.updater();
       break;
     case SettingsWindowInstruction.TRACE_EDITOR_DATA:
       if(data['trace_editor_data']! is Map){
-        localLogger.info("Starting to import trace editor data");
+        localLogger.info("Starting to import trace editor data", doNoti: false);
         TraceSettingsProvider.reload(data['trace_editor_data']!);
-        localLogger.info("Successfully imported trace editor data");
+        localLogger.info("Successfully imported trace editor data", doNoti: false);
         StyleManager.updater();
       }
       else{
-        localLogger.error("Unable to interpret payload message received as SettingsWindowInstruction.TRACE_EDITOR_DATA");
+        localLogger.error("Unable to interpret payload message received as SettingsWindowInstruction.TRACE_EDITOR_DATA", doNoti: false);
       }
       break;
     default:
-      localLogger.error("SettingsWindowInstruction not implemented for SettingsWindowInstruction.${SettingsWindowInstruction.values[data['instruction']].name}");
+      localLogger.error("SettingsWindowInstruction not implemented for SettingsWindowInstruction.${SettingsWindowInstruction.values[data['instruction']].name}", doNoti: false);
   }
 }

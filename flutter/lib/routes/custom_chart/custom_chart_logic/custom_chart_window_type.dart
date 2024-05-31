@@ -99,11 +99,11 @@ bool isInSharingGroup = true;
 CustomCharacteristicsDescriptor? customCharacteristics;
 
 void customChartHandleDataReceived(Map data) async {
-  localLogger.info("Data received from master");
+  localLogger.info("Data received from master", doNoti: false);
   switch (CustomChartWindowInstruction.values[data['instruction']]) {
     case CustomChartWindowInstruction.SET_TYPE:
       customChartWindowType = CustomChartWindowType.values[data['type']];
-      localLogger.info("CustomChartWindowType changed to ${customChartWindowType.name}");
+      localLogger.info("CustomChartWindowType changed to ${customChartWindowType.name}", doNoti: false);
       StyleManager.updater();
       break;
 
@@ -113,12 +113,12 @@ void customChartHandleDataReceived(Map data) async {
         customTimeseriesChartGroupIndex = data["index"];
 
         if(customTimeseriesChartGroup == null || customTimeseriesChartGroupIndex == null){
-          localLogger.error("Failed to load descriptor data");
+          localLogger.error("Failed to load descriptor data", doNoti: false);
           customChartWindowType = CustomChartWindowType.ERROR;
           StyleManager.updater();
         }
         else{
-          localLogger.info("Loaded descriptor file for ${customTimeseriesChartGroup!.name}");
+          localLogger.info("Loaded descriptor file for ${customTimeseriesChartGroup!.name}", doNoti: false);
           CustomTimeseriesChartDescriptor desc = customTimeseriesChartGroup!.elements[customTimeseriesChartGroupIndex!];
           signalData[desc.measurement] = {};
           desc.loadChannels();
@@ -137,12 +137,12 @@ void customChartHandleDataReceived(Map data) async {
       else if(customChartWindowType == CustomChartWindowType.CHARACTERISTICS){
         customCharacteristics = await CustomCharacteristicsDescriptor.load(data["filename"]);
         if(customCharacteristics == null){
-          localLogger.error("Failed to load descriptor data");
+          localLogger.error("Failed to load descriptor data", doNoti: false);
           customChartWindowType = CustomChartWindowType.ERROR;
           StyleManager.updater();
         }
         else{
-          localLogger.info("Loaded descriptor file for ${customCharacteristics!.name}");
+          localLogger.info("Loaded descriptor file for ${customCharacteristics!.name}", doNoti: false);
           signalData[customCharacteristics!.measurement] = {};
           customCharacteristics!.loadChannels();
           
@@ -158,11 +158,11 @@ void customChartHandleDataReceived(Map data) async {
             value.timeDuration = TraceSettingsProvider.lastVisibleTimestamp - value.timeOffset;
           });
           TraceSettingsProvider.traceSettingNotifier.update((value) { });
-          localLogger.info("Finished setup for ${customCharacteristics!.name}");
+          localLogger.info("Finished setup for ${customCharacteristics!.name}", doNoti: false);
         }
       }
       else{
-        localLogger.error("Loading descriptor file is not implemented for ${customChartWindowType.name}");
+        localLogger.error("Loading descriptor file is not implemented for ${customChartWindowType.name}", doNoti: false);
       }
       break;
     case CustomChartWindowInstruction.SHARING_GROUP_DATA:
@@ -170,7 +170,7 @@ void customChartHandleDataReceived(Map data) async {
       break;
 
     default:
-      localLogger.error("CustomChartWindowInstruction not implemented for CustomChartWindowInstruction.${CustomChartWindowInstruction.values[data['instruction']].name}");
+      localLogger.error("CustomChartWindowInstruction not implemented for CustomChartWindowInstruction.${CustomChartWindowInstruction.values[data['instruction']].name}", doNoti: false);
   }
 }
 
@@ -215,6 +215,6 @@ void _handleSharingGroupData(Map data){
     }
   }
   else{
-    localLogger.error("CustomChartWindowInstruction.SHARING_GROUP_DATA not implemented for CustomChartWindowType.${customChartWindowType.name}");
+    localLogger.error("CustomChartWindowInstruction.SHARING_GROUP_DATA not implemented for CustomChartWindowType.${customChartWindowType.name}", doNoti: false);
   }
 }

@@ -36,7 +36,7 @@ class CustomTimeseriesChartDescriptor implements CustomDescriptor{
   @override
   void saveChannels(){
     if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomTimeseriesChartDescriptor.saveChannel was called on a non-main process");
+      localLogger.error("CustomTimeseriesChartDescriptor.saveChannel was called on a non-main process", doNoti: false);
       return;
     }
     for(final String signal in signals){
@@ -51,7 +51,7 @@ class CustomTimeseriesChartDescriptor implements CustomDescriptor{
   @override
   void loadChannels(){
     if(windowType != WindowType.CUSTOM_CHART){
-      localLogger.error("CustomTimeseriesChartDescriptor.loadChannel was called on a non-customchart process");
+      localLogger.error("CustomTimeseriesChartDescriptor.loadChannel was called on a non-customchart process", doNoti: false);
       return;
     }
     
@@ -62,10 +62,10 @@ class CustomTimeseriesChartDescriptor implements CustomDescriptor{
         deleteWhenDone: false
       );
       if(bytes.isEmpty){
-        localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL");
+        localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL", doNoti: false);
         continue;
       }
-      localLogger.info("Imported channel file: ${measurement}_$signal.3DCHANNEL");
+      localLogger.info("Imported channel file: ${measurement}_$signal.3DCHANNEL", doNoti: false);
 
       final SignalContainer sig = SignalContainer.fromBytes(bytes);
       signalData[measurement]![signal] = sig;
@@ -93,7 +93,7 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
   @override
   void loadChannels() {
     if(windowType != WindowType.CUSTOM_CHART){
-      localLogger.error("CustomCharacteristicsDescriptor.loadChannel was called on a non-customchart process");
+      localLogger.error("CustomCharacteristicsDescriptor.loadChannel was called on a non-customchart process", doNoti: false);
       return;
     }
 
@@ -103,10 +103,10 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
       deleteWhenDone: false
     );
     if(bytes.isEmpty){
-      localLogger.error("Failed to import channel file: ${measurement}_$baseSignal.3DCHANNEL");
+      localLogger.error("Failed to import channel file: ${measurement}_$baseSignal.3DCHANNEL", doNoti: false);
     }
     else{
-      localLogger.info("Imported channel file: ${measurement}_$baseSignal.3DCHANNEL");
+      localLogger.info("Imported channel file: ${measurement}_$baseSignal.3DCHANNEL", doNoti: false);
     }
 
     final SignalContainer sig = SignalContainer.fromBytes(bytes);
@@ -119,10 +119,10 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
         deleteWhenDone: false
       );
       if(bytes.isEmpty){
-        localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL");
+        localLogger.error("Failed to import channel file: ${measurement}_$signal.3DCHANNEL", doNoti: false);
         continue;
       }
-      localLogger.info("Imported channel file: ${measurement}_$signal.3DCHANNEL");
+      localLogger.info("Imported channel file: ${measurement}_$signal.3DCHANNEL", doNoti: false);
 
       final SignalContainer sig = SignalContainer.fromBytes(bytes);
       signalData[measurement]![signal] = sig;
@@ -132,7 +132,7 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
   @override
   void saveChannels() {
     if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomCharacteristicsDescriptor.saveChannel was called on a non-main process");
+      localLogger.error("CustomCharacteristicsDescriptor.saveChannel was called on a non-main process", doNoti: false);
       return;
     }
 
@@ -186,7 +186,7 @@ class CustomCharacteristicsDescriptor implements CustomDescriptor{
 
   Future<void> launch() async {    
     if(windowType != WindowType.MAIN_WINDOW){
-      localLogger.error("CustomCharacteristicsDescriptor.launch was called on a non-main process");
+      localLogger.error("CustomCharacteristicsDescriptor.launch was called on a non-main process", doNoti: false);
       return;
     }
     

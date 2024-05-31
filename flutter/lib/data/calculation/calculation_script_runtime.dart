@@ -200,7 +200,7 @@ class CalculationScriptRuntime{
 
   static void __updateTraceSettings(final String measurement, final List<String> signals){
     if(!signalData.containsKey(measurement)){
-      localLogger.error("Measurement $measurement referenced by __updateTraceSettings did not exist");
+      localLogger.error("Measurement $measurement referenced by __updateTraceSettings did not exist", doNoti: false);
       return;
     }
     TraceSettingsProvider.updateEntriesFrom(measurement, signals);

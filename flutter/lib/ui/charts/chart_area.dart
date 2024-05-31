@@ -334,7 +334,7 @@ class _ChartLinePainter extends CustomPainter {
         try{
           path.lineTo(plotContext.x[i], plotContext.y[i]);
         } on RangeError{
-          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
+          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo", doNoti: false);
           break;
         }
       }
@@ -353,14 +353,14 @@ class _ChartLinePainter extends CustomPainter {
         try{
           points.add(Offset(plotContext.x[i], plotContext.y[i]));
         } on RangeError{
-          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo");
+          localLogger.warning("ChartLinePainter detected miscalculated scalinginfo", doNoti: false);
           break;
         }
       }
       canvas.drawPoints(PointMode.points, points, pointPaint);
     }
     else{
-      localLogger.error("Not implemented chart painting for chartDrawMode ${drawMode.name}");
+      localLogger.error("Not implemented chart painting for chartDrawMode ${drawMode.name}", doNoti: false);
     }
   }
   

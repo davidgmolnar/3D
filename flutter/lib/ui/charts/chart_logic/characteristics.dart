@@ -40,7 +40,7 @@ abstract class CharacteristicsProcessor{
 
   static void process(){
     if(windowType != WindowType.CUSTOM_CHART && customChartWindowType != CustomChartWindowType.CHARACTERISTICS){
-      localLogger.error("CharacteristicsProcessor.process was called on a non Characteristics window");
+      localLogger.error("CharacteristicsProcessor.process was called on a non Characteristics window", doNoti: false);
       return;
     }
 

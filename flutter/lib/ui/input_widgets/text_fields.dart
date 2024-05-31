@@ -38,7 +38,7 @@ class _ToggleableTextFieldState<T> extends State<ToggleableTextField<T>> {
     try{
       widget.onFinished(parsedValue);
     }catch(exc){
-      localLogger.error("Exception when passing parsed value ${exc.toString()}");
+      localLogger.error("Exception when passing parsed value ${exc.toString()}", doNoti: false);
     }
     setState((){});
   }

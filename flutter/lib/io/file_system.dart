@@ -34,14 +34,14 @@ abstract class FileSystem{
       return dir;
     }
     else{
-      localLogger.error("Unsupported operating system, FileSystem.getCurrentDirectory only supports Linux and Windows");
+      localLogger.error("Unsupported operating system, FileSystem.getCurrentDirectory only supports Linux and Windows", doNoti: false);
       return null;
     }
   }
 
   static Future<void> trySaveMapToLocalAsync(final String path, final String filename, final Map jsonEncodeable) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = await File("${_currentDirectory}Local/$path$filename").create(recursive: true);
@@ -52,7 +52,7 @@ abstract class FileSystem{
 
   static void trySaveMapToLocalSync(final String path, final String filename, final Map jsonEncodeable){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = File("${_currentDirectory}Local/$path$filename")..createSync(recursive: true);
@@ -63,7 +63,7 @@ abstract class FileSystem{
 
   static Future<Map> tryLoadMapFromLocalAsync(final String path, final String filename, {final bool deleteWhenDone = false}) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return {};
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -82,7 +82,7 @@ abstract class FileSystem{
 
   static Map tryLoadMapFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return {};
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -98,7 +98,7 @@ abstract class FileSystem{
 
   static Future<void> trySaveBytesToLocalAsync(final String path, final String filename, final Uint8List bytes) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = await File("${_currentDirectory}Local/$path$filename").create(recursive: true);
@@ -109,7 +109,7 @@ abstract class FileSystem{
 
   static void trySaveBytesToLocalSync(final String path, final String filename, final Uint8List bytes){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = File("${_currentDirectory}Local/$path$filename")..createSync(recursive: true);
@@ -120,7 +120,7 @@ abstract class FileSystem{
 
   static Future<Uint8List> tryLoadBytesFromLocalAsync(final String path, final String filename, {final bool deleteWhenDone = false}) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return Uint8List(0);
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -139,7 +139,7 @@ abstract class FileSystem{
 
   static Uint8List tryLoadBytesFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return Uint8List(0);
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -155,7 +155,7 @@ abstract class FileSystem{
 
   static Future<void> tryDeleteFromLocalAsync(final String path, final String filename) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -170,7 +170,7 @@ abstract class FileSystem{
 
   static void tryDeleteFromLocalSync(final String path, final String filename){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = File("${_currentDirectory}Local/$path$filename");
@@ -185,7 +185,7 @@ abstract class FileSystem{
 
   static Future<List<FileSystemEntity>> tryListElementsInLocalAsync(final String path) async {
     if(await getCurrentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return [];
     }
     Directory("${_currentDirectory}Local/$path");
@@ -200,7 +200,7 @@ abstract class FileSystem{
 
   static List<FileSystemEntity> tryListElementsInLocalSync(final String path){
     if(_currentDirectory == null){
-      localLogger.error("Cant determine current directory");
+      localLogger.error("Cant determine current directory", doNoti: false);
       return [];
     }
     final Directory dir = Directory("${_currentDirectory}Local/$path");

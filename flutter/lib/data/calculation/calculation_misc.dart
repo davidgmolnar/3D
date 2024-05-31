@@ -126,7 +126,7 @@ class Filter{
       case FilterType.MAX:
         return window.fold(double.negativeInfinity, (p, e) => max(p, e));
       default:
-        localLogger.error("Not implemented window calculation for FilterType.${type.name}");
+        localLogger.error("Not implemented window calculation for FilterType.${type.name}", doNoti: false);
         return 0;
     }
   }

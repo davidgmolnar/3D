@@ -127,7 +127,7 @@ Future<bool> tryStartup(List<String> args) async {
 
 Future<void> postStartup(var root) async {
   localLogger.start();
-  localLogger.info("Starting ${windowType.name}");
+  localLogger.info("Starting ${windowType.name}", doNoti: false);
   if(windowType != WindowType.MAIN_WINDOW && windowSetup == null){
     localLogger.error("Failed to load window setup file");
   }

@@ -35,7 +35,7 @@ abstract class ChildProcessController{
   }
 
   static void _init() async {
-    localLogger.info("ChildProcessController started listening");
+    localLogger.info("ChildProcessController started listening", doNoti: false);
     _sock!.listen((udp) async {
       if (udp == RawSocketEvent.read) {
         Uint8List? udpPayload = Protocol.decode(_sock?.receive()?.data);
@@ -47,10 +47,10 @@ abstract class ChildProcessController{
                 if(_newConnections.containsKey(response.childProcessPort)){
                   _activeChildProcesses[response.childProcessPort] = _newConnections[response.childProcessPort]!;
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
-                  localLogger.info("Established connection with childprocess on port ${response.childProcessPort}");
+                  localLogger.info("Established connection with childprocess on port ${response.childProcessPort}", doNoti: false);
                 }
                 else{
-                  localLogger.error("A process on port ${response.childProcessPort} unexpectedly reported INIT_READY");
+                  localLogger.error("A process on port ${response.childProcessPort} unexpectedly reported INIT_READY", doNoti: false);
                 }
                 break;
 
@@ -81,25 +81,25 @@ abstract class ChildProcessController{
               case ResponseType.STOPPING:
                 if(_activeChildProcesses.containsKey(response.childProcessPort)){
                   _activeChildProcesses.removeWhere((key, value) => key == response.childProcessPort);
-                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
+                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING", doNoti: false);
                   _sock?.send(_killSignal, InternetAddress.loopbackIPv4, response.childProcessPort);
                 }
                 else if(_newConnections.containsKey(response.childProcessPort)){
                   _newConnections.removeWhere((key, value) => key == response.childProcessPort);
-                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING");
+                  localLogger.info("Childprocess on port ${response.childProcessPort} reported STOPPING", doNoti: false);
                   _sock?.send(_killSignal, InternetAddress.loopbackIPv4, response.childProcessPort);
                 }
                 else{
-                  localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master");
+                  localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master", doNoti: false);
                 }
                 break;
 
               default:
-                localLogger.error("Childprocess on port ${response.childProcessPort} sent an undefined message");
+                localLogger.error("Childprocess on port ${response.childProcessPort} sent an undefined message", doNoti: false);
             }
           }
           catch (exc){
-            localLogger.error("Undefined message received");
+            localLogger.error("Undefined message received", doNoti: false);
           }
         }
       }
@@ -113,7 +113,7 @@ abstract class ChildProcessController{
   static void _handleFinished(int port, Map data) async {
     ResponseFinishable? finishedTask = ResponseFinishable.fromJson(data);
     if(finishedTask == null){
-      localLogger.error("Invalid finish message was received from $port: $data");
+      localLogger.error("Invalid finish message was received from $port: $data", doNoti: false);
       return;
     }
     switch (finishedTask.type) {
@@ -170,7 +170,7 @@ abstract class ChildProcessController{
         return; // no kill
         
       default:
-        localLogger.error("Finished task ${finishedTask.type.name} handling not implemented");
+        localLogger.error("Finished task ${finishedTask.type.name} handling not implemented", doNoti: false);
     }
     sendTo(Command(port, CommandType.KILL, {}));
   }
@@ -192,7 +192,7 @@ abstract class ChildProcessController{
     await FileSystem.trySaveMapToLocalAsync("", "${port}_setup.3D", windowSetupInfo.asJson);
     Process.run("${dir}log_analyser.exe", [type.name , port.toString(), "${port}_setup.3D"],);
     _newConnections[port] = type;
-    localLogger.info("Started ${type.name} on $port");
+    localLogger.info("Started ${type.name} on $port", doNoti: false);
     return port;
   }
 
@@ -226,7 +226,7 @@ abstract class ChildProcessController{
       }));
     }
     else{
-      localLogger.error("Message was attempted to be sent to a port not managed by master");
+      localLogger.error("Message was attempted to be sent to a port not managed by master", doNoti: false);
     }
   }
 
@@ -247,7 +247,7 @@ abstract class ChildProcessController{
             _backlog[command] = _backlog[command]! + 1;
             if(_backlog[command]! >= 10){
               toRemove.add(command);
-              localLogger.error("Error when attempting to send message to process at port ${command.childProcessPort}");
+              localLogger.error("Error when attempting to send message to process at port ${command.childProcessPort}", doNoti: false);
             }
           }
         }
@@ -255,7 +255,7 @@ abstract class ChildProcessController{
           _backlog[command] = _backlog[command]! + 1;
           if(_backlog[command]! >= 10){
             toRemove.add(command);
-            localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready");
+            localLogger.error("Message was attempted to be sent to a new connection that failed to signal ready", doNoti: false);
           }
         }
       }
@@ -272,7 +272,7 @@ abstract class ChildProcessController{
   }
 
   static void dispose(){
-    localLogger.info("ChildProcessController started to dispose clients");
+    localLogger.info("ChildProcessController started to dispose clients", doNoti: false);
     if(_dispatcher != null && _dispatcher!.isActive){
         _dispatcher?.cancel();
         _dispatcher = null;
@@ -286,6 +286,6 @@ abstract class ChildProcessController{
     }
     _newConnections.clear();
     _sock?.close();
-    localLogger.info("ChildProcessController finished disposing clients");
+    localLogger.info("ChildProcessController finished disposing clients", doNoti: false);
   }
 }
