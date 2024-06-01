@@ -23,7 +23,7 @@ class EditSingleParameter extends StatelessWidget {
             child: Text("$parameterKey:", style: StyleManager.textStyle,),
           ),
           const Spacer(),
-          Const.parameterIsBasic(parameterKey) ?
+          Const.parameterIsConstant(parameterKey) ?
           Container(
             width: 350,
             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
@@ -60,7 +60,7 @@ class EditSingleParameter extends StatelessWidget {
             },
             width: 350,
           ),
-          Const.parameterIsBasic(parameterKey) ?
+          Const.parameterIsConstant(parameterKey) ?
           const SizedBox(width: 50,)
           :
           IconButton(

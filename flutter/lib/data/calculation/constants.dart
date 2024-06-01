@@ -6,27 +6,29 @@ import 'unit.dart';
 
 const String parameterPath = "CalculationParameters/";
 
-abstract class Const{
-  static final Map<String, num> __parameters = {
-    "PI" : pi,
-    "2PI": 2 * pi,
-    "PI/2": pi / 2,
-    "E": e,
-    "G": 9.80665,
-    "LN2": log(2),
-    "RAD2DEG": 180 / pi,
-    "DEG2RAD": pi / 180,
-  };
+const Map<String, num> __constants = {
+  "PI" : pi,
+  "2PI": 2 * pi,
+  "PI/2": pi / 2,
+  "E": e,
+  "G": 9.80665,
+  "LN2": ln2,
+  "RAD2DEG": 180 / pi,
+  "DEG2RAD": pi / 180,
+};
 
-  static bool parameterIsBasic(final String parameter){
-    return ["PI", "2PI", "PI/2", "E", "G", "LN2", "RAD2DEG", "DEG2RAD"].contains(parameter.toUpperCase());
+abstract class Const{
+  static final Map<String, num> __parameters = {};
+
+  static bool parameterIsConstant(final String parameter){
+    return __constants.keys.contains(parameter.toUpperCase());
   }
 
-  static Map<String, num> get parameters => __parameters;
+  static Map<String, num> get parameters => {}..addAll(__constants)..addAll(__parameters);
 
-  static void loadParameters(Map<String, num> parameters){
-    for(String key in parameters.keys){
-      __parameters[key.toUpperCase()] = parameters[key]!;
+  static void loadParameters(Map<String, num> loadedParameters){
+    for(String key in loadedParameters.keys){
+      __parameters[key.toUpperCase()] = loadedParameters[key]!;
     }
     __syncToDisk();
   }
@@ -53,22 +55,12 @@ abstract class Const{
 
   static void clearParameters() {
     __parameters.clear();
-    loadParameters({
-      "PI" : pi,
-      "2PI": 2 * pi,
-      "PI/2": pi / 2,
-      "E": e,
-      "G": 9.80665,
-      "LN2": ln2,
-      "RAD2DEG": 180 / pi,
-      "DEG2RAD": pi / 180,
-    });
     __syncToDisk();
   }
 
   static bool parsable(final String str){
     if(str[0] == '@'){
-      if(["@PI", "@2PI", "@PI/2", "@E", "@G", "@LN2", "@RAD2DEG", "@DEG2RAD"].contains(str.toUpperCase())){
+      if(__constants.keys.contains(str.substring(1).toUpperCase())){
         return true;
       }
       return false;
@@ -133,8 +125,8 @@ abstract class Const{
   static num parse(final String str, Function(LogEntry) onError){
     if(str[0] == '@'){
       final p = str.substring(1).toUpperCase();
-      if(__parameters.containsKey(p)){
-        return __parameters[p]!;
+      if(__constants.containsKey(p)){
+        return __constants[p]!;
       }
       else{
         onError(LogEntry.error("Constant $str was not predefined, skipping instruction"));
