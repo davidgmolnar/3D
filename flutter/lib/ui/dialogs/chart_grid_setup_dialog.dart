@@ -10,6 +10,7 @@ import '../../io/logger.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_group.dart';
 import '../../routes/main_window/screen.dart';
+import '../input_widgets/search_selector.dart';
 import '../input_widgets/sliders.dart';
 import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
@@ -246,17 +247,14 @@ class _ChartGridCreateState extends State<ChartGridCreate> {
                         Column(
                           children: [
                             for(int i = 0; i < _signals[index].length; i++)
-                              SizedBox(
-                                width: 300,
-                                child: DropdownButton<String>(
-                                  isExpanded: true,
-                                  value: _signals[index][i],
-                                  items: [const DropdownMenuItem<String>(value: null, child: Text("Select")), ...?signalData[_meas[index]]?.keys.map((signal) => DropdownMenuItem<String>(value: signal, child: Text(signal)))],
-                                  onChanged: (value) {
-                                    _signals[index][i] = value;
-                                    setState(() {});
-                                  },
-                                ),
+                              SearchSelector(
+                                selected: _signals[index][i],
+                                hintText: "Select signal",
+                                options: signalData[_meas[index]]?.keys.where((element) => !_signals[index].contains(element)).toList() ?? [],
+                                onSelected: (selected) {
+                                  _signals[index][i] = selected;
+                                  setState(() {});
+                                },
                               ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.end,

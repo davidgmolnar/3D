@@ -33,7 +33,7 @@ abstract class CustomGroup<T extends CustomDescriptor>{
   Map toJson();
 }
 
-class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDescriptor>{  // TODO a way to edit measurement
+class CustomTimeseriesChartGroup implements CustomGroup<CustomTimeseriesChartDescriptor>{ 
   @override
   final String name;
   @override

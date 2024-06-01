@@ -251,7 +251,6 @@ abstract class Importer {
   }
 
   static Future<LoadContext> _binaryLoader(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
-    // TODO csvloader kommentek itt is érvényesek
     Map<String, SignalContainer> storage = {};
     List<LogEntry> context = [];
 

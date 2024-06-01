@@ -125,7 +125,7 @@ class CalculationScriptProcessor{
         return await __twoOperandBase(inst, options, (p0, p1) => p0 * p1, (p0, p1) => unitMult(p0, p1));
       case Operation.DIV:
         return await __twoOperandBase(inst, options, (p0, p1) => p0 / p1, ((p0, p1) => unitDiv(p0, p1)));
-      case Operation.DERIVATE: // TODO a zoh import ezt rendesen megbaszkodja
+      case Operation.DERIVATE:
         return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => (p1 - p0) / (t1 - t0) * 1000.0, (p0) => 0, (p0) => unitDiv(p0, const Unit(scalar: 1, components: {Units.s: 1})));
       case Operation.AND:
         return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt(), null);

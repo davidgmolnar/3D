@@ -151,7 +151,7 @@ class CursorFunctionsDisplay extends StatefulWidget {
     ToolbarDropdownItem(text: "Min Search", onPressed: _cursorMinSearch),
   ];
 
-  static void _cursorPeakSearch(){  // TODO chart grid sharing
+  static void _cursorPeakSearch(){
     cursorInfoNotifier.update((value) {
       final List<String> parts = valueDescription.split('|');
       final ChartShowDuration shown = ChartController.shownDurationNotifier.value;
@@ -169,7 +169,7 @@ class CursorFunctionsDisplay extends StatefulWidget {
     
   }*/
 
-  static void _cursorPeakToPeak(){  // TODO chart grid sharing
+  static void _cursorPeakToPeak(){
     if(!cursorInfoNotifier.value.cursors[CursorFunctionsDisplay.selected].isDelta){
       noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Selected marker has to be a delta one"), 5000));
       return;
@@ -190,7 +190,7 @@ class CursorFunctionsDisplay extends StatefulWidget {
     });
   }
 
-  static void _cursorMinSearch(){  // TODO chart grid sharing
+  static void _cursorMinSearch(){
     cursorInfoNotifier.update((value) {
       final List<String> parts = valueDescription.split('|');
       final ChartShowDuration shown = ChartController.shownDurationNotifier.value;

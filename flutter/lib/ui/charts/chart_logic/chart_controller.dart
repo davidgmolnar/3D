@@ -9,7 +9,7 @@ import '../../../data/settings.dart';
 const int _scrollMultiplierHorizontal = 1; // setting
 const int _dragMultiplierHorizontal = 1; // setting
 
-class ChartShowDuration{ // TODO lehet mégiscsak double kéne ez legyen
+class ChartShowDuration{
   double timeOffset;
   double timeDuration;
 

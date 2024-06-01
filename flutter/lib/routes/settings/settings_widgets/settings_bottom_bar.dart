@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../io/logger.dart';
 import '../../../ui/theme/theme.dart';
 import 'settings_container.dart';
 

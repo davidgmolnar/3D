@@ -9,6 +9,7 @@ import '../../io/importer.dart';
 import '../../io/logger.dart';
 import '../../routes/custom_chart/custom_chart_logic/custom_descriptor.dart';
 import '../../routes/main_window/screen.dart';
+import '../input_widgets/search_selector.dart';
 import '../input_widgets/sliders.dart';
 import '../notifications/notification_logic.dart' as noti;
 import '../theme/theme.dart';
@@ -174,32 +175,26 @@ class _CharacteristicsCreateState extends State<CharacteristicsCreate> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      SizedBox(
-                        width: 250,
-                        child: DropdownButton<String>(
-                          isExpanded: true,
-                          value: _baseSignal,
-                          items: [const DropdownMenuItem<String>(value: null, child: Text("Select base")), ...?signalData[_meas]?.keys.map((signal) => DropdownMenuItem<String>(value: signal, child: Text(signal)))],
-                          onChanged: (value) {
-                            _baseSignal = value;
-                            setState(() {});
-                          },
-                        ),
+                      SearchSelector(
+                        selected: _baseSignal,
+                        hintText: "Select base",
+                        options: signalData[_meas]?.keys.toList() ?? [],
+                        onSelected: (selected) {
+                          _baseSignal = selected;
+                          setState(() {});
+                        },
                       ),
                       Column(
                         children: [
                           for(int i = 0; i < _compSignals.length; i++)
-                            SizedBox(
-                              width: 250,
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                value: _compSignals[i],
-                                items: [const DropdownMenuItem<String>(value: null, child: Text("Select comp")), ...?signalData[_meas]?.keys.map((signal) => DropdownMenuItem<String>(value: signal, child: Text(signal)))],
-                                onChanged: (value) {
-                                  _compSignals[i] = value;
-                                  setState(() {});
-                                },
-                              ),
+                            SearchSelector(
+                              selected: _compSignals[i],
+                              hintText: "Select comp",
+                              options: signalData[_meas]?.keys.where((element) => element != _baseSignal && !_compSignals.contains(element)).toList() ?? [],
+                              onSelected: (selected) {
+                                _compSignals[i] = selected;
+                                setState(() {});
+                              },
                             ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
