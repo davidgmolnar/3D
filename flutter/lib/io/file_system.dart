@@ -12,6 +12,7 @@ abstract class FileSystem{
   static String get customTimeSeriesGroupDir => "CustomTimeSeriesGroups/";
   static String get customCharacteristicsGroupDir => "CustomCharacteristicsGroups/";
   static String get channelDir => "Channels/";
+  static String get unitSystemDir => "UnitSystem/";
 
   static Future<String?> get getCurrentDirectory async {
     if(_currentDirectory != null){
@@ -39,25 +40,37 @@ abstract class FileSystem{
     }
   }
 
-  static Future<void> trySaveMapToLocalAsync(final String path, final String filename, final Map jsonEncodeable) async {
+  static Future<void> trySaveMapToLocalAsync(final String path, final String filename, final Map jsonEncodeable, {final bool withIndent = false}) async {
     if(await getCurrentDirectory == null){
       localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = await File("${_currentDirectory}Local/$path$filename").create(recursive: true);
     final RandomAccessFile access = await file.open(mode: FileMode.write);
-    await access.writeFrom(Exporter.jsonToBytes(jsonEncodeable));
+    
+    if(withIndent){
+      await access.writeFrom(Exporter.prettyJsonToBytes(jsonEncodeable));
+    }
+    else{
+      await access.writeFrom(Exporter.jsonToBytes(jsonEncodeable));
+    }
     await access.close();
   }
 
-  static void trySaveMapToLocalSync(final String path, final String filename, final Map jsonEncodeable){
+  static void trySaveMapToLocalSync(final String path, final String filename, final Map jsonEncodeable, {final bool withIndent = false}){
     if(_currentDirectory == null){
       localLogger.error("Cant determine current directory", doNoti: false);
       return;
     }
     final File file = File("${_currentDirectory}Local/$path$filename")..createSync(recursive: true);
     final RandomAccessFile access = file.openSync(mode: FileMode.write);
-    access.writeFromSync(Exporter.jsonToBytes(jsonEncodeable));
+    
+    if(withIndent){
+      access.writeFromSync(Exporter.prettyJsonToBytes(jsonEncodeable));
+    }
+    else{
+      access.writeFromSync(Exporter.jsonToBytes(jsonEncodeable));
+    }
     access.closeSync();
   }
 
@@ -77,7 +90,12 @@ abstract class FileSystem{
     if(deleteWhenDone){
       await file.delete();
     }
-    return Importer.jsonFromBytes(buffer);
+    try{
+      return Importer.jsonFromBytes(buffer);
+    }catch(ex){
+      localLogger.error("Cannot parse json at ${file.absolute.path}");
+      return {};
+    }
   }
 
   static Map tryLoadMapFromLocalSync(final String path, final String filename, {final bool deleteWhenDone = false}){
@@ -93,7 +111,12 @@ abstract class FileSystem{
     if(deleteWhenDone){
       file.deleteSync();
     }
-    return Importer.jsonFromBytes(buffer);
+    try{
+      return Importer.jsonFromBytes(buffer);
+    }catch(ex){
+      localLogger.error("Cannot parse json at ${file.absolute.path}");
+      return {};
+    }
   }
 
   static Future<void> trySaveBytesToLocalAsync(final String path, final String filename, final Uint8List bytes) async {

@@ -38,20 +38,7 @@ abstract class Importer {
     "us": 0.001
   };
 
-  static String safeUTF8Decode(final List<int> bytes){
-    List<int> removeIndexes = [];
-    for(int i = 0; i < bytes.length; i++){
-      if(bytes[i] > 127){
-        removeIndexes.add(i);
-      }
-    }
-
-    for(int i in removeIndexes.reversed){
-      bytes.removeAt(i);
-    }
-
-    return utf8Decoder.convert(bytes);
-  }
+  static String safeUTF8Decode(final List<int> bytes) => utf8Decoder.convert(bytes);
   
   static Future<LoadContext> loadLogFile(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
     try{
