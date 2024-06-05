@@ -157,18 +157,18 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
     if(shownMeasurement != "Select Measurement"){
       if(sortLogic == SortLogic.STARTSWITH){
         visibleFiltered = allTraceSettings.where(
-          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.startsWith(filter))
+          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.toUpperCase().startsWith(filter.toUpperCase()))
         ).toList();
         hiddenFiltered = allTraceSettings.where(
-          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isNotEmpty && traceSettingWidget.traceSetting.signal.startsWith(filter))
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (traceSettingWidget.traceSetting.signal.toUpperCase().startsWith(filter.toUpperCase()))
         ).toList();
       }
       else if(sortLogic == SortLogic.CONTAINS){
         visibleFiltered = allTraceSettings.where(
-          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.contains(filter))
+          (traceSettingWidget) => traceSettingWidget.traceSetting.isVisible && (filter.isEmpty || traceSettingWidget.traceSetting.signal.toUpperCase().contains(filter.toUpperCase()))
         ).toList();
         hiddenFiltered = allTraceSettings.where(
-          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (filter.isNotEmpty && traceSettingWidget.traceSetting.signal.contains(filter))
+          (traceSettingWidget) => !traceSettingWidget.traceSetting.isVisible && (traceSettingWidget.traceSetting.signal.toUpperCase().contains(filter.toUpperCase()))
         ).toList();
       }
     }
