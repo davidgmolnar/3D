@@ -30,6 +30,9 @@ abstract class CSVReformatter{
     String decimalSepFound = "";
     final List<String> colValues = firstDataLine.split(lineSepFound);
     for(final String colValue in colValues){
+      if(decimalSepFound.isNotEmpty){
+        break;
+      }
       if(!_isNum(colValue)){
         for(int i = 0; i < colValue.length; i++){
           if(!_isNum(colValue[i])){
