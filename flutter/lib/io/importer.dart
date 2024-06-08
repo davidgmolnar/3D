@@ -6,6 +6,7 @@ import 'package:dart_dbc_parser/dart_dbc_parser.dart';
 import 'package:dart_dbc_parser/signal/dbc_signal.dart';
 
 import '../data/calculation/unit.dart';
+import '../data/csv/csv_reformatter.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
 import '../data/typed_data_list_container.dart';
@@ -38,7 +39,25 @@ abstract class Importer {
     "us": 0.001
   };
 
-  static String safeUTF8Decode(final List<int> bytes) => utf8Decoder.convert(bytes);
+  static String safeUTF8Decode(List<int> bytes) {
+    // ahol van 176 ott legyen előtte 194
+    final List<int> degreeCharIndexes = [];
+    for(int i = 0; i < bytes.length; i++){
+      if(bytes[i] == 176){
+        degreeCharIndexes.add(i);
+      }
+    }
+
+    bytes = bytes.toList(growable: true);
+
+    for(final int ind in degreeCharIndexes.reversed){
+      if(ind == 0 || bytes[ind - 1] != 194){
+        bytes.insert(ind, 194); // degree char extension
+      }
+    }
+
+    return utf8Decoder.convert(bytes);
+  }
   
   static Future<LoadContext> loadLogFile(final File file, {final Function(double, String?)? lineProgressIndication, final int? indicationCount}) async {
     try{
@@ -79,7 +98,15 @@ abstract class Importer {
       }
     }
     await Future.delayed(const Duration(milliseconds: 10));
-    List<String> lines = safeUTF8Decode((await file.readAsBytes()).toList()).split('\n');
+    List<String> lines = CSVReformatter.convert(
+      safeUTF8Decode((await file.readAsBytes()).toList()),
+      (final LogEntry entry){
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(0, entry.asString(localLogger.loggerName));
+        }
+      }
+      );
     {
       final LogEntry entry = LogEntry.info("File read ${file.absolute.path}");
       context.add(entry);

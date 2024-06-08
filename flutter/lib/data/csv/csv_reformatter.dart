@@ -2,28 +2,33 @@ import '../../io/logger.dart';
 
 abstract class CSVReformatter{
 
-  static bool _isAlphanum(String s) {
-    return RegExp(r'^[a-zA-Z0-9]+').hasMatch(s);
+  static const String _intermediateLineSep = "-|-";
+  static const String _intermediateDecimalSep = "-\\-";
+
+  static bool _isColumnDef(String s) {
+    return RegExp(r'^[a-zA-Z0-9-_]+').hasMatch(s);
   }
 
   static bool _isNum(String s) {
-    return RegExp(r'^[0-9]+').hasMatch(s);
+    return RegExp(r'^[0-9-.]+').hasMatch(s) && !s.contains(',');
   }
 
   static List<String> convert(final String raw, final Function(LogEntry) onMessage, {final String targetLineSep = ',', final String targetDecimalSep = '.'}){
-    raw.replaceAll('"', '');
-
-    final List<String> lines = raw.split('\n');
+    final List<String> lines = raw.replaceAll('"', '').split('\n');
+    if(lines.length < 3){
+      return lines;
+    }
     final String cols = lines[0].trim();
-    final String firstDataLine = lines[2].trim();  // TODO check lines size
+    final String firstDataLine = lines[2].trim();
     
     String lineSepFound = "";
     for(int i = 0; i < cols.length; i++){
-      if(!_isAlphanum(cols[i])){
+      if(!_isColumnDef(cols[i])){
         lineSepFound += cols[i];
       }
       else if(lineSepFound.isNotEmpty){
-        break;                                     // TODO onMessage
+        onMessage(LogEntry.info("Line sep found: '$lineSepFound'"));
+        break;
       }
     }
 
@@ -39,13 +44,36 @@ abstract class CSVReformatter{
             decimalSepFound += colValue[i];
           }
           else if(decimalSepFound.isNotEmpty){
-            break;                                     // TODO onMessage
+            onMessage(LogEntry.info("Decimal sep found: '$decimalSepFound'"));
+            break;
           }
         }
       }
     }
 
-    final bool hasLineSep = lineSepFound.isNotEmpty;  // one col
-    final bool hasDecimalSep = decimalSepFound.isNotEmpty;  // all ints
+    if(lineSepFound.isNotEmpty){
+      for (int i = 0; i < lines.length; i++){
+        lines[i] = lines[i].replaceAll(lineSepFound, _intermediateLineSep);
+      }
+    }
+
+    if(decimalSepFound.isNotEmpty){
+      for (int i = 0; i < lines.length; i++){
+        lines[i] = lines[i].replaceAll(decimalSepFound, _intermediateDecimalSep);
+      }
+    }
+
+    if(lineSepFound.isNotEmpty){
+      for (int i = 0; i < lines.length; i++){
+        lines[i] = lines[i].replaceAll(_intermediateLineSep, targetLineSep);
+      }
+    }
+
+    if(decimalSepFound.isNotEmpty){
+      for (int i = 0; i < lines.length; i++){
+        lines[i] = lines[i].replaceAll(_intermediateDecimalSep, targetDecimalSep);
+      }
+    }
+    return lines;
   }
 }
