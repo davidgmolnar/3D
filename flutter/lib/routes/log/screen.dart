@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../ui/common.dart';
+import '../../ui/notifications/notification_widgets.dart';
 import '../../ui/theme/theme.dart';
 import '../../ui/window/window_titlebar.dart';
 import '../startup.dart';
@@ -54,7 +55,13 @@ class LogScreen extends StatelessWidget{
           children: [
             CustomWindowTitleBar(),
             Expanded(
-              child: LogContainer()
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  LogContainer(),
+                  NotificationOverlay()
+                ],
+              )
             ),
           ],
         ),

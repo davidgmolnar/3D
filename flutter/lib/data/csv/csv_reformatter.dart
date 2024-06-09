@@ -51,27 +51,25 @@ abstract class CSVReformatter{
       }
     }
 
-    if(lineSepFound.isNotEmpty){
+    if(lineSepFound.isNotEmpty && decimalSepFound.isNotEmpty){
       for (int i = 0; i < lines.length; i++){
         lines[i] = lines[i].replaceAll(lineSepFound, _intermediateLineSep);
-      }
-    }
-
-    if(decimalSepFound.isNotEmpty){
-      for (int i = 0; i < lines.length; i++){
         lines[i] = lines[i].replaceAll(decimalSepFound, _intermediateDecimalSep);
       }
-    }
 
-    if(lineSepFound.isNotEmpty){
       for (int i = 0; i < lines.length; i++){
         lines[i] = lines[i].replaceAll(_intermediateLineSep, targetLineSep);
+        lines[i] = lines[i].replaceAll(_intermediateDecimalSep, targetDecimalSep);
       }
     }
-
-    if(decimalSepFound.isNotEmpty){
+    else if(lineSepFound.isNotEmpty){
       for (int i = 0; i < lines.length; i++){
-        lines[i] = lines[i].replaceAll(_intermediateDecimalSep, targetDecimalSep);
+        lines[i] = lines[i].replaceAll(lineSepFound, targetLineSep);
+      }
+    }
+    else if(decimalSepFound.isNotEmpty){
+      for (int i = 0; i < lines.length; i++){
+        lines[i] = lines[i].replaceAll(decimalSepFound, targetDecimalSep);
       }
     }
     return lines;

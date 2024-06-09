@@ -41,7 +41,7 @@ abstract class SettingsProvider{
     Map<String, Setting?> loadedEntries = loaded.map((key, value) => MapEntry(key as String, Setting.fromJson(value)));
     loadedEntries.removeWhere((key, value) => value == null);
     __setting.addAll(loadedEntries.cast<String, Setting>());
-    localLogger.info("Settings reloaded");
+    localLogger.info("Settings reloaded", doNoti: false);
   }
 
   static Map<String, Map<String, dynamic>> get toJsonFormattable =>

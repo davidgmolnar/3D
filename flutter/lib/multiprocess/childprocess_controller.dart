@@ -120,20 +120,25 @@ abstract class ChildProcessController{
       case ResponseFinishableType.IMPORT_LOG:
         for(String id in finishedTask.data.keys){
           final String measurementAlias = finishedTask.data[id]["alias"].split('.').first;
-          LoadContext result = await Importer.loadLogFile(File(finishedTask.data[id]["path"]),
-            lineProgressIndication: (final double linePercentage, final String? entry) {
-              sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
-                "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
-                "value": linePercentage,
-                "status": entry ?? 0
-              }));
-            }, indicationCount: 100
-          );
-          if(result.storage != null){
-            signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
-            TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+          try{
+            LoadContext result = await Importer.loadLogFile(File(finishedTask.data[id]["path"]),
+              lineProgressIndication: (final double linePercentage, final String? entry) {
+                sendTo(Command(port, CommandType.PERIODIC_UPDATE, {
+                  "type": PeriodicUpdateType.IO_LINE_PERCENTAGE.index,
+                  "value": linePercentage,
+                  "status": entry ?? 0
+                }));
+              }, indicationCount: 100
+            );
+            if(result.storage != null){
+              signalData[measurementAlias] = result.storage as Map<String, SignalContainer>;
+              TraceSettingsProvider.addEntriesFrom(measurementAlias, signalData[measurementAlias]!.values.toList());
+            }
+            localLogger.addAll(result.context);
+            
+          }catch(exc){
+            localLogger.error("Error when importing measurement $measurementAlias: ${exc.toString()}");
           }
-          localLogger.addAll(result.context);
         }
         return; // no kill
 
