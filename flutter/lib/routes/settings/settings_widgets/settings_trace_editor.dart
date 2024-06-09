@@ -5,6 +5,7 @@ import '../../../data/settings_classes.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/input_widgets/buttons.dart';
+import '../../../ui/input_widgets/color_picker.dart';
 import '../../../ui/input_widgets/sliders.dart';
 import '../../../ui/input_widgets/text_fields.dart';
 import '../../../ui/structures/hideable_listview.dart';
@@ -76,6 +77,13 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(scalingGroup: p0);
             },
             width: 60, // 50
+          ),
+          ColorPicker(
+            selected: widget.traceSetting.color,
+            onSelected: (p0) {
+              widget.traceSetting.color = p0;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(color: p0);
+            },
           ),
           /*ToggleableTextField<num>(
             initialValue: widget.traceSetting.span,

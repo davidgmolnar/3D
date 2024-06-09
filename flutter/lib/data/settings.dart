@@ -90,12 +90,24 @@ abstract class TraceSettingsProvider{
 
   static double get fullVisibleTime => lastVisibleTimestamp - firstVisibleTimestamp;
 
-  static List<Color> colorBank = [
-    Colors.red,
+  static final List<Color> colorBank = [
+    Colors.red.shade100,
+    Colors.red.shade400,
+    Colors.red.shade900,
+    Colors.blue.shade100,
     Colors.blue,
+    Colors.blue.shade900,
+    Colors.green.shade100,
     Colors.green,
-    Colors.orange,
-    Colors.brown,
+    Colors.green.shade900,
+    Colors.cyan.shade100,
+    Colors.cyan,
+    Colors.cyan.shade900,
+    Colors.purpleAccent.shade100,
+    Colors.purpleAccent.shade700,
+    Colors.yellow.shade100,
+    Colors.yellow.shade700,
+    Colors.yellow.shade900,
   ];
   
 
@@ -227,7 +239,7 @@ abstract class TraceSettingsProvider{
   static int get _nextScalingGroup => _maxScalingGroup++;
 
   static Color get _nextColor {
-    _newColorIndex = _newColorIndex >= colorBank.length - 2 ? 0 : _newColorIndex + 1;
+    _newColorIndex = _newColorIndex >= colorBank.length - 1 ? 0 : _newColorIndex + 1;
     return colorBank[_newColorIndex];
   }
 
