@@ -149,3 +149,22 @@ String representNumber(String ret, {final int maxDigit = 10}){
     }
   return ret;
 }
+
+String msToTimeString(final num ms, {final bool addMs = false}) {// addMs = true if neighbouring majorTickMs values have diff of less than 1000
+  int sec = ms ~/ 1000;
+  int min = sec ~/ 60;
+  sec = sec - min * 60;
+  int remMs = (ms - sec * 1000 - min * 60000).toInt();
+  bool neg = false;
+  neg |= min < 0;
+  neg |= sec < 0;
+  neg |= remMs < 0;
+  min = min.abs();
+  sec = sec.abs();
+  remMs = remMs.abs();
+  final String pref = neg ? "-" : "";
+  if (addMs) {
+    return "$pref${min < 10 ? "0$min" : min}:${sec < 10 ? "0$sec" : sec}.${remMs > 100 ? remMs : remMs > 10 ? "0$remMs" : "00$remMs"}";
+  }
+  return "$pref${min < 10 ? "0$min" : min}:${sec < 10 ? "0$sec" : sec}";
+}

@@ -391,7 +391,7 @@ class TimeAxisPainter extends CustomPainter{
     int i = 0;
     for(final num label in valueAxisData.majorTickValues){
       final TextPainter tp = textPainterBase..text = TextSpan(
-        text: label.toString(),
+        text: msToTimeString(label, addMs: valueAxisData.majorTickValues.length > 1 && valueAxisData.majorTickValues[1] - valueAxisData.majorTickValues[0] < 1000),
         style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
       );
       tp.layout();
