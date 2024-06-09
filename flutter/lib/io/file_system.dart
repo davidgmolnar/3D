@@ -184,7 +184,7 @@ abstract class FileSystem{
     final File file = File("${_currentDirectory}Local/$path$filename");
     if(await file.exists()){
       await file.delete();
-      localLogger.info("File ${file.absolute} was successfully removed");
+      localLogger.info("File ${file.absolute} was successfully removed", doNoti: false);
     }
     else{
       localLogger.warning("File ${file.absolute} cannot be removed as it doesnt exist");
@@ -199,7 +199,7 @@ abstract class FileSystem{
     final File file = File("${_currentDirectory}Local/$path$filename");
     if(file.existsSync()){
       file.deleteSync();
-      localLogger.info("File ${file.absolute} was successfully removed");
+      localLogger.info("File ${file.absolute} was successfully removed", doNoti: false);
     }
     else{
       localLogger.warning("File ${file.absolute} cannot be removed as it doesnt exist");

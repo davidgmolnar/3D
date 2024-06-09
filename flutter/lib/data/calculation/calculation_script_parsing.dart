@@ -391,124 +391,138 @@ class CalculationScriptParser{
     final Instruction instruction = Instruction();
 
     for(String line in lines){
-      if(_state == ParserState.LINEFINISHED && instruction != Instruction()){
-        instructions.last.add(instruction.freeze);
-      }
-      instruction.clear();
-
-      _state = ParserState.LINESTART;
-      lineNum++;
-      if(line.isEmpty){
-        continue;
-      }
-
-      if(doIndication && lineNum % indicationStep == 0){
-        lineProgressIndication(lineNum / lines.length, null);
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-
-      line = line.trim();
-
-      for(String char in line.characters){
-        if(_state == ParserState.COMMENT){
-          if(line.startsWith("[") && line.endsWith(']')){
+      try{
+        if(_state == ParserState.LINEFINISHED && instruction != Instruction()){
+          if(instructions.isEmpty){
             instructions.add([]);
           }
-          _state = ParserState.LINESTART;
-          break;
+          instructions.last.add(instruction.freeze);
+        }
+        instruction.clear();
+
+        _state = ParserState.LINESTART;
+        lineNum++;
+        if(line.isEmpty){
+          continue;
         }
 
-        switch (_state) {
+        if(doIndication && lineNum % indicationStep == 0){
+          lineProgressIndication(lineNum / lines.length, null);
+          await Future.delayed(const Duration(milliseconds: 10));
+        }
 
-          case ParserState.LINESTART:
-            if([";", "/", "["].contains(char)){
-              _state = ParserState.COMMENT;
+        line = line.trim();
+
+        for(String char in line.characters){
+          if(_state == ParserState.COMMENT){
+            if(line.startsWith("[") && line.endsWith(']')){
+              instructions.add([]);
             }
-            else{
-              instruction.result += char;
-              _state = ParserState.RESULT;
-            }
+            _state = ParserState.LINESTART;
             break;
+          }
 
-          case ParserState.RESULT:
-            if([" ", "="].contains(char)){
-              _state = ParserState.OP;
-            }
-            else if(["("].contains(char)){
-              if(instruction.result.toUpperCase() == "IFEXISTS"){
-                instruction.result = "";
-                instruction.op = Operation.SKIPIF;
-                instruction.operands.add('');
-                _state = ParserState.OPERAND;
-              }
-              else if(instruction.result.toUpperCase() == "DELETE"){
-                instruction.result = "";
-                instruction.op = Operation.DELETE;
-                instruction.operands.add('');
-                _state = ParserState.OPERAND;
-              }
-              else{
-                final LogEntry entry = LogEntry.error("Interpretation for preprocessor token ${instruction.result} at line $lineNum not implemented, notify 3D responsible, token ignored");
-                context.add(entry);
-                if(doIndication){
-                  lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
-                  await Future.delayed(const Duration(milliseconds: 10));
-                }
-                _state = ParserState.COMMENT;
-              }
-            }
-            else{
-              instruction.result += char;
-            }
-            break;
+          switch (_state) {
 
-          case ParserState.OP:
-            if(["("].contains(char)){
-              Operation? op = Operation.NOP;
-              op = op.tryParse(instruction.opBuffer);
-              if(op == null){
-                final LogEntry entry = LogEntry.error("Interpretation for operation ${instruction.opBuffer} at line $lineNum not implemented, notify 3D responsible, operation ignored");
-                context.add(entry);
-                if(doIndication){
-                  lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
-                  await Future.delayed(const Duration(milliseconds: 10));
-                }
+            case ParserState.LINESTART:
+              if([";", "/", "["].contains(char)){
                 _state = ParserState.COMMENT;
               }
               else{
-                instruction.op = op;
-                instruction.operands.add('');
-                _state = ParserState.OPERAND;
+                instruction.result += char;
+                _state = ParserState.RESULT;
               }
-            }
-            else if(!([" ", "="].contains(char))){
-              instruction.opBuffer += char;
-            }
-            break;
-          
-          case ParserState.OPERAND:
-            if([")"].contains(char)){
-              for(int i = 0; i < instruction.operands.length; i++){
-                instruction.operands[i] = instruction.operands[i].replaceAll('(', '');
-              }
-              _state = ParserState.LINEFINISHED;
-            }
-            else if([","].contains(char)){
-              instruction.operands.add('');
-            }
-            else if(!([",", " "].contains(char))){
-              instruction.operands.last += char;
-            }
-            break;
+              break;
 
-          default:
-            break;
-        } // switch (_state) 
-      } // for(String char in line.characters)
+            case ParserState.RESULT:
+              if([" ", "="].contains(char)){
+                _state = ParserState.OP;
+              }
+              else if(["("].contains(char)){
+                if(instruction.result.toUpperCase() == "IFEXISTS"){
+                  instruction.result = "";
+                  instruction.op = Operation.SKIPIF;
+                  instruction.operands.add('');
+                  _state = ParserState.OPERAND;
+                }
+                else if(instruction.result.toUpperCase() == "DELETE"){
+                  instruction.result = "";
+                  instruction.op = Operation.DELETE;
+                  instruction.operands.add('');
+                  _state = ParserState.OPERAND;
+                }
+                else{
+                  final LogEntry entry = LogEntry.error("Interpretation for preprocessor token ${instruction.result} at line $lineNum not implemented, notify 3D responsible, token ignored");
+                  context.add(entry);
+                  if(doIndication){
+                    lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
+                    await Future.delayed(const Duration(milliseconds: 10));
+                  }
+                  _state = ParserState.COMMENT;
+                }
+              }
+              else{
+                instruction.result += char;
+              }
+              break;
+
+            case ParserState.OP:
+              if(["("].contains(char)){
+                Operation? op = Operation.NOP;
+                op = op.tryParse(instruction.opBuffer);
+                if(op == null){
+                  final LogEntry entry = LogEntry.error("Interpretation for operation ${instruction.opBuffer} at line $lineNum not implemented, notify 3D responsible, operation ignored");
+                  context.add(entry);
+                  if(doIndication){
+                    lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
+                    await Future.delayed(const Duration(milliseconds: 10));
+                  }
+                  _state = ParserState.COMMENT;
+                }
+                else{
+                  instruction.op = op;
+                  instruction.operands.add('');
+                  _state = ParserState.OPERAND;
+                }
+              }
+              else if(!([" ", "="].contains(char))){
+                instruction.opBuffer += char;
+              }
+              break;
+            
+            case ParserState.OPERAND:
+              if([")"].contains(char)){
+                for(int i = 0; i < instruction.operands.length; i++){
+                  instruction.operands[i] = instruction.operands[i].replaceAll('(', '');
+                }
+                _state = ParserState.LINEFINISHED;
+              }
+              else if([","].contains(char)){
+                instruction.operands.add('');
+              }
+              else if(!([",", " "].contains(char))){
+                instruction.operands.last += char;
+              }
+              break;
+
+            default:
+              break;
+          } // switch (_state) 
+        } // for(String char in line.characters)
+      }catch(exc){
+        final LogEntry entry = LogEntry.error("Error when parsing line $line: ${exc.toString()}");
+        context.add(entry);
+        if(doIndication){
+          lineProgressIndication(lineNum / lines.length, entry.asString("CALCULATION"));
+        }
+      }
     } // for(String line in lines)
 
     if(_state == ParserState.LINEFINISHED && instruction != Instruction()){
-        instructions.last.add(instruction.freeze);
+      if(instructions.isEmpty){
+        instructions.add([]);
+      }
+      instructions.last.add(instruction.freeze);
     }
 
     List<String> resultChannels = [];
