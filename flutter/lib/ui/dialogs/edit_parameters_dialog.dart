@@ -110,7 +110,7 @@ class _EditParametersDialogState extends State<EditParametersDialog> {
                   width: 200),
                 TextButton(
                   onPressed: (){
-                    if(Const.parameters.keys.contains(newParameter.toUpperCase())){                      
+                    if(Const.parameters.containsKey(newParameter.toUpperCase())){                      
                       noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Parameter already exists"), 10000));
                       return;
                     }

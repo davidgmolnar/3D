@@ -187,7 +187,7 @@ abstract class Importer {
         if(i != timeIndex){
           DBCSignal? signal;
           for(final Map<String, DBCSignal> msg in can.database.values){
-            if(msg.keys.contains(signals[i])){
+            if(msg.containsKey(signals[i])){
               signal = msg[signals[i]];
               break;
             }
@@ -371,7 +371,7 @@ abstract class Importer {
         if(!storage.containsKey(signal)){
           late final DBCSignal dbcSignal;
           for(final Map<String, DBCSignal> msg in can.database.values){
-            if(msg.keys.contains(signal)){
+            if(msg.containsKey(signal)){
               dbcSignal = msg[signal]!;
               break;
             }

@@ -7,6 +7,7 @@ import 'package:window_manager/window_manager.dart';
 import '../data/calculation/constants.dart';
 import '../data/settings.dart';
 import '../io/file_system.dart';
+import '../io/fscache.dart';
 import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_api.dart';
@@ -126,6 +127,7 @@ Future<bool> tryStartup(List<String> args) async {
 }
 
 Future<void> postStartup(var root) async {
+  FSCache.init();
   localLogger.start();
   localLogger.info("Starting ${windowType.name}", doNoti: false);
   if(windowType != WindowType.MAIN_WINDOW && windowSetup == null){

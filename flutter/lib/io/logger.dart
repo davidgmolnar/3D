@@ -57,6 +57,12 @@ class Logger{
     if(_isActive){
       return;
     }
+
+    final File logFile = File(logPath);
+    if(logFile.existsSync()){
+      logFile.deleteSync();
+    }
+
     _isActive = true;
     timer = Timer.periodic(Duration(milliseconds: loggerFlushIntervalMS), ((timer) async {
       await __flush();
@@ -134,12 +140,12 @@ class Logger{
       return;
     }
 
-    File logFile = File(logPath);
+    final File logFile = File(logPath);
     if(!await logFile.exists()){
       await logFile.create(recursive: true);
     }
-    RandomAccessFile access = await logFile.open(mode: FileMode.append);
-    List<LogEntry> copy = _buffer;
+    final RandomAccessFile access = await logFile.open(mode: FileMode.append);
+    final List<LogEntry> copy = _buffer;
     await access.writeString(__contentsToString(copy));
     _buffer = _buffer.skip(copy.length).toList();
     await access.close();

@@ -1,7 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:log_analyser/extensions.dart';
 
 import '../../../io/logger.dart';
 import '../../../ui/input_widgets/buttons.dart';
@@ -89,7 +88,7 @@ class _CalculationWindowState extends State<CalculationWindow> {
                         );
                         if(result != null){
                           CalculationIoController.calIOInfoNotifier.update((value) {
-                            final List<String> filtered = result.paths.removedWhere((element) => element == null).cast<String>();
+                            final List<String> filtered = result.paths.whereType<String>().toList();
                             value.selectedPaths.addAll(filtered);
                           });
                         }

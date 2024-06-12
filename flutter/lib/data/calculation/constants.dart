@@ -21,7 +21,7 @@ abstract class Const{
   static final Map<String, num> __parameters = {};
 
   static bool parameterIsConstant(final String parameter){
-    return __constants.keys.contains(parameter.toUpperCase());
+    return __constants.containsKey(parameter.toUpperCase());
   }
 
   static Map<String, num> get parameters => {}..addAll(__constants)..addAll(__parameters);
@@ -60,7 +60,7 @@ abstract class Const{
 
   static bool parsable(final String str){
     if(str[0] == '@'){
-      if(__constants.keys.contains(str.substring(1).toUpperCase())){
+      if(__constants.containsKey(str.substring(1).toUpperCase())){
         return true;
       }
       return false;

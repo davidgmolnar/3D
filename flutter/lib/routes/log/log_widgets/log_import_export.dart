@@ -1,6 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:log_analyser/extensions.dart';
 
 import '../../../data/settings.dart';
 import '../../../io/logger.dart';
@@ -99,7 +98,7 @@ class _LogImportState extends State<LogImport> {
                           allowedExtensions: ["csv", "bin"]
                         );
                         if(result != null){
-                          final List<String> filtered = result.paths.removedWhere((element) => element == null).cast<String>();
+                          final List<String> filtered = result.paths.whereType<String>().toList();
                           LogIOInfoController.logIOInfoNotifier.update((value) {
                             value.selectedPaths.addAll(filtered);
                             value.measurementAliases.addAll(List.filled(filtered.length, null));

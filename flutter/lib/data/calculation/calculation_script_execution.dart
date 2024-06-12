@@ -276,7 +276,7 @@ class CalculationScriptProcessor{
     if(dbcPaths != null && dbcPaths.isNotEmpty){
       DBCDatabase can = await DBCDatabase.loadFromFile(dbcPaths.map((e) => File(e)).toList());
       for(final Map<String, DBCSignal> msg in can.database.values){
-        if(msg.keys.contains(name)){
+        if(msg.containsKey(name)){
           return msg[name]!;
         }
       }

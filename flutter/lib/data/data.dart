@@ -16,7 +16,7 @@ Map<String, Map<String, num>> cursorDataAtTimeStamp(final double timeStamp, Map<
     for(String signal in visibility[meas]!){
       final num? val = binarySearchValueAtTimeStamp(signalData[meas]![signal]!.values, signalData[meas]![signal]!.timestamps, timeStamp);
       if(val != null){
-        if(!dataAtTimeStamp.keys.contains(meas)){
+        if(!dataAtTimeStamp.containsKey(meas)){
           dataAtTimeStamp[meas] = {};
         }
         dataAtTimeStamp[meas]![signal] = val;

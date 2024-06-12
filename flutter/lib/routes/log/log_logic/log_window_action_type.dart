@@ -43,7 +43,6 @@ void logHandleDataReceived(Map data){
 }
 
 void logHandlePeriodicUpdateReceived(Map data){
-  localLogger.info("Periodic update received from master", doNoti: false);
   switch (PeriodicUpdateType.values[data['type']]) {
     case PeriodicUpdateType.IO_LINE_PERCENTAGE:
       try{
