@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../data/calculation/calculation_script_execution.dart';
 import '../../../data/calculation/calculation_script_parsing.dart';
 import '../../../data/calculation/calculation_script_runtime.dart';
-import '../../../data/updateable_valuenotifier.dart';
+import '../../../data/custom_notifiers.dart';
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';

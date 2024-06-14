@@ -1,4 +1,4 @@
-import '../../../data/updateable_valuenotifier.dart';
+import '../../../data/custom_notifiers.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 

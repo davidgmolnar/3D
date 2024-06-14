@@ -2,6 +2,8 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../data/settings.dart';
+
 class Style{
   final Color bgColor;
   final double fontSize;
@@ -52,6 +54,11 @@ abstract class StyleManager{
     ),
   };
 
+  static void init(final void Function() topLevelSetState){
+    updater = topLevelSetState;
+    SettingsProvider.notifier.addListener(changeStyle, ["visual.theme"]);
+  }
+
   static Style globalStyle = _styles["DARK"]!;
 
   static String? title;
@@ -66,8 +73,9 @@ abstract class StyleManager{
 
   static List<String> getStyleList() => _styles.keys.toList();
 
-  static void changeStyle(String name){
-    if(_styles.containsKey(name)){
+  static void changeStyle(){
+    final String name = _styles.keys.toList()[SettingsProvider.get("visual.theme")!.value.toInt()];
+    if(_styles.containsKey(name) && activeStyle != name){
       globalStyle = _styles[name]!;
       updater();
     }

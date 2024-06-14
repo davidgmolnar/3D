@@ -12,7 +12,7 @@ import '../ui/theme/theme.dart';
 import 'data.dart';
 import 'settings_classes.dart';
 import 'signal_container.dart';
-import 'updateable_valuenotifier.dart';
+import 'custom_notifiers.dart';
 
 const int _scrollMultiplierVertical = 1; // setting
 const int _dragMultiplierVertical = 1; // setting
@@ -23,7 +23,8 @@ final Map<String, Setting> __defaultSettings = {
 };
 
 abstract class SettingsProvider{
-  static final Map<String, Setting> __setting = __defaultSettings;
+  static final MappedConditionalNotifier<Setting> notifier = MappedConditionalNotifier<Setting>(value: __defaultSettings);
+  //static final Map<String, Setting> __setting = __defaultSettings;
   static const String __settingsPath = "Settings/";
 
   static void __syncToDisk() async {
@@ -40,32 +41,34 @@ abstract class SettingsProvider{
     Map loaded = await FileSystem.tryLoadMapFromLocalAsync(__settingsPath, "settings.json");
     Map<String, Setting?> loadedEntries = loaded.map((key, value) => MapEntry(key as String, Setting.fromJson(value)));
     loadedEntries.removeWhere((key, value) => value == null);
-    __setting.addAll(loadedEntries.cast<String, Setting>());
+    for(final String key in loadedEntries.keys){
+      if(notifier.value.containsKey(key)){
+        if(notifier.value[key] != loadedEntries[key]){
+          notifier.update(key, loadedEntries[key]!);
+        }
+      }
+      else{
+        notifier.update(key, loadedEntries[key]!);
+      }
+    }
     localLogger.info("Settings reloaded", doNoti: false);
   }
 
   static Map<String, Map<String, dynamic>> get toJsonFormattable =>
-    __setting.map((key, value) => MapEntry(key, value.asJson));
-
-  static set setting(final Map<String, Setting> newData){
-    __setting.clear();
-    for(String newSetting in newData.keys){
-      if(newData[newSetting]!.trySet(newData[newSetting]!.value)){
-        __setting[newSetting] = newData[newSetting]!;
-      }
-    }
-    __syncToDisk();
-  }
+    notifier.value.map((key, value) => MapEntry(key, value.asJson));
 
   static bool update(final String settingsPath, final dynamic newValue){
-    if(__setting.containsKey(settingsPath)){
-      if(newValue is num && __setting[settingsPath]!.type != SettingType.STRLIST){
-        final bool success = __setting[settingsPath]!.trySet(newValue);
-        __syncToDisk();
+    if(notifier.value.containsKey(settingsPath)){
+      if(newValue is num && notifier.value[settingsPath]!.type != SettingType.STRLIST){
+        final bool success = notifier.value[settingsPath]!.trySet(newValue);
+        if(success){
+          notifier.updateKey(settingsPath);
+          __syncToDisk();
+        }
         return success;
       }
-      else if(newValue is List<String> && __setting[settingsPath]!.type == SettingType.STRLIST){
-        __setting[settingsPath] = Setting(identifier: settingsPath, type: SettingType.STRLIST, selection: newValue, max: null, min: null, value: 0);
+      else if(newValue is List<String> && notifier.value[settingsPath]!.type == SettingType.STRLIST){
+        notifier.update(settingsPath, Setting(identifier: settingsPath, type: SettingType.STRLIST, selection: newValue, max: null, min: null, value: 0));
         __syncToDisk();
         return true;
       }
@@ -74,7 +77,8 @@ abstract class SettingsProvider{
   }
 
   static Setting? get(final String settingsPath){
-    return __setting[settingsPath];
+    // check settingsPath leaf
+    return notifier.value[settingsPath];
   }
 }
 

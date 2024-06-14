@@ -1,5 +1,5 @@
 import '../../../data/settings_classes.dart';
-import '../../../data/updateable_valuenotifier.dart';
+import '../../../data/custom_notifiers.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../../../routes/window_type.dart';

@@ -138,6 +138,22 @@ class Setting{
     {
       'type': -1
     };
+
+  @override
+  bool operator ==(covariant Setting other) {
+    return identifier == other.identifier &&
+      type.index == other.type.index &&
+      selection == other.selection &&
+      max == other.max &&
+      min == other.min &&
+      value == other.value;
+  }
+
+  @override
+  int get hashCode {
+    return identifier.hashCode ^ type.index.hashCode ^ selection.hashCode ^ max.hashCode ^ min.hashCode ^ value.hashCode;
+  }
+
 }
 
 class TraceSetting{
