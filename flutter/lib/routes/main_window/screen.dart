@@ -21,7 +21,7 @@ class MainWindowApp extends StatefulWidget {
 class _MainWindowAppState extends State<MainWindowApp> with WindowListener {
   @override
   void initState() {
-    StyleManager.updater = _update;
+    StyleManager.init(_update);
     postStartup(this);
     setState(() {});
     super.initState();

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../routes/window_type.dart';
 import '../ui/notifications/notification_logic.dart';
 
 const String mainLogPath = "./Logs/3D.log";
@@ -58,9 +59,11 @@ class Logger{
       return;
     }
 
-    final File logFile = File(logPath);
-    if(logFile.existsSync()){
-      logFile.deleteSync();
+    if(windowType == WindowType.MAIN_WINDOW){
+      final File logFile = File(logPath);
+      if(logFile.existsSync()){
+        logFile.deleteSync();
+      }
     }
 
     _isActive = true;

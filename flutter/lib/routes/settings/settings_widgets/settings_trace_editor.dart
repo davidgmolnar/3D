@@ -131,7 +131,16 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
     super.initState();
   }
 
-  void update() => setState(() {});
+  void update() {
+    if(TraceSettingsProvider.traceSettingNotifier.value.keys.length == 1){
+      shownMeasurement = TraceSettingsProvider.traceSettingNotifier.value.keys.single;
+      filter = "";
+      _textEditingController.text = "";
+      _loadList();
+      _refreshList();
+    }
+    setState(() {});
+  }
 
   void _sendToApp(){
     ChildProcess.send(Response(localSocketPort, ResponseType.FINISHED, {"type": ResponseFinishableType.TRACE_EDITOR_DATA.index, "data": TraceSettingsProvider.toJsonFormattable}));

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../data/custom_notifiers.dart';
+import '../routes/window_type.dart';
 import 'exporter.dart';
 import 'file_system.dart';
 import 'importer.dart';
@@ -30,10 +31,12 @@ abstract class FSCache{
 
     _fullPath = "$dir$_localPath";
     File file = File(_fullPath);
-    if(await file.exists()){
-      await file.delete();
+    if(windowType == WindowType.MAIN_WINDOW){
+      if(await file.exists()){
+        await file.delete();
+      }
+      await file.create(recursive: true);
     }
-    await file.create(recursive: true);
     _lastModif = await file.lastModified();
 
     Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -62,14 +65,16 @@ abstract class FSCache{
 
       final DateTime mod = await file.lastModified();
       if(_lastModif.isBefore(mod)){
-        _storage.clear();
-        _storage.addAll(Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>());
+        if(await file.length() != 0){
+          _storage.clear();
+          _storage.addAll(Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>());
+          _notifier.update((value) { });
+        }
         _lastModif = mod;
-        _notifier.update((value) { });
       }
     }
     catch(ex){
-      localLogger.error("FSCache update exception $ex");
+      localLogger.error("FSCache update exception $ex", doNoti: false);
     }
   }
 

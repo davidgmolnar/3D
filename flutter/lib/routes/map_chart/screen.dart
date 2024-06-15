@@ -16,7 +16,7 @@ class MapApp extends StatefulWidget {
 class _MapAppState extends State<MapApp> with WindowListener{
   @override
   void initState() {
-    StyleManager.updater = _update;
+    StyleManager.init(_update);
     postStartup(this);
     setState(() {});
     super.initState();

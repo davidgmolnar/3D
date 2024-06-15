@@ -19,7 +19,7 @@ class LogApp extends StatefulWidget {
 class _LogAppState extends State<LogApp> with WindowListener {
   @override
   void initState() {
-    StyleManager.updater = _update;
+    StyleManager.init(_update);
     postStartup(this);
     setState(() {});
     super.initState();

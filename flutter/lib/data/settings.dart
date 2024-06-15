@@ -119,15 +119,15 @@ abstract class TraceSettingsProvider{
     traceSettingNotifier.value.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
 
   static void reload(Map newData){
-    for(String measurement in newData.keys){
-      traceSettingNotifier.update((value) {
+    traceSettingNotifier.update((value) {
+      for(String measurement in newData.keys){
         value[measurement] ??= [];
         value.update(measurement, (value) => newData[measurement]!.map((e) => TraceSetting.fromJson(e)).toList().whereType<TraceSetting>().toList());
         
         _postUpdate(measurement);
         reCalculateVisibleDuration();
-      });
-    }
+      }
+    });
   }
 
   static void _postUpdate(final String measurement){

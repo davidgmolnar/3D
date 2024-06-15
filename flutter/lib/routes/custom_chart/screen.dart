@@ -19,7 +19,7 @@ class CustomChartApp extends StatefulWidget {
 class _CustomChartAppState extends State<CustomChartApp> with WindowListener{
   @override
   void initState() {
-    StyleManager.updater = _update;
+    StyleManager.init(_update);
     postStartup(this);
     setState(() {});
     super.initState();
