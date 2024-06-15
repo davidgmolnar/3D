@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/settings.dart';
+import '../../data/settings_classes.dart';
 import '../theme/theme.dart';
 import 'chart_logic/axis_data.dart';
 
@@ -16,7 +17,7 @@ class ChartScalerContainer extends StatefulWidget {
 }
 
 class _ChartScalerContainerState extends State<ChartScalerContainer> {
-  Set<int> visibleGroups = {};
+  List<TraceSetting> visibleGroups = [];
 
   @override
   void dispose() {
@@ -27,13 +28,13 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
   @override
   void initState() {
     TraceSettingsProvider.traceSettingNotifier.addListener(handleTraceSettingUpdate);
-    visibleGroups = TraceSettingsProvider.scalingGroupSet;
+    visibleGroups = TraceSettingsProvider.scalingGroupData;
     super.initState();
   }
 
   void handleTraceSettingUpdate(){
-    if(visibleGroups != TraceSettingsProvider.scalingGroupSet){
-      visibleGroups = TraceSettingsProvider.scalingGroupSet;
+    if(visibleGroups != TraceSettingsProvider.scalingGroupData){
+      visibleGroups = TraceSettingsProvider.scalingGroupData;
       setState(() {});
     }
   }
@@ -52,7 +53,7 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
             physics: const NeverScrollableScrollPhysics(),
             itemCount: visibleGroups.length,
             itemBuilder: ((context, index) {
-              return ChartScaler(scalingGroup: visibleGroups.toList()[index], axisHeight: constraints.maxHeight,);
+              return ChartScaler(scalingGroup: visibleGroups[index].scalingGroup, axisHeight: constraints.maxHeight,);
             })
           ),
         );
@@ -83,20 +84,22 @@ class _ChartScalerState extends State<ChartScaler> {
 
   void handleDrag(final double delta){
     TraceSettingsProvider.dragScalingGroup(widget.scalingGroup, delta);
-    final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
-    valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
     setState(() {});
   }
 
   void handleZoom(final double delta){
     TraceSettingsProvider.zoomScalingGroup(widget.scalingGroup, delta);
+    setState(() {});
+  }
+
+  void _reloadAxisData(){
     final Map<String, dynamic> traceDataForGroup = TraceSettingsProvider.getValueAxisDataForGroup(widget.scalingGroup);
     valueAxisData = ValueAxisData.from(traceDataForGroup['offset'], traceDataForGroup['span'], widget.axisHeight, traceDataForGroup['unit'].toString());
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    _reloadAxisData();
     return Listener(
       onPointerSignal: (event) {
         if(event is PointerScrollEvent){

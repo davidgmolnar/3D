@@ -278,6 +278,18 @@ abstract class TraceSettingsProvider{
     return tmp;
   }
 
+  static List<TraceSetting> get scalingGroupData {
+    List<TraceSetting> tmp = [];
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].isVisible && !tmp.any((element) => element.scalingGroup == traceSettingNotifier.value[measurement]![i].scalingGroup)){
+          tmp.add(traceSettingNotifier.value[measurement]![i]);
+        }
+      }
+    }
+    return tmp;
+  }
+
   static Color colorOfScalingGroup(final int group) {
     for(String measurement in traceSettingNotifier.value.keys){
       for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){

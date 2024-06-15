@@ -30,7 +30,7 @@ class _ToggleableTextFieldState<T> extends State<ToggleableTextField<T>> {
   void _onPressed(){
     final T? parsedValue = widget.parser(_controller.text);
     if(parsedValue == null){
-      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Value could not be parsed: $parsedValue"), 10000));
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Value could not be parsed: ${_controller.text}"), 10000));
       return;
     }
     value = parsedValue.toString();

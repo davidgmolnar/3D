@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:log_analyser/extensions.dart';
 
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
+import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../ui/input_widgets/buttons.dart';
@@ -90,24 +92,32 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(color: p0);
             },
           ),
-          /*ToggleableTextField<num>(
-            initialValue: widget.traceSetting.span,
-            parser: (p0) => double.tryParse(p0),
-            onFinished: (p0) {
-              widget.traceSetting.span = p0;
-              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(span: p0);
-            },
-            width: 100,
-          ),
           ToggleableTextField<num>(
-            initialValue: widget.traceSetting.offset,
+            initialValue: widget.traceSetting.offset.roundToDecimalPlaces(6),
             parser: (p0) => double.tryParse(p0),
             onFinished: (p0) {
               widget.traceSetting.offset = p0;
               TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(offset: p0);
+              setState(() {});
             },
-            width: 100,
-          ),*/
+            width: 120,
+          ),
+          ToggleableTextField<num>(
+            initialValue: (widget.traceSetting.offset + widget.traceSetting.span).roundToDecimalPlaces(6),
+            parser: (p0) {
+              double? newMax = double.tryParse(p0);
+              if(newMax != null && newMax <= widget.traceSetting.offset){
+                localLogger.error("Max must be larger than min");
+                return null;
+              }
+              return newMax;
+            },
+            onFinished: (p0) {
+              widget.traceSetting.span = p0 - widget.traceSetting.offset;
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(span: p0 - widget.traceSetting.offset);
+            },
+            width: 120,
+          ),
         ],
       ),
     );
