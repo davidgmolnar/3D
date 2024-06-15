@@ -99,7 +99,7 @@ abstract class ChildProcessController{
             }
           }
           catch (exc){
-            localLogger.error("Undefined message received $exc", doNoti: false);
+            localLogger.error("Undefined message received ${exc is Error ? exc.stackTrace.toString() : ""} $exc", doNoti: false);
           }
         }
       }

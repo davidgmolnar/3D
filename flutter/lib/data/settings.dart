@@ -139,6 +139,10 @@ abstract class TraceSettingsProvider{
   }
 
   static void reCalculateVisibleDuration(){
+    if(windowType != WindowType.MAIN_WINDOW && windowType != WindowType.CUSTOM_CHART){
+      return;
+    }
+
     final Map<String, List<String>> vis = visibleSignals;
     double first = double.maxFinite;
     double last = 0;
@@ -236,9 +240,9 @@ abstract class TraceSettingsProvider{
     });
   }
 
-  static int itemCount(String measurement){
+  /*static int itemCount(String measurement){
     return traceSettingNotifier.value[measurement]?.length ?? 0;
-  }
+  }*/
 
   static int get _nextScalingGroup => _maxScalingGroup++;
 
@@ -247,7 +251,7 @@ abstract class TraceSettingsProvider{
     return colorBank[_newColorIndex];
   }
 
-  static Map<int, List<TraceSetting>> get scalingGroups {
+  /*static Map<int, List<TraceSetting>> get scalingGroups {
     Map<int, List<TraceSetting>> tmp = {};
     for(String measurement in traceSettingNotifier.value.keys){
       for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
@@ -260,7 +264,7 @@ abstract class TraceSettingsProvider{
       }
     }
     return tmp;
-  }
+  }*/
 
   static Set<int> get scalingGroupSet {
     Set<int> tmp = {};
@@ -366,4 +370,14 @@ abstract class TraceSettingsProvider{
     return {};
   }
 
+  static Offset? scalingForGroup(final int group){
+    for(String measurement in traceSettingNotifier.value.keys){
+      for(int i = 0; i < traceSettingNotifier.value[measurement]!.length; i++){
+        if(traceSettingNotifier.value[measurement]![i].scalingGroup == group){
+          return Offset(traceSettingNotifier.value[measurement]![i].offset.toDouble(), traceSettingNotifier.value[measurement]![i].span.toDouble());
+        }
+      }
+    }
+    return null;
+  }
 }

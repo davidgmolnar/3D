@@ -73,8 +73,13 @@ class _TraceSettingWidgetState extends State<TraceSettingWidget> {
             initialValue: widget.traceSetting.scalingGroup,
             parser: (p0) => int.tryParse(p0),
             onFinished: (p0) {
+              final Offset? scaling = TraceSettingsProvider.scalingForGroup(p0);
+              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(
+                scalingGroup: p0,
+                offset: scaling?.dx,
+                span: scaling?.dy
+              );
               widget.traceSetting.scalingGroup = p0;
-              TraceSettingsProvider.traceSettingNotifier.value[widget.measurement]!.firstWhere((element) => element.signal == widget.traceSetting.signal,).update(scalingGroup: p0);
             },
             width: 60, // 50
           ),

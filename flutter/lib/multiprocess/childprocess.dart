@@ -55,7 +55,7 @@ abstract class ChildProcess{
             }
           }
           catch (exc){
-            localLogger.error("Undefined message received ${exc.toString()}", doNoti: false);
+            localLogger.error("Undefined message received ${exc is Error ? exc.stackTrace.toString() : ""} ${exc.toString()}", doNoti: false);
           }
         }
       }
