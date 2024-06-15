@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../../io/fscache.dart';
 import '../../../io/logger.dart';
 import '../../../ui/input_widgets/buttons.dart';
 import '../../../ui/input_widgets/text_fields.dart';
@@ -25,6 +26,7 @@ class _CalculationWindowState extends State<CalculationWindow> {
   @override
   void initState() {
     CalculationIoController.calIOInfoNotifier.addListener(update);
+    FSCache.addListener(update, [FSCache.importedMeasurementsPath]);
     super.initState();
   }
 
@@ -32,6 +34,12 @@ class _CalculationWindowState extends State<CalculationWindow> {
 
   @override
   Widget build(BuildContext context) {
+    final List? possibleMeas = FSCache.read<List>(FSCache.importedMeasurementsPath, expect: true);
+    if(possibleMeas != null && possibleMeas.length == 1){
+      CalculationIoController.calIOInfoNotifier.value.calculationOptions = CalculationIoController.calIOInfoNotifier.value.calculationOptions.copyWith(
+        measurement: possibleMeas.single
+      );
+    }
     return Column(
       children: [
         SizedBox(
@@ -95,15 +103,25 @@ class _CalculationWindowState extends State<CalculationWindow> {
                       },
                       child: Text("Select", style: StyleManager.textStyle,),
                     ),
-                    ToggleableTextField<String>(
-                      initialValue: CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement,
-                      parser: (p0) => p0,
-                      onFinished: (p0) {
-                        CalculationIoController.calIOInfoNotifier.update((value) {
-                          value.calculationOptions = value.calculationOptions.copyWith(measurement: p0);
-                        });
-                      },
+                    Container(
                       width: 250,
+                      height: 36,
+                      padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding * 2),
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement == "NOTSET" ? null : CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement,
+                        items: (possibleMeas?.map((e) => DropdownMenuItem<String>(value: e, child: Text(e, style: StyleManager.textStyle,))).toList()
+                          ?..add(DropdownMenuItem<String>(value: null, child: Text("Refresh/Select", style: StyleManager.textStyle,))))
+                          ?? [DropdownMenuItem<String>(value: null, child: Text("No measurements", style: StyleManager.textStyle,))],
+                        onChanged: (selected) {
+                          if(selected != null){
+                            CalculationIoController.calIOInfoNotifier.update((value) {
+                              value.calculationOptions = value.calculationOptions.copyWith(measurement: selected);
+                            });
+                          }
+                          setState(() {});
+                        },
+                      ),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -139,16 +157,16 @@ class _CalculationWindowState extends State<CalculationWindow> {
                               return;
                             }
                             if(CalculationIoController.calIOInfoNotifier.value.selectedPaths.isEmpty){
-                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Nothing was selected"), 5000));
+                              noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("No calfiles were selected"), 5000));
                               return;
                             }
-                            if(CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement == "Please select measurement"){
+                            if(CalculationIoController.calIOInfoNotifier.value.calculationOptions.measurement == "NOTSET"){
                               noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("A measurement must be selected"), 5000));
                               return;
                             }
-                            CalculationIoController.calIOInfoNotifier.value.processing = true;
                             try{
                               CalculationIoController.sendFilesToMaster();
+                              CalculationIoController.calIOInfoNotifier.value.processing = true;
                             }catch(exc){
                               noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("Error when starting calfile execution: ${exc.toString()}"), 5000));
                             }
@@ -277,6 +295,7 @@ class _CalculationWindowState extends State<CalculationWindow> {
   @override
   void dispose() {
     CalculationIoController.calIOInfoNotifier.removeListener(update);
+    FSCache.removeListener(update);
     super.dispose();
   }
 }

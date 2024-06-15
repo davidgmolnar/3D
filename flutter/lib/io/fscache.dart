@@ -15,8 +15,9 @@ abstract class FSCache{
   static String _fullPath = "";
   static DateTime _lastModif = DateTime.now();
   static bool _initialized = false;
-  static final Map<String, dynamic> _storage = {};
-  static final UpdateableValueNotifier<bool> _notifier = UpdateableValueNotifier(false);
+  static final MappedConditionalNotifier<dynamic> _notifier = MappedConditionalNotifier(value: {});
+
+  static String get importedMeasurementsPath => "main.imported";
 
   static Future<void> init() async {
     if(_initialized){
@@ -37,6 +38,9 @@ abstract class FSCache{
       }
       await file.create(recursive: true);
     }
+    else if(await file.length() != 0){
+      _notifier.value.addAll(Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>());
+    }
     _lastModif = await file.lastModified();
 
     Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -46,11 +50,11 @@ abstract class FSCache{
     _initialized = true;
   }
 
-  static void addListener(VoidCallback listener){
-    _notifier.addListener(listener);
+  static void addListener(final VoidCallback listener, final List<String> keysToWatch){
+    _notifier.addListener(listener, keysToWatch);
   }
 
-  static void removeListener(VoidCallback listener){
+  static void removeListener(final VoidCallback listener){
     _notifier.removeListener(listener);
   }
 
@@ -66,9 +70,20 @@ abstract class FSCache{
       final DateTime mod = await file.lastModified();
       if(_lastModif.isBefore(mod)){
         if(await file.length() != 0){
-          _storage.clear();
-          _storage.addAll(Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>());
-          _notifier.update((value) { });
+          final Map<String, dynamic> loadedEntries = Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>();
+          for(final String key in loadedEntries.keys){
+            if(_notifier.value.containsKey(key)){
+              if(_notifier.value[key] != loadedEntries[key]){
+                _notifier.update(key, loadedEntries[key]!);
+              }
+            }
+            else{
+              _notifier.update(key, loadedEntries[key]!);
+            }
+          }
+        }
+        else{
+          _notifier.value.clear();
         }
         _lastModif = mod;
       }
@@ -78,29 +93,23 @@ abstract class FSCache{
     }
   }
 
-  static dynamic _resolve(final String path){
-    return path.split('.').fold<Map<String, dynamic>>(_storage, (previousValue, element) => previousValue[element].cast<String, dynamic>());
-  }
-
   static T? read<T>(final String path, {final bool expect = false}){
     if(!_initialized){
       return null;
     }
-    try{
-      dynamic ret = _resolve(path);
-      if(ret is T){
-        return ret;
-      }
-      else{
-        localLogger.warning("FSCache found ${ret.runtimeType}, not $T at $path");
-      }
-    }
-    catch(ex){
+
+    if(!_notifier.value.containsKey(path)){
       if(expect){
-        localLogger.warning("FSCache did not find path $path");
+        localLogger.warning("FSCache did not find path $path", doNoti: false);
       }
       return null;
     }
+
+    if(_notifier.value[path] is T){
+      return _notifier.value[path];
+    }
+
+    localLogger.warning("FSCache found ${_notifier.value[path].runtimeType}, not $T at $path", doNoti: false);
     return null;
   }
 
@@ -112,7 +121,7 @@ abstract class FSCache{
     }
 
     try{
-      file.writeAsBytes(Exporter.jsonToBytes(_storage));
+      file.writeAsBytes(Exporter.jsonToBytes(_notifier.value));
     }
     catch(ex){
       localLogger.error("FSCache write exception $ex");
@@ -123,16 +132,7 @@ abstract class FSCache{
     if(!_initialized){
       return;
     }
-    final List<String> pathElements = path.split('.');
-    final Map<String, dynamic> leaf = pathElements.sublist(0, pathElements.length - 1).fold<Map<String, dynamic>>(_storage, (previousValue, element){
-      if(!previousValue.containsKey(element)){
-        previousValue[element] = {};
-      }
-      return previousValue[element].cast<String, dynamic>();
-    });
-    leaf[pathElements.last] = value;
-    _notifier.update((value) { });
-
+    _notifier.update(path, value);
     _syncToDisk();
   }
 }

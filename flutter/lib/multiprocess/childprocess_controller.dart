@@ -8,6 +8,7 @@ import '../data/data.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
 import '../io/file_system.dart';
+import '../io/fscache.dart';
 import '../io/logger.dart';
 import '../io/importer.dart';
 import '../routes/startup.dart';
@@ -140,6 +141,7 @@ abstract class ChildProcessController{
             localLogger.error("Error when importing measurement $measurementAlias: ${exc.toString()}");
           }
         }
+        FSCache.write<List<String>>(FSCache.importedMeasurementsPath, signalData.keys.toList());
         return; // no kill
 
       case ResponseFinishableType.TRACE_EDITOR_DATA:

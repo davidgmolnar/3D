@@ -22,7 +22,7 @@ class CalculationIOInfo{
   double linePercentage = 0;
   List<String> context = [];
   List<String> selectedPaths = [];
-  CalculationOptions calculationOptions = CalculationOptions(cleanRebuild: false, measurement: "Please select measurement", sampleTimeMs: 10);
+  CalculationOptions calculationOptions = CalculationOptions(cleanRebuild: false, measurement: "NOTSET", sampleTimeMs: 10);
 }
 
 class CalculationIoController{
@@ -50,7 +50,7 @@ class CalculationIoController{
       }
       if(["Build failed", "Exception when running script", "Cannot run calculation file on measurement", "Script successfully executed"].any((element) => entry.contains(element))){
         value.scriptsFinished++;
-        if(value.scriptsFinished == value.selectedPaths.length){
+        if(value.scriptsFinished >= value.selectedPaths.length){
           value.processing = false;
         }
       }

@@ -60,9 +60,10 @@ class MappedConditionalNotifier<T>{
     keyUpdates.add(keysToWatch);
   }
 
-  void removeListener(final VoidCallback listener, final List<String> keysToWatch) {
-    listeners.add(listener);
-    keyUpdates.add(keysToWatch);
+  void removeListener(final VoidCallback listener) {
+    final int index = listeners.indexOf(listener);
+    listeners.removeAt(index);
+    keyUpdates.removeAt(index);
   }
 
   void _notifyListeners(final String keyUpdated) {
