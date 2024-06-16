@@ -4,6 +4,7 @@ import '../../../ui/charts/main_window_chart.dart';
 import '../../../ui/theme/theme.dart';
 import '../custom_chart_logic/custom_chart_window_type.dart';
 import 'custom_chart_toolbar.dart';
+import 'statistics_view_container.dart';
 
 const double logBottomBarHeight = 100;
 
@@ -30,7 +31,7 @@ class CustomChartContainer extends StatelessWidget {
         );
         break;
       case CustomChartWindowType.STATISTICS:
-        child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
+        child = const StatisticsViewContainer();
         break;
       case CustomChartWindowType.CHARACTERISTICS:
         child = ListView(
