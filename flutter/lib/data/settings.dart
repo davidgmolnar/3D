@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../io/file_system.dart';
+import '../io/fscache.dart';
 import '../io/logger.dart';
 import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_controller.dart';
@@ -128,6 +129,9 @@ abstract class TraceSettingsProvider{
         reCalculateVisibleDuration();
       }
     });
+    if(windowType == WindowType.MAIN_WINDOW){
+      addVisibleTraceSettingsToCache();
+    }
   }
 
   static void _postUpdate(final String measurement){
@@ -203,6 +207,10 @@ abstract class TraceSettingsProvider{
       _postUpdate(measurement);
       reCalculateVisibleDuration();
     });
+    
+    if(windowType == WindowType.MAIN_WINDOW){
+      addVisibleTraceSettingsToCache();
+    }
   }
 
   static void updateEntriesFrom(final String measurement, final List<String> signals){
@@ -238,6 +246,18 @@ abstract class TraceSettingsProvider{
       _postUpdate(measurement);
       reCalculateVisibleDuration();
     });
+
+    
+    if(windowType == WindowType.MAIN_WINDOW){
+      addVisibleTraceSettingsToCache();
+    }
+  }
+
+  static void addVisibleTraceSettingsToCache(){
+    FSCache.write<Map>(
+      FSCache.visibleTraceSettingsPath,
+      visibleSignalsData.map((key, value) => MapEntry(key, value.map((e) => e.asJson)))
+    );
   }
 
   /*static int itemCount(String measurement){

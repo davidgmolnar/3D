@@ -11,6 +11,8 @@ import '../io/file_system.dart';
 import '../io/fscache.dart';
 import '../io/logger.dart';
 import '../io/importer.dart';
+import '../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
+import '../routes/custom_chart/custom_chart_logic/statistics_view_logic.dart';
 import '../routes/startup.dart';
 import '../routes/window_type.dart';
 import '../ui/charts/chart_logic/chart_controller.dart';
@@ -56,7 +58,7 @@ abstract class ChildProcessController{
                 break;
 
               case ResponseType.DATA:
-                // ...
+                _handleData(response.data, response.childProcessPort);
                 break;
 
               case ResponseType.FINISHED:
@@ -109,6 +111,26 @@ abstract class ChildProcessController{
       localLogger.critical("Main socket listener got an error ${err.toString()}");
     }
     );
+  }
+
+  static void _handleData(final Map data, final int port){
+    ChildRequest? request = ChildRequest.fromJson(data);
+    if(request == null){
+      localLogger.error("Invalid request message was received from $port: $data", doNoti: false);
+      return;
+    }
+    switch (request.type) {
+      case ChildRequestType.STATISTICS_MEAS_REQ:
+        if(request.context.containsKey("meas") && request.context["meas"] is String){
+          StatisticsViewLoadHelper.saveVisible(request.context["meas"]);
+          sendTo(Command(port, CommandType.DATA, setStatisticsReloadPayload(request.context["meas"])));
+        }
+        else{
+          localLogger.error("The STATISTICS_MEAS_REQ request must provide meas in context");
+        }
+        break;
+      default:
+    }
   }
 
   static void _handleFinished(int port, Map data) async {

@@ -29,7 +29,7 @@ class CustomChartContainer extends StatelessWidget {
           ],
         );
         break;
-      case CustomChartWindowType.HISTOGRAM:
+      case CustomChartWindowType.STATISTICS:
         child = Center(child: Text("Type not implemented", style: StyleManager.subTitleStyle,),);
         break;
       case CustomChartWindowType.CHARACTERISTICS:

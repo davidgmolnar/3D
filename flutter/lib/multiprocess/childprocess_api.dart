@@ -87,7 +87,7 @@ class ResponseFinishable{
 
   ResponseFinishable(this.type, this.data);
 
-  static ResponseFinishable? fromJson(Map json){
+  static ResponseFinishable? fromJson(final Map json){
     if(!json.containsKey('type') || json['type'] is! int){
       return null;
     }
@@ -102,6 +102,35 @@ class ResponseFinishable{
   Map get asJson => {
     "type": type.index,
     "data": data
+  };
+}
+
+enum ChildRequestType{
+  // ignore: constant_identifier_names
+  STATISTICS_MEAS_REQ,
+}
+
+class ChildRequest{
+  final ChildRequestType type;
+  final Map context;
+
+  ChildRequest({required this.type, required this.context});
+
+  static fromJson(final Map json){
+    if(!json.containsKey('type') || json['type'] is! int){
+      return null;
+    }
+    else if(!json.containsKey('context') || json['context'] is! Map){
+      return null;
+    }
+    else{
+      return ChildRequest(type: ChildRequestType.values[json['type']], context: json['context']);
+    }
+  }
+
+  Map get asJson => {
+    "type": type.index,
+    "context": context
   };
 }
 

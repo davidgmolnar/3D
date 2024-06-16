@@ -18,6 +18,7 @@ abstract class FSCache{
   static final MappedConditionalNotifier<dynamic> _notifier = MappedConditionalNotifier(value: {});
 
   static String get importedMeasurementsPath => "main.imported";
+  static String get visibleTraceSettingsPath => "main.trace.visible";
 
   static Future<void> init() async {
     if(_initialized){
@@ -132,7 +133,9 @@ abstract class FSCache{
     if(!_initialized){
       return;
     }
-    _notifier.update(path, value);
-    _syncToDisk();
+    if(_notifier.value[path] != value){
+      _notifier.update(path, value);
+      _syncToDisk();
+    }
   }
 }

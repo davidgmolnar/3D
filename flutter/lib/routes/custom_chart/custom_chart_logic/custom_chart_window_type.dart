@@ -8,6 +8,7 @@ import '../../../ui/charts/cursor_displays.dart';
 import '../../../ui/theme/theme.dart';
 import 'custom_descriptor.dart';
 import 'custom_group.dart';
+import 'statistics_view_logic.dart';
 
 enum CustomChartWindowType{
   // ignore: constant_identifier_names
@@ -19,12 +20,17 @@ enum CustomChartWindowType{
   // ignore: constant_identifier_names
   CHARACTERISTICS,
   // ignore: constant_identifier_names
-  HISTOGRAM,
+  STATISTICS,
 }
 
 Map setCustomChartWindowTypePayload(CustomChartWindowType type) => {
   'instruction': CustomChartWindowInstruction.SET_TYPE.index,
   'type': type.index
+};
+
+Map setStatisticsReloadPayload(final String meas) => {
+  'instruction': CustomChartWindowInstruction.STATISTICS_RELOAD.index,
+  'meas': meas
 };
 
 Map setCustomChartDescriptorPayload(final String filename, final int index) => {
@@ -77,7 +83,9 @@ enum CustomChartWindowInstruction{
   // ignore: constant_identifier_names
   DESCRIPTOR_FILE,
   // ignore: constant_identifier_names
-  SHARING_GROUP_DATA
+  SHARING_GROUP_DATA,
+  // ignore: constant_identifier_names
+  STATISTICS_RELOAD
 }
 
 enum SharingGroupEvent{
@@ -98,12 +106,17 @@ bool isInSharingGroup = true;
 
 CustomCharacteristicsDescriptor? customCharacteristics;
 
+String? statisticsSelectedMeas;
+
 void customChartHandleDataReceived(Map data) async {
   localLogger.info("Data received from master", doNoti: false);
   switch (CustomChartWindowInstruction.values[data['instruction']]) {
     case CustomChartWindowInstruction.SET_TYPE:
       customChartWindowType = CustomChartWindowType.values[data['type']];
       localLogger.info("CustomChartWindowType changed to ${customChartWindowType.name}", doNoti: false);
+      if(customChartWindowType == CustomChartWindowType.STATISTICS){
+        StatisticsViewLoadHelper.registerToCache();
+      }
       StyleManager.updater();
       break;
 
@@ -168,7 +181,11 @@ void customChartHandleDataReceived(Map data) async {
     case CustomChartWindowInstruction.SHARING_GROUP_DATA:
       _handleSharingGroupData(data["data"]);
       break;
-
+    case CustomChartWindowInstruction.STATISTICS_RELOAD:
+      if(customChartWindowType == CustomChartWindowType.STATISTICS && data.containsKey("meas") && data["meas"] == statisticsSelectedMeas){
+        StatisticsViewLoadHelper.load(statisticsSelectedMeas!);
+      }
+      break;
     default:
       localLogger.error("CustomChartWindowInstruction not implemented for CustomChartWindowInstruction.${CustomChartWindowInstruction.values[data['instruction']].name}", doNoti: false);
   }

@@ -12,6 +12,7 @@ import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
+import '../../custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../../log/log_logic/log_window_action_type.dart';
 import '../../settings/settings_logic/settings_window_type.dart';
 import '../../startup.dart';
@@ -75,6 +76,11 @@ class MainWindowToolbar extends StatelessWidget {
     });
   }
 
+  static void _statisticsViewWindow() async{
+    int port = await ChildProcessController.addConnection(WindowType.CUSTOM_CHART, WindowSetupInfo("Statistics View", const Size(1000,700), _getCenterOffset(const Size(1000,700))));
+    ChildProcessController.sendTo(Command(port, CommandType.DATA, setCustomChartWindowTypePayload(CustomChartWindowType.STATISTICS)));
+  }
+
   static void _calfileCreatorWindow (){/* builtin kontextuális warningok pl ha ifexistben van channel majd később másik blockban újra van használva a channel meg ilyenek*/}
 
   static void _settingsWindow () async {
@@ -124,6 +130,7 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [
       ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
       ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+      ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
     ToolbarItemWithDropdown(iconData: Icons.settings, dropdownItems: [
@@ -140,6 +147,9 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarDropdownItem(onPressed: _exportLogWindow, text: "Export Log"),
     ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
     ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
+    ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
+    ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+    ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
     ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
     ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
     ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
