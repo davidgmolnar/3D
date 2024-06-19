@@ -256,7 +256,7 @@ abstract class TraceSettingsProvider{
   static void addVisibleTraceSettingsToCache(){
     FSCache.write<Map>(
       FSCache.visibleTraceSettingsPath,
-      visibleSignalsData.map((key, value) => MapEntry(key, value.map((e) => e.asJson)))
+      visibleSignalsData.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()))
     );
   }
 

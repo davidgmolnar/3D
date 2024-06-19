@@ -330,14 +330,14 @@ class _ChartLinePainter extends CustomPainter {
   @override
   void paint(final Canvas canvas, final Size size) {
     final Paint paint = _chartLinePaint..color = plotContext.color;
-    final int end = plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount;
+    final int end = min(plotContext.scalingInfo.startIndex + plotContext.scalingInfo.measCount + 2, plotContext.x.length);
     final int increment = max((end - plotContext.scalingInfo.startIndex) ~/ 100000, 1);
     final ChartDrawMode drawMode = ChartController.drawModesNotifier.value.getMode(plotContext.measurement, plotContext.signal);
     
     if(drawMode == ChartDrawMode.LINE){
       Path path = Path();
-      for(int i = plotContext.scalingInfo.startIndex; i < end; i += increment){
-        if(i == plotContext.scalingInfo.startIndex){
+      for(int i = max(plotContext.scalingInfo.startIndex - 1, 0); i < end; i += increment){
+        if(i == max(plotContext.scalingInfo.startIndex - 1, 0)){
           canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
           canvas.scale(1,-1); // ezt PlotContext.reScalePoints és initialScaledPointsban kéne csinálni meg a kövit is
           canvas.translate(0, -size.height);
