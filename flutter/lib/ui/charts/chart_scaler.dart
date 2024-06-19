@@ -108,7 +108,20 @@ class _ChartScalerState extends State<ChartScaler> {
       },
       child: GestureDetector(
         onVerticalDragUpdate: (details) {
-          handleDrag(details.primaryDelta ?? 0);
+          if(details.delta.dy.abs() > details.delta.dx.abs()){
+            handleDrag(details.primaryDelta ?? 0);
+          }
+          else{
+            handleZoom(details.delta.distance * details.delta.dx.sign * -1);
+          }
+        },
+        onHorizontalDragUpdate: (details) {
+          if(details.delta.dy.abs() > details.delta.dx.abs()){
+            handleDrag(details.primaryDelta ?? 0);
+          }
+          else{
+            handleZoom(details.delta.distance * details.delta.dx.sign * -1);
+          }
         },
         child: Container(
           width: _chartScalerWidth,

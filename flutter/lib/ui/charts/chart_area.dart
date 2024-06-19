@@ -259,8 +259,21 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
       },
       behavior: HitTestBehavior.opaque,
       child: GestureDetector(
+        onVerticalDragUpdate: (details) {
+          if(details.delta.dy.abs() < details.delta.dx.abs()){
+            ChartController.moveInTime = details.primaryDelta ?? 0;
+          }
+          else{
+            ChartController.zoomInTime = details.delta.distance * details.delta.dy.sign * -1;
+          }
+        },
         onHorizontalDragUpdate: (details) {
-          ChartController.moveInTime = details.primaryDelta ?? 0;
+          if(details.delta.dy.abs() < details.delta.dx.abs()){
+            ChartController.moveInTime = details.primaryDelta ?? 0;
+          }
+          else{
+            ChartController.zoomInTime = details.delta.distance * details.delta.dy.sign * -1;
+          }
         },
         onSecondaryTapDown: (details) async {
           final Map<String, List<String>> visibility = dataSeen.map((key, value) => MapEntry(key, value.keys.toList()));
