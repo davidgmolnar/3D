@@ -130,7 +130,7 @@ abstract class TraceSettingsProvider{
       }
     });
     if(windowType == WindowType.MAIN_WINDOW){
-      addVisibleTraceSettingsToCache();
+      addTraceSettingsToCache();
     }
   }
 
@@ -209,7 +209,7 @@ abstract class TraceSettingsProvider{
     });
     
     if(windowType == WindowType.MAIN_WINDOW){
-      addVisibleTraceSettingsToCache();
+      addTraceSettingsToCache();
     }
   }
 
@@ -249,14 +249,18 @@ abstract class TraceSettingsProvider{
 
     
     if(windowType == WindowType.MAIN_WINDOW){
-      addVisibleTraceSettingsToCache();
+      addTraceSettingsToCache();
     }
   }
 
-  static void addVisibleTraceSettingsToCache(){
-    FSCache.write<Map>(
-      FSCache.visibleTraceSettingsPath,
-      visibleSignalsData.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()))
+  static void addTraceSettingsToCache(){
+    FSCache.write<Map<String, List<String>>>(
+      FSCache.visibleTraceSettingsNamePath,
+      visibleSignals
+    );
+    FSCache.write<Map<String, List<String>>>(
+      FSCache.allTraceSettingsNamePath,
+      traceSettingNotifier.value.map((key, value) => MapEntry(key, value.map((e) => e.signal).toList()))
     );
   }
 

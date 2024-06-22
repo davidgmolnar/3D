@@ -127,7 +127,7 @@ Future<bool> tryStartup(List<String> args) async {
 }
 
 Future<void> postStartup(var root) async {
-  FSCache.init();
+  await FSCache.init();
   localLogger.start();
   localLogger.info("Starting ${windowType.name}", doNoti: false);
   if(windowType != WindowType.MAIN_WINDOW && windowSetup == null){

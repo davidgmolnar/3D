@@ -121,8 +121,8 @@ abstract class ChildProcessController{
     }
     switch (request.type) {
       case ChildRequestType.STATISTICS_MEAS_REQ:
-        if(request.context.containsKey("meas") && request.context["meas"] is String){
-          StatisticsViewLoadHelper.saveVisible(request.context["meas"]);
+        if(request.context.containsKey("meas") && request.context["meas"] is String && request.context.containsKey("signals") && request.context["signals"] is List){
+          StatisticsViewLoadHelper.saveVisible(request.context["meas"], request.context["signals"].cast<String>());
           sendTo(Command(port, CommandType.DATA, setStatisticsReloadPayload(request.context["meas"])));
         }
         else{

@@ -84,4 +84,10 @@ class MappedConditionalNotifier<T>{
     // check keyToUpdate is leaf
     _notifyListeners(keyToUpdate);
   }
+
+  void updateAll(){
+    for(final VoidCallback listener in listeners){
+      listener();
+    }
+  }
 }

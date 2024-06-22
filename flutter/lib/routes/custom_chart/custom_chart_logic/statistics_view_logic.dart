@@ -1,32 +1,49 @@
 import 'dart:typed_data';
 
 import '../../../data/data.dart';
-import '../../../data/settings.dart';
 import '../../../data/signal_container.dart';
 import '../../../io/file_system.dart';
 import '../../../io/fscache.dart';
 import '../../../io/logger.dart';
 import '../../window_type.dart';
 import 'custom_chart_window_type.dart';
+import 'statistics_view_controller.dart';
 
 abstract class StatisticsViewLoadHelper{
   static void registerToCache(){
-    FSCache.addListener(_onCacheTraceVisibleChanged, [FSCache.visibleTraceSettingsPath]);
+    FSCache.addListener(_onCacheTraceVisibleChanged, [FSCache.visibleTraceSettingsNamePath]);
+    FSCache.addListener(_onCacheTraceAllChanged, [FSCache.allTraceSettingsNamePath]);
+    _onCacheTraceVisibleChanged();
+    _onCacheTraceAllChanged();
+    localLogger.info("Register complete", doNoti: false);
   }
 
   static void _onCacheTraceVisibleChanged(){
-    final Map<String, List<String>> visibleTraceSettingsDesc = FSCache.read<Map>(FSCache.visibleTraceSettingsPath)?.cast<String, List<String>>() ?? {};
-    TraceSettingsProvider.traceSettingNotifier.value.clear();
-    TraceSettingsProvider.reload(visibleTraceSettingsDesc);
+    final Map<String, List> visibleTraceSettingsName = FSCache.read<Map>(FSCache.visibleTraceSettingsNamePath)?.cast<String, List>() ?? {};
+    StatisticsViewController.notifier.update((value) {
+      value.visibleTraceNames.clear();
+      for(final String key in visibleTraceSettingsName.keys){
+        value.visibleTraceNames[key] = visibleTraceSettingsName[key]!.cast<String>();
+      }
+    });
   }
 
-  static void saveVisible(final String meas){
+  static void _onCacheTraceAllChanged(){
+    final Map<String, List> allTraceSettingsDesc = FSCache.read<Map>(FSCache.allTraceSettingsNamePath)?.cast<String, List>() ?? {};
+    StatisticsViewController.notifier.update((value) {
+      value.allTraceNames.clear();
+      for(final String key in allTraceSettingsDesc.keys){
+        value.allTraceNames[key] = allTraceSettingsDesc[key]!.cast<String>();
+      }
+    });
+  }
+
+  static void saveVisible(final String meas, final List<String> signals){
     if(windowType != WindowType.MAIN_WINDOW){
       localLogger.error("StatisticsViewLoadHelper.saveVisible was called on a non-main process", doNoti: false);
     }
 
-    final List<String> signalsToSave = TraceSettingsProvider.visibleSignals[meas] ?? [];
-    for(final String signal in signalsToSave){
+    for(final String signal in signals){
       try{
         FileSystem.trySaveBytesToLocalSync(
           FileSystem.channelDir,
@@ -40,7 +57,7 @@ abstract class StatisticsViewLoadHelper{
     }
   }
 
-  static load(final String meas){
+  static load(final String meas, final List<String> singals){
     if(windowType != WindowType.CUSTOM_CHART && customChartWindowType != CustomChartWindowType.STATISTICS){
       localLogger.error("StatisticsViewLoadHelper.load was called on a non-statistics process", doNoti: false);
       return;
@@ -49,8 +66,7 @@ abstract class StatisticsViewLoadHelper{
     signalData.clear();
     signalData[meas] = {};
 
-    final List<String> singalsToLoad = TraceSettingsProvider.visibleSignals[statisticsSelectedMeas] ?? [];
-    for(final String signal in singalsToLoad){
+    for(final String signal in singals){
       final Uint8List bytes = FileSystem.tryLoadBytesFromLocalSync(
         FileSystem.channelDir,
         "${meas}_$signal.3DCHANNEL",
@@ -67,8 +83,4 @@ abstract class StatisticsViewLoadHelper{
       signalData[meas]![signal] = sig;
       }
   }
-}
-
-abstract class StatisticsViewLogic{
-
 }

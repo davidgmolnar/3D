@@ -18,7 +18,8 @@ abstract class FSCache{
   static final MappedConditionalNotifier<dynamic> _notifier = MappedConditionalNotifier(value: {});
 
   static String get importedMeasurementsPath => "main.imported";
-  static String get visibleTraceSettingsPath => "main.trace.visible";
+  static String get visibleTraceSettingsNamePath => "main.trace.visible_signals";
+  static String get allTraceSettingsNamePath => "main.trace.all_signals";
 
   static Future<void> init() async {
     if(_initialized){
@@ -42,6 +43,7 @@ abstract class FSCache{
     else if(await file.length() != 0){
       _notifier.value.addAll(Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>());
     }
+    _notifier.updateAll();
     _lastModif = await file.lastModified();
 
     Timer.periodic(const Duration(seconds: 1), (timer) {

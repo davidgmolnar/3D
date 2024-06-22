@@ -8,6 +8,7 @@ import '../../../ui/charts/cursor_displays.dart';
 import '../../../ui/theme/theme.dart';
 import 'custom_descriptor.dart';
 import 'custom_group.dart';
+import 'statistics_view_controller.dart';
 import 'statistics_view_logic.dart';
 
 enum CustomChartWindowType{
@@ -106,8 +107,6 @@ bool isInSharingGroup = true;
 
 CustomCharacteristicsDescriptor? customCharacteristics;
 
-String? statisticsSelectedMeas;
-
 void customChartHandleDataReceived(Map data) async {
   localLogger.info("Data received from master", doNoti: false);
   switch (CustomChartWindowInstruction.values[data['instruction']]) {
@@ -182,8 +181,8 @@ void customChartHandleDataReceived(Map data) async {
       _handleSharingGroupData(data["data"]);
       break;
     case CustomChartWindowInstruction.STATISTICS_RELOAD:
-      if(customChartWindowType == CustomChartWindowType.STATISTICS && data.containsKey("meas") && data["meas"] == statisticsSelectedMeas){
-        StatisticsViewLoadHelper.load(statisticsSelectedMeas!);
+      if(customChartWindowType == CustomChartWindowType.STATISTICS && data.containsKey("meas") && data["meas"] == StatisticsViewController.notifier.value.meas){
+        StatisticsViewLoadHelper.load(StatisticsViewController.notifier.value.meas!, StatisticsViewController.notifier.value.selectedSignals);
       }
       break;
     default:

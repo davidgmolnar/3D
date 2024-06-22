@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../ui/charts/main_window_chart.dart';
 import '../../../ui/theme/theme.dart';
 import '../custom_chart_logic/custom_chart_window_type.dart';
+import '../statistics_view/statistics_view_container.dart';
 import 'custom_chart_toolbar.dart';
-import 'statistics_view_container.dart';
 
 const double logBottomBarHeight = 100;
 
