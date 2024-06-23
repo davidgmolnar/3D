@@ -1,6 +1,9 @@
+import 'dart:ui';
+
 import '../../../data/custom_notifiers.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
+import 'statistics_processor.dart';
 
 enum StatistiscsViewPlotType{
   // ignore: constant_identifier_names
@@ -31,6 +34,11 @@ class StatisticsViewData{
   final Map<String, List<String>> visibleTraceNames = {};
   final Map<String, List<String>> allTraceNames = {};
   final List<String> selectedSignals = [];
+  final Map<StatistiscsViewPlotType, PlotConfig> plotConfigs = {
+    StatistiscsViewPlotType.HIST: HistogramConfig(binCount: 50, minmax: const Offset(0, 100)),
+    StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(0.01, 100)),
+    StatistiscsViewPlotType.CDF: CDFConfig(bw: 1, minmax: const Offset(0.01, 100)),
+  };
 }
 
 abstract class StatisticsViewController{
@@ -48,5 +56,19 @@ abstract class StatisticsViewController{
         }
       ).asJson
     ));
+  }
+
+  static Map<String, num> get plotConfig{
+    return notifier.value.plotConfigs[notifier.value.plotType]!.asMap;
+  }
+
+  static Offset get plotConfigMinMax{
+    return notifier.value.plotConfigs[notifier.value.plotType]!.minmax;
+  }
+
+  static void updatePlotConfig(final String path, final num newValue){
+    notifier.update((value) {
+      value.plotConfigs[notifier.value.plotType]!.set(path, newValue);
+    });
   }
 }

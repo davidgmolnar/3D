@@ -1,6 +1,7 @@
+import 'dart:ui';
+
 import '../../../data/data.dart';
 import '../../../data/signal_container.dart';
-import '../../../io/logger.dart';
 
 class Stat{
   final num min;
@@ -22,26 +23,82 @@ class Stat{
   }
 }
 
-class HistogramConfig{
-  final int binCount;
+abstract class PlotConfig{
+  Offset minmax = const Offset(0, 1);
 
-  const HistogramConfig({required this.binCount});
+  Map<String, num> get asMap;
+  void set(final String path, final num value);
+}
+
+class HistogramConfig implements PlotConfig{
+  int binCount;
+
+  @override
+  Offset minmax;
+
+  HistogramConfig({required this.binCount, required this.minmax});
+  
+  @override
+  Map<String, num> get asMap => {
+    "Bin count": binCount
+  };
+  
+  @override
+  void set(String path, num value) {
+    if(path == "Bin count"){
+      binCount = value.toInt();
+    }
+  }
 }
 
 class Histogram{
 
 }
 
-class PDFConfig{
+class PDFConfig implements PlotConfig{
+  double bw;
 
+  @override
+  Offset minmax;
+
+  PDFConfig({required this.bw, required this.minmax});
+  
+  @override
+  Map<String, num> get asMap => {
+    "KDE bw": bw
+  };
+  
+  @override
+  void set(String path, num value) {
+    if(path == "KDE bw"){
+      bw = value.toDouble();
+    }
+  }
 }
 
 class PDF{
 
 }
 
-class CDFConfig{
+class CDFConfig implements PlotConfig{
+  double bw;
 
+  @override
+  Offset minmax;
+
+  CDFConfig({required this.bw, required this.minmax});
+
+  @override
+  Map<String, num> get asMap => {
+    "KDE bw": bw
+  };
+  
+  @override
+  void set(String path, num value) {
+    if(path == "KDE bw"){
+      bw = value.toDouble();
+    }
+  }
 }
 
 class CDF{
@@ -51,11 +108,9 @@ class CDF{
 abstract class StatisticsProcessor{
   static Stat stat(final String measurement, final String signal){
     if(!signalData.containsKey(measurement)){
-      localLogger.warning("No meas $measurement among  ${signalData.keys}", doNoti: false);
       return const Stat(min: 0, max: 0, integral: 0, avg: 0);
     }
     if(!signalData[measurement]!.containsKey(signal)){
-      localLogger.warning("No signal $signal among  ${signalData[measurement]!.keys}", doNoti: false);
       return const Stat(min: 0, max: 0, integral: 0, avg: 0);
     }
 
