@@ -161,7 +161,7 @@ class _SearchListSelectorDialogState extends State<SearchListSelectorDialog> {
                       selection.removeAt(index);
                       setState(() {});
                     },
-                    leading: Text(validSelection[index], style: StyleManager.textStyle,),
+                    leading: Text(selection[index], style: StyleManager.textStyle,),
                   );
                 },
               ),
