@@ -24,15 +24,6 @@ extension ToString on StatistiscsViewPlotType{
   }
 }
 
-enum StatisticsViewStatElements{
-  // ignore: constant_identifier_names
-  MAX,
-  // ignore: constant_identifier_names
-  MIN,
-  // ignore: constant_identifier_names
-  AVG,
-}
-
 class StatisticsViewData{
   StatistiscsViewPlotType plotType = StatistiscsViewPlotType.HIST;
   String? signalToPlot;

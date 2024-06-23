@@ -20,7 +20,7 @@ class StatisticsViewContainer extends StatelessWidget {
           child: StatisticsViewDataContainer()
         ),
         SizedBox(
-          height: 500,
+          height: 400,
           child: StatisticsViewPlotContainer()
         ),
       ],

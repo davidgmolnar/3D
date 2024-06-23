@@ -81,6 +81,8 @@ abstract class StatisticsViewLoadHelper{
 
       final SignalContainer sig = SignalContainer.fromBytes(bytes);
       signalData[meas]![signal] = sig;
-      }
+    }
+
+    StatisticsViewController.notifier.update((value) { });
   }
 }
