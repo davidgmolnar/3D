@@ -13,22 +13,18 @@ class StatisticsViewPlotContainer extends StatefulWidget {
 class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContainer> {
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_onControllerUpdate);
+    StatisticsViewController.notifier.addListener(_reDrawNeeded, ["plot.signal", "plot.type", "plot.configs"]);
     super.initState();
   }
 
-  void _onControllerUpdate(){
-    setState(() {});
-  }
-
-  void _reDraw(dynamic config){
-    // calc plot
+  void _reDrawNeeded(){
+    // calc plot into "plot.datas"
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    if(StatisticsViewController.notifier.value.signalToPlot == null){
+    if(StatisticsViewController.notifier.value["plot.signal"] == null){
       return Center(child: Text("Select a signal to plot", style: StyleManager.subTitleStyle,));
     }
     return Expanded(
@@ -42,8 +38,7 @@ class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContaine
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 StatisticsPlotConfigView(
-                  type: StatisticsViewController.notifier.value.plotType,
-                  onFinalized: _reDraw
+                  onChanged: _reDrawNeeded
                 ),
               ]
             ),
@@ -55,16 +50,15 @@ class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContaine
 
   @override
   void dispose() {
-    StatisticsViewController.notifier.removeListener(_onControllerUpdate);
+    StatisticsViewController.notifier.removeListener(_reDrawNeeded);
     super.dispose();
   }
 }
 
 class StatisticsPlotConfigView extends StatelessWidget {
-  const StatisticsPlotConfigView({super.key, required this.type, required this.onFinalized});
+  const StatisticsPlotConfigView({super.key, required this.onChanged});
 
-  final StatistiscsViewPlotType type;
-  final void Function(dynamic) onFinalized;
+  final VoidCallback onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +78,7 @@ class StatisticsPlotConfigView extends StatelessWidget {
               minmax: StatisticsViewController.plotConfigMinMax,
               onChanged: (final double value){
                 StatisticsViewController.updatePlotConfig(param.key, value);
+                onChanged();
               }
             )
         ],

@@ -17,7 +17,7 @@ class StatisticsViewToolbar extends StatefulWidget {
 class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_onControllerUpdate);
+    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data", "plot.type", "plot.signal"]);
     super.initState();
   }
 
@@ -39,35 +39,32 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
             child: DropdownButton<String>(
-              value: StatisticsViewController.notifier.value.meas,
-              items: [DropdownMenuItem<String>(value: null, child: Text("Select measurement", style: StyleManager.textStyle,)), ...StatisticsViewController.notifier.value.allTraceNames.keys.map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas, style: StyleManager.textStyle,)))],
+              value: StatisticsViewController.notifier.value["data.meas"],
+              items: [DropdownMenuItem<String>(value: null, child: Text("Select measurement", style: StyleManager.textStyle,)), ...StatisticsViewController.notifier.value["data.all_names"].keys.map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas, style: StyleManager.textStyle,)))],
               onChanged: (final String? selected){
-                StatisticsViewController.notifier.update((value) {
-                  value.meas = selected;
-                  if(selected != null && value.selectedSignals.isNotEmpty){
-                    StatisticsViewController.sendRequest();
-                  }
-                });
+                StatisticsViewController.notifier.update("data.meas", selected);
+                if(selected != null && StatisticsViewController.notifier.value["data.selected_names"].isNotEmpty){
+                  StatisticsViewController.sendRequest();
+                }
               }
             ),
           ),
           SearchListSelector(
-            selection: StatisticsViewController.notifier.value.selectedSignals,
+            selection: StatisticsViewController.notifier.value["data.selected_names"].cast<String>(),
             hintText: "Select signals",
-            options: StatisticsViewController.notifier.value.allTraceNames[StatisticsViewController.notifier.value.meas] ?? [],
+            options: StatisticsViewController.notifier.value["data.all_names"][StatisticsViewController.notifier.value["data.meas"]]?.cast<String>() ?? [],
             onSelected: (p0) {
-              StatisticsViewController.notifier.update((value) {
-                value.selectedSignals.clear();
-                value.selectedSignals.addAll(p0);
-                if(p0.isNotEmpty && value.meas != null){
-                  StatisticsViewController.sendRequest();
-                }
-              });
-            },
+              StatisticsViewController.notifier.value["data.selected_names"].clear();
+              StatisticsViewController.notifier.value["data.selected_names"].addAll(p0);
+              StatisticsViewController.notifier.updateKey("data.selected_names");
+              if(p0.isNotEmpty && StatisticsViewController.notifier.value["data.meas"] != null){
+                StatisticsViewController.sendRequest();
+              }
+            }
           ),
           TextButton(
             onPressed: (){
-              if(StatisticsViewController.notifier.value.selectedSignals.isNotEmpty && StatisticsViewController.notifier.value.meas != null){
+              if(StatisticsViewController.notifier.value["data.selected_names"].isNotEmpty && StatisticsViewController.notifier.value["data.meas"] != null){
                 StatisticsViewController.sendRequest();
               }
               else{
@@ -81,26 +78,22 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
             color: StyleManager.globalStyle.primaryColor,
           ),
           DropdownButton<StatistiscsViewPlotType>(
-            value: StatisticsViewController.notifier.value.plotType,
+            value: StatisticsViewController.notifier.value["plot.type"],
             items: StatistiscsViewPlotType.values.map((e) => DropdownMenuItem<StatistiscsViewPlotType>(value: e, child: Text(e.asString(), style: StyleManager.textStyle,))).toList(),
             onChanged: (selected){
               if(selected != null){
-                StatisticsViewController.notifier.update((value) {
-                  value.plotType = selected;
-                });
+                StatisticsViewController.notifier.update("plot.type", selected);
               }
             }
           ),
           Padding(
             padding: EdgeInsets.all(StyleManager.globalStyle.padding),
             child: SearchSelector(
-              selected: StatisticsViewController.notifier.value.signalToPlot,
-              options: StatisticsViewController.notifier.value.selectedSignals,
+              selected: StatisticsViewController.notifier.value["plot.signal"],
+              options: StatisticsViewController.notifier.value["data.selected_names"].cast<String>(),
               hintText: "Select signal to plot",
               onSelected: (p0) {
-                StatisticsViewController.notifier.update((value) {
-                  value.signalToPlot = p0;
-                });
+                StatisticsViewController.notifier.update("plot.signal", p0);
               },
             ),
           )

@@ -17,15 +17,15 @@ class _StatisticsViewDataContainerState extends State<StatisticsViewDataContaine
 
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_onControllerUpdate);
+    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data.selected_names", "data.meas"]);
     super.initState();
   }
   
   void _onControllerUpdate(){
-    if(StatisticsViewController.notifier.value.selectedSignals.isNotEmpty && StatisticsViewController.notifier.value.meas != null){
+    if(StatisticsViewController.notifier.value["data.selected_names"].isNotEmpty && StatisticsViewController.notifier.value["data.meas"] != null){
       statistics.clear();
-      for(final String signal in StatisticsViewController.notifier.value.selectedSignals) {
-        statistics[signal] = StatisticsProcessor.stat(StatisticsViewController.notifier.value.meas!, signal);
+      for(final String signal in StatisticsViewController.notifier.value["data.selected_names"]) {
+        statistics[signal] = StatisticsProcessor.stat(StatisticsViewController.notifier.value["data.meas"]!, signal);
       }
       setState(() {});
     }

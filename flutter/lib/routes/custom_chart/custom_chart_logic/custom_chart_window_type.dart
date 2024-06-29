@@ -181,8 +181,8 @@ void customChartHandleDataReceived(Map data) async {
       _handleSharingGroupData(data["data"]);
       break;
     case CustomChartWindowInstruction.STATISTICS_RELOAD:
-      if(customChartWindowType == CustomChartWindowType.STATISTICS && data.containsKey("meas") && data["meas"] == StatisticsViewController.notifier.value.meas){
-        StatisticsViewLoadHelper.load(StatisticsViewController.notifier.value.meas!, StatisticsViewController.notifier.value.selectedSignals);
+      if(customChartWindowType == CustomChartWindowType.STATISTICS && data.containsKey("meas") && data["meas"] == StatisticsViewController.notifier.value["data.meas"]){
+        StatisticsViewLoadHelper.load(StatisticsViewController.notifier.value["data.meas"]!, StatisticsViewController.notifier.value["data.selected_names"].cast<String>());
       }
       break;
     default:

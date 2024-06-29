@@ -20,22 +20,19 @@ abstract class StatisticsViewLoadHelper{
 
   static void _onCacheTraceVisibleChanged(){
     final Map<String, List> visibleTraceSettingsName = FSCache.read<Map>(FSCache.visibleTraceSettingsNamePath)?.cast<String, List>() ?? {};
-    StatisticsViewController.notifier.update((value) {
-      value.visibleTraceNames.clear();
-      for(final String key in visibleTraceSettingsName.keys){
-        value.visibleTraceNames[key] = visibleTraceSettingsName[key]!.cast<String>();
-      }
-    });
+    StatisticsViewController.notifier.value["data.visible_names"].clear();
+    for(final String key in visibleTraceSettingsName.keys){
+      StatisticsViewController.notifier.value["data.visible_names"][key] = visibleTraceSettingsName[key]!.cast<String>();
+    }
+    StatisticsViewController.notifier.updateKey("data.visible_names");
   }
 
   static void _onCacheTraceAllChanged(){
-    final Map<String, List> allTraceSettingsDesc = FSCache.read<Map>(FSCache.allTraceSettingsNamePath)?.cast<String, List>() ?? {};
-    StatisticsViewController.notifier.update((value) {
-      value.allTraceNames.clear();
-      for(final String key in allTraceSettingsDesc.keys){
-        value.allTraceNames[key] = allTraceSettingsDesc[key]!.cast<String>();
-      }
-    });
+    final Map<String, List> allTraceSettingsDesc = FSCache.read<Map>(FSCache.allTraceSettingsNamePath)?.cast<String, List>() ?? {};    
+    StatisticsViewController.notifier.value["data.all_names"].clear();
+    for(final String key in allTraceSettingsDesc.keys){
+      StatisticsViewController.notifier.value["data.all_names"][key] = allTraceSettingsDesc[key]!.cast<String>();
+    } 
   }
 
   static void saveVisible(final String meas, final List<String> signals){
@@ -83,6 +80,6 @@ abstract class StatisticsViewLoadHelper{
       signalData[meas]![signal] = sig;
     }
 
-    StatisticsViewController.notifier.update((value) { });
+    StatisticsViewController.notifier.updateGroup(["data.meas", "data.signal"]);
   }
 }

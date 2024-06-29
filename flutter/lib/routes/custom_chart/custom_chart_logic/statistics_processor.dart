@@ -51,8 +51,18 @@ class HistogramConfig implements PlotConfig{
   }
 }
 
-class Histogram{
+class HistogramBin{
+  final num start;
+  final num stop;
+  final num value;
 
+  HistogramBin({required this.start, required this.stop, required this.value});
+}
+
+class Histogram{
+  final List<HistogramBin> bins;
+
+  Histogram({required this.bins});
 }
 
 class PDFConfig implements PlotConfig{
@@ -77,7 +87,9 @@ class PDFConfig implements PlotConfig{
 }
 
 class PDF{
+  final List<Offset> line;
 
+  PDF({required this.line});
 }
 
 class CDFConfig implements PlotConfig{
@@ -102,7 +114,9 @@ class CDFConfig implements PlotConfig{
 }
 
 class CDF{
+  final List<Offset> line;
 
+  CDF({required this.line});
 }
 
 abstract class StatisticsProcessor{

@@ -74,6 +74,14 @@ class MappedConditionalNotifier<T>{
     }
   }
 
+  void _notifyListenersFromGroup(final List<String> keyUpdated) {
+    for(int i = 0; i < listeners.length; i++){
+      if(keyUpdates[i].any((key) => keyUpdated.any((updated) => updated.startsWith(key)))){
+        listeners[i]();
+      }
+    }
+  }
+
   void update(final String keyToUpdate, final T newValue){
     // check keyToUpdate is leaf
     value[keyToUpdate] = newValue;
@@ -83,6 +91,11 @@ class MappedConditionalNotifier<T>{
   void updateKey(final String keyToUpdate){
     // check keyToUpdate is leaf
     _notifyListeners(keyToUpdate);
+  }
+
+  void updateGroup(final List<String> keysToUpdate){
+    // check keyToUpdate is leaf
+    _notifyListenersFromGroup(keysToUpdate);
   }
 
   void updateAll(){
