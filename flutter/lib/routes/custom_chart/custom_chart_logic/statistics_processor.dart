@@ -1,7 +1,9 @@
 import 'dart:ui';
+import 'dart:math' as math;
 
 import '../../../data/data.dart';
 import '../../../data/signal_container.dart';
+import '../../../data/typed_data_list_container.dart';
 
 class Stat{
   final num min;
@@ -51,20 +53,6 @@ class HistogramConfig implements PlotConfig{
   }
 }
 
-class HistogramBin{
-  final num start;
-  final num stop;
-  final num value;
-
-  HistogramBin({required this.start, required this.stop, required this.value});
-}
-
-class Histogram{
-  final List<HistogramBin> bins;
-
-  Histogram({required this.bins});
-}
-
 class PDFConfig implements PlotConfig{
   double bw;
 
@@ -84,12 +72,6 @@ class PDFConfig implements PlotConfig{
       bw = value.toDouble();
     }
   }
-}
-
-class PDF{
-  final List<Offset> line;
-
-  PDF({required this.line});
 }
 
 class CDFConfig implements PlotConfig{
@@ -113,10 +95,76 @@ class CDFConfig implements PlotConfig{
   }
 }
 
-class CDF{
+class HistogramBin{
+  final num start;
+  final num stop;
+  num value;
+
+  HistogramBin({required this.start, required this.stop, required this.value});
+}
+
+abstract class Plot{
+  void recalc(final String meas, final String signal, final PlotConfig config);
+}
+
+class Histogram extends Plot{
+  final List<HistogramBin> bins;
+
+  Histogram({required this.bins});
+
+  @override
+  void recalc(final String meas, final String signal, final PlotConfig config){
+    bins.clear();
+    final HistogramConfig conf = config as HistogramConfig;
+
+    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
+    if(values == null){
+      return;
+    }
+
+    num min = double.infinity;
+    num max = double.negativeInfinity;
+    for(final num value in values.iterable){
+      if(value < min){
+        min = value;
+      }
+      if(value > max){
+        max = value;
+      }
+    }
+
+    final double binSpan = (max - min) / conf.binCount;
+    bins.addAll(List<HistogramBin>.generate(conf.binCount, (index) => HistogramBin(start: index * binSpan, stop: (index + 1) * binSpan, value: 0)));
+    for(final num value in values.iterable){
+      bins[math.min(value ~/ binSpan, conf.binCount - 1)].value++;
+    }
+  }
+}
+
+class PDF extends Plot{
+  final List<Offset> line;
+
+  PDF({required this.line});
+
+  @override
+  void recalc(final String meas, final String signal, final PlotConfig config){
+    line.clear();
+    final PDFConfig conf = config as PDFConfig;
+    
+  }
+}
+
+class CDF extends Plot{
   final List<Offset> line;
 
   CDF({required this.line});
+
+  @override
+  void recalc(final String meas, final String signal, final PlotConfig config){
+    line.clear();
+    final CDFConfig conf = config as CDFConfig;
+    
+  }
 }
 
 abstract class StatisticsProcessor{
@@ -145,16 +193,4 @@ abstract class StatisticsProcessor{
     num avg = integral / (channel.timestamps.last - channel.timestamps.first) * 1000; // ms to s
     return Stat(min: min, max: max, integral: integral, avg: avg);
   }
-
-  /*static Histogram hist(final String measurement, final String signal, final HistogramConfig config){
-
-  }
-
-  static PDF pdf(final String measurement, final String signal, final PDFConfig config){
-    
-  }
-
-  static CDF cdf(final String measurement, final String signal, final CDFConfig config){
-    
-  }*/
 }
