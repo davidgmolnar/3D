@@ -37,8 +37,8 @@ abstract class StatisticsViewController{
     "data.selected_names": [],
     "plot.configs": {
       StatistiscsViewPlotType.HIST: HistogramConfig(binCount: 50, minmax: const Offset(0, 100)),
-      StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(0.01, 100)),
-      StatistiscsViewPlotType.CDF: CDFConfig(bw: 1, minmax: const Offset(0.01, 100)),
+      StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(-5, 5)),
+      StatistiscsViewPlotType.CDF: CDFConfig(bw: 1, minmax: const Offset(-5, 5)),
     },
     "plot.datas": {
       StatistiscsViewPlotType.HIST: Histogram(bins: []),

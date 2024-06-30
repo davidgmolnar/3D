@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'dart:math' as math;
 
+import 'package:ml_linalg/vector.dart';
+
 import '../../../data/data.dart';
+import '../../../data/sci/kde.dart';
 import '../../../data/signal_container.dart';
 import '../../../data/typed_data_list_container.dart';
 
@@ -63,12 +66,12 @@ class PDFConfig implements PlotConfig{
   
   @override
   Map<String, num> get asMap => {
-    "KDE bw": bw
+    "KDE bw log10": bw
   };
   
   @override
   void set(String path, num value) {
-    if(path == "KDE bw"){
+    if(path == "KDE bw log10"){
       bw = value.toDouble();
     }
   }
@@ -84,12 +87,12 @@ class CDFConfig implements PlotConfig{
 
   @override
   Map<String, num> get asMap => {
-    "KDE bw": bw
+    "KDE bw log10": bw
   };
   
   @override
   void set(String path, num value) {
-    if(path == "KDE bw"){
+    if(path == "KDE bw log10"){
       bw = value.toDouble();
     }
   }
@@ -134,7 +137,7 @@ class Histogram extends Plot{
     }
 
     final double binSpan = (max - min) / conf.binCount;
-    bins.addAll(List<HistogramBin>.generate(conf.binCount, (index) => HistogramBin(start: index * binSpan, stop: (index + 1) * binSpan, value: 0)));
+    bins.addAll(List<HistogramBin>.generate(conf.binCount, (index) => HistogramBin(start: min + index * binSpan, stop: min + (index + 1) * binSpan, value: 0)));
     for(final num value in values.iterable){
       bins[math.min((value - min) ~/ binSpan, conf.binCount - 1)].value++;
     }
@@ -150,7 +153,36 @@ class PDF extends Plot{
   void recalc(final String meas, final String signal, final PlotConfig config){
     line.clear();
     final PDFConfig conf = config as PDFConfig;
-    
+        
+    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
+    if(values == null){
+      return;
+    }
+
+    num min = double.infinity;
+    num max = double.negativeInfinity;
+    for(final num value in values.iterable){
+      if(value < min){
+        min = value;
+      }
+      if(value > max){
+        max = value;
+      }
+    }
+
+    final num trueRange = max - min;
+    min = min - trueRange * 0.1;
+    max = max + trueRange * 0.1;
+
+    const int resolution = 1000; // TODO pdfconf
+    final double cellDist = (max - min) / resolution;
+    line.addAll(
+      KDE.estimatePDF(
+        values.iterable,
+        Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+        math.pow(10, conf.bw).toDouble()
+      )
+    );
   }
 }
 
@@ -163,7 +195,36 @@ class CDF extends Plot{
   void recalc(final String meas, final String signal, final PlotConfig config){
     line.clear();
     final CDFConfig conf = config as CDFConfig;
-    
+        
+    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
+    if(values == null){
+      return;
+    }
+
+    num min = double.infinity;
+    num max = double.negativeInfinity;
+    for(final num value in values.iterable){
+      if(value < min){
+        min = value;
+      }
+      if(value > max){
+        max = value;
+      }
+    }
+
+    final num trueRange = max - min;
+    min = min - trueRange * 0.1;
+    max = max + trueRange * 0.1;
+
+    const int resolution = 1000; // TODO pdfconf
+    final double cellDist = (max - min) / resolution;
+    line.addAll(
+      KDE.estimateCDF(
+        values.iterable,
+        Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+        math.pow(10, conf.bw).toDouble()
+      )
+    );
   }
 }
 

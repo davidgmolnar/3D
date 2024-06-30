@@ -272,6 +272,98 @@ class PDFPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    try{
+    canvas.clipRect(Rect.fromPoints(const Offset(-10, -10), Offset(size.width + 10, size.height + 10)));
+
+    final TextPainter textPainterBase = TextPainter(
+      text: TextSpan(
+        text: "DEFAULT TEXT",
+        style: StyleManager.textStyle,
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    final Paint paintBase = Paint()..color = StyleManager.globalStyle.primaryColor..style = PaintingStyle.stroke..strokeWidth = 0.5;
+
+    const double inset = 10;
+
+    // xaxis
+    final num xAxisValueMin = pdf.line.isEmpty ? 0.0 : pdf.line.first.dx;
+    final num xAxisValueMax = pdf.line.isEmpty ? 1.0 : pdf.line.last.dx;
+    final ValueAxisData xAxisData = ValueAxisData.from(xAxisValueMin, xAxisValueMax - xAxisValueMin, size.width - 2 * inset, null);
+    
+    final Path xAxisPath = Path();
+    xAxisPath.moveTo(inset, -(inset - size.height));
+    xAxisPath.lineTo(size.width - inset, -(inset - size.height));
+    for(int i = 0; i < xAxisData.majorTickPositions.length; i++){
+      xAxisPath.moveTo(xAxisData.majorTickPositions[i] + inset, -(inset - size.height));
+      xAxisPath.lineTo(xAxisData.majorTickPositions[i] + inset, -(inset / 2 - size.height));
+
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: xAxisData.majorTickValues[i].toString(),
+        style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(xAxisData.majorTickPositions[i] + inset, size.height);
+      tp.paint(canvas, majorPos.translate(-tp.width / 2, -10));
+    }
+    for(final double tick in xAxisData.tickPositions){
+      xAxisPath.moveTo(tick, -(inset - size.height));
+      xAxisPath.lineTo(tick, -(3 * inset / 4 - size.height));
+    }
+
+    canvas.drawPath(xAxisPath, paintBase);
+    canvas.rotate(1.5 * 3.14159265359);
+
+    // yaxis
+    const int yAxisValueMin = 0;
+    final int yAxisValueMax = pdf.line.isEmpty ? 1 : pdf.line.fold(0, (previousValue, element) => max(previousValue, element.dy.toInt()));
+    localLogger.info("$yAxisValueMin, ${yAxisValueMax - yAxisValueMin}, ${size.height - 2 * inset}");
+    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMax - yAxisValueMin, size.height - 2 * inset, null);
+
+    final Path yAxisPath = Path();
+    yAxisPath.moveTo(inset - size.height, inset);
+    yAxisPath.lineTo(-inset, inset);
+    for(int i = 0; i < yAxisData.majorTickPositions.length; i++){
+      yAxisPath.moveTo(yAxisData.majorTickPositions[i] - size.height + inset, inset);
+      yAxisPath.lineTo(yAxisData.majorTickPositions[i] - size.height + inset, inset / 2);
+
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: yAxisData.majorTickValues[i].toString(),
+        style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(yAxisData.majorTickPositions[i] - size.height + inset, -5);
+      tp.paint(canvas, majorPos.translate(-10, -tp.height / 2));
+    }
+    for(final double tick in yAxisData.tickPositions){
+      yAxisPath.moveTo(tick - size.height + inset, inset);
+      yAxisPath.lineTo(tick - size.height + inset, 3 * inset / 4);
+    }
+
+    canvas.drawPath(yAxisPath, paintBase);
+    canvas.rotate(-1.5 * 3.14159265359);
+
+    // pdf
+    if(pdf.line.isEmpty){
+      return;
+    }
+    final Path pdfPath = Path();
+
+    final double xOffset =  - xAxisValueMin.toDouble();
+    final double xMult = (size.width - 2 * inset) / (xAxisValueMax - xAxisValueMin);
+    final double yOffset = yAxisValueMin.toDouble();
+    final double yMult = (size.height - 2 * inset) / (yAxisValueMax - yAxisValueMin);
+
+    pdfPath.moveTo((pdf.line.first.dx + xOffset) * xMult + inset, -((pdf.line.first.dy + yOffset) * yMult - size.height + inset));
+    for(final Offset point in pdf.line.skip(1)){
+      pdfPath.lineTo((point.dx + xOffset) * xMult + inset, -((point.dy + yOffset) * yMult - size.height + inset));
+    }
+    canvas.drawPath(pdfPath, paintBase);
+
+    }
+    catch(ex, stack){
+      localLogger.info("$ex $stack");
+    }
   }
 
   @override
@@ -288,6 +380,98 @@ class CDFPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    try{
+    canvas.clipRect(Rect.fromPoints(const Offset(-10, -10), Offset(size.width + 10, size.height + 10)));
+
+    final TextPainter textPainterBase = TextPainter(
+      text: TextSpan(
+        text: "DEFAULT TEXT",
+        style: StyleManager.textStyle,
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    final Paint paintBase = Paint()..color = StyleManager.globalStyle.primaryColor..style = PaintingStyle.stroke..strokeWidth = 0.5;
+
+    const double inset = 10;
+
+    // xaxis
+    final num xAxisValueMin = cdf.line.isEmpty ? 0.0 : cdf.line.first.dx;
+    final num xAxisValueMax = cdf.line.isEmpty ? 1.0 : cdf.line.last.dx;
+    final ValueAxisData xAxisData = ValueAxisData.from(xAxisValueMin, xAxisValueMax - xAxisValueMin, size.width - 2 * inset, null);
+    
+    final Path xAxisPath = Path();
+    xAxisPath.moveTo(inset, -(inset - size.height));
+    xAxisPath.lineTo(size.width - inset, -(inset - size.height));
+    for(int i = 0; i < xAxisData.majorTickPositions.length; i++){
+      xAxisPath.moveTo(xAxisData.majorTickPositions[i] + inset, -(inset - size.height));
+      xAxisPath.lineTo(xAxisData.majorTickPositions[i] + inset, -(inset / 2 - size.height));
+
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: xAxisData.majorTickValues[i].toString(),
+        style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(xAxisData.majorTickPositions[i] + inset, size.height);
+      tp.paint(canvas, majorPos.translate(-tp.width / 2, -10));
+    }
+    for(final double tick in xAxisData.tickPositions){
+      xAxisPath.moveTo(tick, -(inset - size.height));
+      xAxisPath.lineTo(tick, -(3 * inset / 4 - size.height));
+    }
+
+    canvas.drawPath(xAxisPath, paintBase);
+    canvas.rotate(1.5 * 3.14159265359);
+
+    // yaxis
+    const int yAxisValueMin = 0;
+    final int yAxisValueMax = cdf.line.isEmpty ? 1 : cdf.line.fold(0, (previousValue, element) => max(previousValue, element.dy.toInt()));
+    localLogger.info("$yAxisValueMin, ${yAxisValueMax - yAxisValueMin}, ${size.height - 2 * inset}");
+    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMax - yAxisValueMin, size.height - 2 * inset, null);
+
+    final Path yAxisPath = Path();
+    yAxisPath.moveTo(inset - size.height, inset);
+    yAxisPath.lineTo(-inset, inset);
+    for(int i = 0; i < yAxisData.majorTickPositions.length; i++){
+      yAxisPath.moveTo(yAxisData.majorTickPositions[i] - size.height + inset, inset);
+      yAxisPath.lineTo(yAxisData.majorTickPositions[i] - size.height + inset, inset / 2);
+
+      final TextPainter tp = textPainterBase..text = TextSpan(
+        text: yAxisData.majorTickValues[i].toString(),
+        style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
+      );
+      tp.layout();
+      final Offset majorPos = Offset(yAxisData.majorTickPositions[i] - size.height + inset, -5);
+      tp.paint(canvas, majorPos.translate(-10, -tp.height / 2));
+    }
+    for(final double tick in yAxisData.tickPositions){
+      yAxisPath.moveTo(tick - size.height + inset, inset);
+      yAxisPath.lineTo(tick - size.height + inset, 3 * inset / 4);
+    }
+
+    canvas.drawPath(yAxisPath, paintBase);
+    canvas.rotate(-1.5 * 3.14159265359);
+
+    // pdf
+    if(cdf.line.isEmpty){
+      return;
+    }
+    final Path pdfPath = Path();
+
+    final double xOffset =  - xAxisValueMin.toDouble();
+    final double xMult = (size.width - 2 * inset) / (xAxisValueMax - xAxisValueMin);
+    final double yOffset = yAxisValueMin.toDouble();
+    final double yMult = (size.height - 2 * inset) / (yAxisValueMax - yAxisValueMin);
+
+    pdfPath.moveTo((cdf.line.first.dx + xOffset) * xMult + inset, -((cdf.line.first.dy + yOffset) * yMult - size.height + inset));
+    for(final Offset point in cdf.line.skip(1)){
+      pdfPath.lineTo((point.dx + xOffset) * xMult + inset, -((point.dy + yOffset) * yMult - size.height + inset));
+    }
+    canvas.drawPath(pdfPath, paintBase);
+
+    }
+    catch(ex, stack){
+      localLogger.info("$ex $stack");
+    }
   }
 
   @override
