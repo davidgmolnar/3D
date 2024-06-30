@@ -174,7 +174,7 @@ class PDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 1000; // TODO pdfconf
+    const int resolution = 100; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
     line.addAll(
       KDE.estimatePDF(
@@ -216,7 +216,7 @@ class CDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 1000; // TODO pdfconf
+    const int resolution = 100; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
     line.addAll(
       KDE.estimateCDF(
