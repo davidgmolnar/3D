@@ -315,10 +315,10 @@ class PDFPainter extends CustomPainter {
     canvas.rotate(1.5 * 3.14159265359);
 
     // yaxis
-    const int yAxisValueMin = 0;
-    final int yAxisValueMax = pdf.line.isEmpty ? 1 : pdf.line.fold(0, (previousValue, element) => max(previousValue, element.dy.toInt()));
-    localLogger.info("$yAxisValueMin, ${yAxisValueMax - yAxisValueMin}, ${size.height - 2 * inset}");
-    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMax - yAxisValueMin, size.height - 2 * inset, null);
+    const double yAxisValueMin = 0;
+    final double yAxisValueMax = pdf.line.isEmpty ? 1 : pdf.line.fold<double>(0.0, (previousValue, element) => max(previousValue, element.dy));
+    final double yAxisValueMaxAxis = pdf.line.isEmpty ? 1 : yAxisValueMax / pdf.line.fold<double>(0.0, (previousValue, element) => previousValue + element.dy);
+    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMaxAxis - yAxisValueMin, size.height - 2 * inset, null);
 
     final Path yAxisPath = Path();
     yAxisPath.moveTo(inset - size.height, inset);
@@ -423,10 +423,10 @@ class CDFPainter extends CustomPainter {
     canvas.rotate(1.5 * 3.14159265359);
 
     // yaxis
-    const int yAxisValueMin = 0;
-    final int yAxisValueMax = cdf.line.isEmpty ? 1 : cdf.line.fold(0, (previousValue, element) => max(previousValue, element.dy.toInt()));
-    localLogger.info("$yAxisValueMin, ${yAxisValueMax - yAxisValueMin}, ${size.height - 2 * inset}");
-    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMax - yAxisValueMin, size.height - 2 * inset, null);
+    const double yAxisValueMin = 0;
+    final double yAxisValueMax = cdf.line.isEmpty ? 1 : cdf.line.fold(0.0, (previousValue, element) => max(previousValue, element.dy));
+    const double yAxisValueMaxAxis = 1;
+    final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMaxAxis - yAxisValueMin, size.height - 2 * inset, null);
 
     final Path yAxisPath = Path();
     yAxisPath.moveTo(inset - size.height, inset);

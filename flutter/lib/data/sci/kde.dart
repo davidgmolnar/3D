@@ -10,7 +10,7 @@ abstract class KDE{
     for(final num value in values.skip(1)){
       sum += Distribution.univariateNormalDistribution(sampling, value.toDouble(), bw);
     }
-    //sum /= sum.sum();
+    
     return List<Offset>.generate(sampling.length, (index) => Offset(sampling[index], sum[index]));
   }
 
