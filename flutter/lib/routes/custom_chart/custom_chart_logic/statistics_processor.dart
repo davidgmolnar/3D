@@ -136,7 +136,7 @@ class Histogram extends Plot{
     final double binSpan = (max - min) / conf.binCount;
     bins.addAll(List<HistogramBin>.generate(conf.binCount, (index) => HistogramBin(start: index * binSpan, stop: (index + 1) * binSpan, value: 0)));
     for(final num value in values.iterable){
-      bins[math.min(value ~/ binSpan, conf.binCount - 1)].value++;
+      bins[math.min((value - min) ~/ binSpan, conf.binCount - 1)].value++;
     }
   }
 }
