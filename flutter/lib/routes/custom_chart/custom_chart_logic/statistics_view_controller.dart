@@ -71,6 +71,6 @@ abstract class StatisticsViewController{
 
   static void updatePlotConfig(final String path, final num newValue){
     notifier.value["plot.configs"][notifier.value["plot.type"]]!.set(path, newValue);
-    notifier.updateKey("plot.configs");
+    //notifier.updateKey("plot.configs");
   }
 }

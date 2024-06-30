@@ -145,13 +145,12 @@ class Histogram extends Plot{
 }
 
 class PDF extends Plot{
-  final List<Offset> line;
+  List<Offset> line;
 
   PDF({required this.line});
 
   @override
   void recalc(final String meas, final String signal, final PlotConfig config){
-    line.clear();
     final PDFConfig conf = config as PDFConfig;
         
     final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
@@ -174,26 +173,23 @@ class PDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 100; // TODO pdfconf
+    const int resolution = 200; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
-    line.addAll(
-      KDE.estimatePDF(
-        values.iterable,
-        Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
-        math.pow(10, conf.bw).toDouble()
-      )
+    line = KDE.estimatePDF(
+      values,
+      Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+      math.pow(10, conf.bw).toDouble()
     );
   }
 }
 
 class CDF extends Plot{
-  final List<Offset> line;
+  List<Offset> line;
 
   CDF({required this.line});
 
   @override
   void recalc(final String meas, final String signal, final PlotConfig config){
-    line.clear();
     final CDFConfig conf = config as CDFConfig;
         
     final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
@@ -216,14 +212,12 @@ class CDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 100; // TODO pdfconf
+    const int resolution = 200; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
-    line.addAll(
-      KDE.estimateCDF(
-        values.iterable,
-        Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
-        math.pow(10, conf.bw).toDouble()
-      )
+    line = KDE.estimateCDF(
+      values,
+      Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+      math.pow(10, conf.bw).toDouble()
     );
   }
 }
