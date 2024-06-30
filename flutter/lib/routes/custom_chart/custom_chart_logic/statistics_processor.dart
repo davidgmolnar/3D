@@ -145,7 +145,7 @@ class Histogram extends Plot{
 }
 
 class PDF extends Plot{
-  List<Offset> line;
+  KDEResult line;
 
   PDF({required this.line});
 
@@ -184,7 +184,7 @@ class PDF extends Plot{
 }
 
 class CDF extends Plot{
-  List<Offset> line;
+  KDEResult line;
 
   CDF({required this.line});
 

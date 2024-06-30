@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:ml_linalg/vector.dart';
 
@@ -12,20 +11,24 @@ class KDEResult{
   final Vector y;
 
   const KDEResult({required this.x, required this.y});
+
+  static KDEResult empty(){
+    return KDEResult(x: Vector.empty(), y: Vector.empty());
+  }
 }
 
 abstract class KDE{
-  static List<Offset> estimatePDF(final TypedDataListContainer<TypedData> values, final Vector sampling, final double bw){
+  static KDEResult estimatePDF(final TypedDataListContainer<TypedData> values, final Vector sampling, final double bw){
     Vector sum = Distribution.univariateNormalDistribution(sampling, values.first, bw);
     final int inc = max((values.size) ~/ 50000, 1);
     for(int i = 1; i < values.size; i += inc){
       sum += Distribution.univariateNormalDistribution(sampling, values[i], bw);
     }
     
-    return List<Offset>.generate(sampling.length, (index) => Offset(sampling[index], sum[index]));
+    return KDEResult(x: sampling, y: sum);
   }
 
-  static List<Offset> estimateCDF(final TypedDataListContainer<TypedData> values, final Vector sampling, final double bw){
+  static KDEResult estimateCDF(final TypedDataListContainer<TypedData> values, final Vector sampling, final double bw){
     Vector sum = Distribution.univariateNormalDistribution(sampling, values.first, bw);
     final int inc = max((values.size) ~/ 50000, 1);
     for(int i = 1; i < values.size; i += inc){
@@ -36,6 +39,6 @@ abstract class KDE{
     for(int i = 1; i < cumsum.length; i++){
       cumsum[i] += cumsum[i - 1];
     }
-    return List<Offset>.generate(sampling.length, (index) => Offset(sampling[index], cumsum[index]));
+    return KDEResult(x: sampling, y: Vector.fromList(cumsum));
   }
 }

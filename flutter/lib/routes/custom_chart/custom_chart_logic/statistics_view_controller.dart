@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import '../../../data/custom_notifiers.dart';
+import '../../../data/sci/kde.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import 'statistics_processor.dart';
@@ -37,13 +38,13 @@ abstract class StatisticsViewController{
     "data.selected_names": [],
     "plot.configs": {
       StatistiscsViewPlotType.HIST: HistogramConfig(binCount: 50, minmax: const Offset(0, 100)),
-      StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(-5, 5)),
-      StatistiscsViewPlotType.CDF: CDFConfig(bw: 1, minmax: const Offset(-5, 5)),
+      StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(-2, 5)),
+      StatistiscsViewPlotType.CDF: CDFConfig(bw: 1, minmax: const Offset(-2, 5)),
     },
     "plot.datas": {
       StatistiscsViewPlotType.HIST: Histogram(bins: []),
-      StatistiscsViewPlotType.PDF: PDF(line: []),
-      StatistiscsViewPlotType.CDF: CDF(line: []),
+      StatistiscsViewPlotType.PDF: PDF(line: KDEResult.empty()),
+      StatistiscsViewPlotType.CDF: CDF(line: KDEResult.empty()),
     }
   });
 

@@ -287,8 +287,8 @@ class PDFPainter extends CustomPainter {
     const double inset = 10;
 
     // xaxis
-    final num xAxisValueMin = pdf.line.isEmpty ? 0.0 : pdf.line.first.dx;
-    final num xAxisValueMax = pdf.line.isEmpty ? 1.0 : pdf.line.last.dx;
+    final num xAxisValueMin = pdf.line.x.isEmpty ? 0.0 : pdf.line.x.first;
+    final num xAxisValueMax = pdf.line.x.isEmpty ? 1.0 : pdf.line.x.last;
     final ValueAxisData xAxisData = ValueAxisData.from(xAxisValueMin, xAxisValueMax - xAxisValueMin, size.width - 2 * inset, null);
     
     final Path xAxisPath = Path();
@@ -316,8 +316,8 @@ class PDFPainter extends CustomPainter {
 
     // yaxis
     const double yAxisValueMin = 0;
-    final double yAxisValueMax = pdf.line.isEmpty ? 1 : pdf.line.fold<double>(0.0, (previousValue, element) => max(previousValue, element.dy));
-    final double yAxisValueMaxAxis = pdf.line.isEmpty ? 1 : yAxisValueMax / pdf.line.fold<double>(0.0, (previousValue, element) => previousValue + element.dy);
+    final double yAxisValueMax = pdf.line.y.isEmpty ? 1 : pdf.line.y.fold<double>(0.0, (previousValue, element) => max(previousValue, element));
+    final double yAxisValueMaxAxis = pdf.line.y.isEmpty ? 1 : yAxisValueMax / pdf.line.y.fold<double>(0.0, (previousValue, element) => previousValue + element);
     final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMaxAxis - yAxisValueMin, size.height - 2 * inset, null);
 
     final Path yAxisPath = Path();
@@ -344,7 +344,7 @@ class PDFPainter extends CustomPainter {
     canvas.rotate(-1.5 * 3.14159265359);
 
     // pdf
-    if(pdf.line.isEmpty){
+    if(pdf.line.x.isEmpty){
       return;
     }
     final Path pdfPath = Path();
@@ -354,9 +354,9 @@ class PDFPainter extends CustomPainter {
     final double yOffset = yAxisValueMin.toDouble();
     final double yMult = (size.height - 2 * inset) / (yAxisValueMax - yAxisValueMin);
 
-    pdfPath.moveTo((pdf.line.first.dx + xOffset) * xMult + inset, -((pdf.line.first.dy + yOffset) * yMult - size.height + inset));
-    for(final Offset point in pdf.line.skip(1)){
-      pdfPath.lineTo((point.dx + xOffset) * xMult + inset, -((point.dy + yOffset) * yMult - size.height + inset));
+    pdfPath.moveTo((pdf.line.x.first + xOffset) * xMult + inset, -((pdf.line.y.first + yOffset) * yMult - size.height + inset));
+    for(int i = 1; i < pdf.line.x.length; i++){
+      pdfPath.lineTo((pdf.line.x[i] + xOffset) * xMult + inset, -((pdf.line.y[i]+ yOffset) * yMult - size.height + inset));
     }
     canvas.drawPath(pdfPath, paintBase);
 
@@ -395,8 +395,8 @@ class CDFPainter extends CustomPainter {
     const double inset = 10;
 
     // xaxis
-    final num xAxisValueMin = cdf.line.isEmpty ? 0.0 : cdf.line.first.dx;
-    final num xAxisValueMax = cdf.line.isEmpty ? 1.0 : cdf.line.last.dx;
+    final num xAxisValueMin = cdf.line.x.isEmpty ? 0.0 : cdf.line.x.first;
+    final num xAxisValueMax = cdf.line.x.isEmpty ? 1.0 : cdf.line.x.last;
     final ValueAxisData xAxisData = ValueAxisData.from(xAxisValueMin, xAxisValueMax - xAxisValueMin, size.width - 2 * inset, null);
     
     final Path xAxisPath = Path();
@@ -424,7 +424,7 @@ class CDFPainter extends CustomPainter {
 
     // yaxis
     const double yAxisValueMin = 0;
-    final double yAxisValueMax = cdf.line.isEmpty ? 1 : cdf.line.fold(0.0, (previousValue, element) => max(previousValue, element.dy));
+    final double yAxisValueMax = cdf.line.y.isEmpty ? 1 : cdf.line.y.fold(0.0, (previousValue, element) => max(previousValue, element));
     const double yAxisValueMaxAxis = 1;
     final ValueAxisData yAxisData = ValueAxisData.from(yAxisValueMin, yAxisValueMaxAxis - yAxisValueMin, size.height - 2 * inset, null);
 
@@ -452,7 +452,7 @@ class CDFPainter extends CustomPainter {
     canvas.rotate(-1.5 * 3.14159265359);
 
     // pdf
-    if(cdf.line.isEmpty){
+    if(cdf.line.x.isEmpty){
       return;
     }
     final Path pdfPath = Path();
@@ -462,9 +462,9 @@ class CDFPainter extends CustomPainter {
     final double yOffset = yAxisValueMin.toDouble();
     final double yMult = (size.height - 2 * inset) / (yAxisValueMax - yAxisValueMin);
 
-    pdfPath.moveTo((cdf.line.first.dx + xOffset) * xMult + inset, -((cdf.line.first.dy + yOffset) * yMult - size.height + inset));
-    for(final Offset point in cdf.line.skip(1)){
-      pdfPath.lineTo((point.dx + xOffset) * xMult + inset, -((point.dy + yOffset) * yMult - size.height + inset));
+    pdfPath.moveTo((cdf.line.x.first + xOffset) * xMult + inset, -((cdf.line.y.first + yOffset) * yMult - size.height + inset));
+    for(int i = 1; i < cdf.line.x.length; i++){
+      pdfPath.lineTo((cdf.line.x[i] + xOffset) * xMult + inset, -((cdf.line.y[i] + yOffset) * yMult - size.height + inset));
     }
     canvas.drawPath(pdfPath, paintBase);
 
