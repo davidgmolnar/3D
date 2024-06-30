@@ -138,6 +138,7 @@ class StatisticsPlotConfigElement extends StatelessWidget {
           onChanged: onChanged,
           activeColor: StyleManager.globalStyle.primaryColor,
           inactiveColor: StyleManager.globalStyle.bgColor,
+          allowedInteraction: SliderInteraction.tapOnly,
         )
       ],
     );
