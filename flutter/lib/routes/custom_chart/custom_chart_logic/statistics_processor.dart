@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:ml_linalg/vector.dart';
 
 import '../../../data/data.dart';
+import '../../../data/sci/distribution.dart';
 import '../../../data/sci/kde.dart';
 import '../../../data/signal_container.dart';
 import '../../../data/typed_data_list_container.dart';
@@ -98,20 +99,12 @@ class CDFConfig implements PlotConfig{
   }
 }
 
-class HistogramBin{
-  final num start;
-  final num stop;
-  num value;
-
-  HistogramBin({required this.start, required this.stop, required this.value});
-}
-
 abstract class Plot{
   void recalc(final String meas, final String signal, final PlotConfig config);
 }
 
 class Histogram extends Plot{
-  final List<HistogramBin> bins;
+  final List<Bin> bins;
 
   Histogram({required this.bins});
 
@@ -137,7 +130,7 @@ class Histogram extends Plot{
     }
 
     final double binSpan = (max - min) / conf.binCount;
-    bins.addAll(List<HistogramBin>.generate(conf.binCount, (index) => HistogramBin(start: min + index * binSpan, stop: min + (index + 1) * binSpan, value: 0)));
+    bins.addAll(List<Bin>.generate(conf.binCount, (index) => Bin(start: min + index * binSpan, stop: min + (index + 1) * binSpan, value: 0)));
     for(final num value in values.iterable){
       bins[math.min((value - min) ~/ binSpan, conf.binCount - 1)].value++;
     }
@@ -173,9 +166,9 @@ class PDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 200; // TODO pdfconf
+    const int resolution = 300; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
-    line = KDE.estimatePDF(
+    line = KDE.estimatePDFBinning(
       values,
       Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
       math.pow(10, conf.bw).toDouble()
@@ -212,9 +205,9 @@ class CDF extends Plot{
     min = min - trueRange * 0.1;
     max = max + trueRange * 0.1;
 
-    const int resolution = 200; // TODO pdfconf
+    const int resolution = 300; // TODO pdfconf
     final double cellDist = (max - min) / resolution;
-    line = KDE.estimateCDF(
+    line = KDE.estimateCDFBinning(
       values,
       Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
       math.pow(10, conf.bw).toDouble()

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../../data/sci/distribution.dart';
 import '../../../io/logger.dart';
 import '../../../ui/charts/chart_logic/axis_data.dart';
 import '../../../ui/theme/theme.dart';
@@ -138,7 +139,7 @@ class StatisticsPlotConfigElement extends StatelessWidget {
           onChanged: onChanged,
           activeColor: StyleManager.globalStyle.primaryColor,
           inactiveColor: StyleManager.globalStyle.bgColor,
-          allowedInteraction: SliderInteraction.tapOnly,
+          allowedInteraction: SliderInteraction.tapAndSlide,
         )
       ],
     );
@@ -229,7 +230,7 @@ class HistogramPainter extends CustomPainter {
     final Path histPath = Path();
     final List<Offset> histValuePoints = [];
     histValuePoints.add(Offset(hist.bins.first.start.toDouble(), 0));
-    for(final HistogramBin bin in hist.bins){
+    for(final Bin bin in hist.bins){
       histValuePoints.add(Offset(
         bin.start.toDouble(),
         bin.value.toDouble()
