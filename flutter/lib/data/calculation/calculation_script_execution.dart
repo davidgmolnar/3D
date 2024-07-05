@@ -668,6 +668,7 @@ class CalculationScriptProcessor{
       values.pushBack(op(previousValue, previousTime, signalData[options.measurement]![channelOperand]!.values[i], signalData[options.measurement]![channelOperand]!.timestamps[i].toInt(), values.last, timestamps.last.toInt()));
       timestamps.pushBack(signalData[options.measurement]![channelOperand]!.timestamps[i]);
       previousValue = signalData[options.measurement]![channelOperand]!.values[i];
+      previousTime = signalData[options.measurement]![channelOperand]!.timestamps[i].toInt();
       if(values.last.isNaN || values.last.isInfinite){
         return LogEntry.error("NaN or Infinite result from instruction ${inst.op.name}");
       }
