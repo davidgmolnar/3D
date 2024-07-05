@@ -45,7 +45,7 @@ num signalIntegral(final String meas, final String signal, final double ref, fin
       }
       sum += valueInc;
       currIndex = currIndex! + inc;
-      if(currIndex + inc >= signalData[meas]![signal]!.values.size || currIndex < 0){
+      if(currIndex + inc >= signalData[meas]![signal]!.values.size || currIndex + inc < 0){
         break;
       }
       currVal = signalData[meas]![signal]!.values[currIndex];

@@ -287,7 +287,7 @@ class CalculationScriptProcessor{
   static Future<TypedDataListContainer> __initializeValueContainer(final String name) async {
     DBCSignal? sig = await __tryGetSignalByName(name);
     if(sig == null){
-      return TypedDataListContainer<Float32List>(list: Float32List(0));
+      return TypedDataListContainer<Float64List>(list: Float64List(0));
     }
     else{
       return TypedDataListContainer.emptyFromDBC(sig);

@@ -72,6 +72,9 @@ class CursorInfo{
     for(String meas in cursors[absIdx].values.keys){
       ret[meas] = {};
       for(String signal in cursors[absIdx].values[meas]!.keys){
+        if(!cursors[index].values.containsKey(meas) || !cursors[index].values[meas]!.containsKey(signal)){
+          continue;
+        }
         if(cursors[index].deltaType == DeltaDisplayType.ABSDIFF){
           ret[meas]![signal] = cursors[index].values[meas]![signal]! - cursors[absIdx].values[meas]![signal]!;
         }
