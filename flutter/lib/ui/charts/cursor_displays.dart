@@ -45,6 +45,10 @@ class CursorData{
   factory CursorData.fromCurrent(final double timeStamp, final Map<String, Map<String, num>> values){
     return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null);
   }
+
+  String represent(final int index) {
+    return "${isDelta ? "D" : "M"}$index: ${msToTimeString(timeStamp, addMs: true)}";
+  }
 }
 
 class CursorInfo{

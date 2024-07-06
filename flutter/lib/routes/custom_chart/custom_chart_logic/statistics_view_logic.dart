@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../../data/data.dart';
+import '../../../data/lapdata.dart';
 import '../../../data/signal_container.dart';
 import '../../../io/file_system.dart';
 import '../../../io/fscache.dart';
@@ -13,8 +14,10 @@ abstract class StatisticsViewLoadHelper{
   static void registerToCache(){
     FSCache.addListener(_onCacheTraceVisibleChanged, [FSCache.visibleTraceSettingsNamePath]);
     FSCache.addListener(_onCacheTraceAllChanged, [FSCache.allTraceSettingsNamePath]);
+    FSCache.addListener(_onCacheLapDataChanged, [FSCache.lapdataPath]);
     _onCacheTraceVisibleChanged();
     _onCacheTraceAllChanged();
+    _onCacheLapDataChanged();
     localLogger.info("Register complete", doNoti: false);
   }
 
@@ -33,6 +36,15 @@ abstract class StatisticsViewLoadHelper{
     for(final String key in allTraceSettingsDesc.keys){
       StatisticsViewController.notifier.value["data.all_names"][key] = allTraceSettingsDesc[key]!.cast<String>();
     } 
+  }
+
+  static void _onCacheLapDataChanged(){
+    LapData.reload();
+    StatisticsViewController.notifier.value["laps"].clear();
+    StatisticsViewController.notifier.update("laps", LapData.laps());
+    if(StatisticsViewController.notifier.value["laps.selected"] != null && StatisticsViewController.notifier.value["laps"].length <= StatisticsViewController.notifier.value["laps.selected"]){
+      StatisticsViewController.notifier.update("laps.selected", null);
+    }
   }
 
   static void saveVisible(final String meas, final List<String> signals){

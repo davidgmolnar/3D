@@ -10,6 +10,7 @@ import '../../../ui/dialogs/chart_grid_setup_dialog.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
 import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
+import '../../../ui/dialogs/lapdata_dialog.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
 import '../../custom_chart/custom_chart_logic/custom_chart_window_type.dart';
@@ -119,6 +120,21 @@ class MainWindowToolbar extends StatelessWidget {
 
   static void _logWindow (){}
 
+  static void _lapDataDialog (){
+    if(mainWindowNavigatorKey.currentContext == null){
+      localLogger.error("Could not show LapDataDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
+      return;
+    }
+    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
+      return const DialogBase(
+        title: "Laptime Editor",
+        dialog: LapDataDialog(),
+        minWidth: 700,
+        maxHeight: 600,
+      );
+    });
+  }
+
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
@@ -139,6 +155,7 @@ class MainWindowToolbar extends StatelessWidget {
       ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
+    ToolbarItem(iconData: Icons.flag, onPressed: _lapDataDialog),
   ];
 
   static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
@@ -155,6 +172,7 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
     ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
     ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
+    ToolbarDropdownItem(onPressed: _lapDataDialog, text: "Laps"),
   ];
 
   static int _mainWindowToolbarItemsHiddenSkip(int i) => 

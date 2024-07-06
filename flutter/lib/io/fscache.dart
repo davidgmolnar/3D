@@ -20,6 +20,7 @@ abstract class FSCache{
   static String get importedMeasurementsPath => "main.imported";
   static String get visibleTraceSettingsNamePath => "main.trace.visible_signals";
   static String get allTraceSettingsNamePath => "main.trace.all_signals";
+  static String get lapdataPath => "main.lapdata";
 
   static Future<void> init() async {
     if(_initialized){

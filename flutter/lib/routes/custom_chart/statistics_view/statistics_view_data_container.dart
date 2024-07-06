@@ -17,7 +17,7 @@ class _StatisticsViewDataContainerState extends State<StatisticsViewDataContaine
 
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data.selected_names", "data.meas"]);
+    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data.selected_names", "data.meas", "laps.selected"]);
     super.initState();
   }
   

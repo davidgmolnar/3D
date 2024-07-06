@@ -17,7 +17,7 @@ class StatisticsViewToolbar extends StatefulWidget {
 class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data", "plot.type", "plot.signal"]);
+    StatisticsViewController.notifier.addListener(_onControllerUpdate, ["data", "plot.type", "plot.signal", "laps"]);
     super.initState();
   }
 

@@ -36,6 +36,8 @@ abstract class StatisticsViewController{
     "data.visible_names": {},
     "data.all_names": {},
     "data.selected_names": [],
+    "laps": [],
+    "laps.selected": null,
     "plot.configs": {
       StatistiscsViewPlotType.HIST: HistogramConfig(binCount: 50, minmax: const Offset(0, 100)),
       StatistiscsViewPlotType.PDF: PDFConfig(bw: 1, minmax: const Offset(-2, 5)),
