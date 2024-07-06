@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import '../io/fscache.dart';
+import 'data.dart';
 
 abstract class LapData{
   static final Set<double> _lapMarkersMs = {};
@@ -44,11 +45,8 @@ abstract class LapData{
     }
     return laps;
   }
+
+  static String rep(final Offset lap, final int index){
+    return "Lap ${index + 1}: ${msToTimeString(lap.dx, addMs: true)} - ${msToTimeString(lap.dy, addMs: true)}";
+  }
 }
-
-// Dropdown on toolbar laps.selected null means full duration, else index in laps
-// Toolbar refresh can become an icon to make room for this^^
-
-// stat() -> crop time
-
-// plot.recalc() -> crop time

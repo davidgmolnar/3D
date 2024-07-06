@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:math' as math;
 
@@ -8,6 +9,7 @@ import '../../../data/sci/distribution.dart';
 import '../../../data/sci/kde.dart';
 import '../../../data/signal_container.dart';
 import '../../../data/typed_data_list_container.dart';
+import 'statistics_view_controller.dart';
 
 class Stat{
   final num min;
@@ -113,26 +115,20 @@ class Histogram extends Plot{
     bins.clear();
     final HistogramConfig conf = config as HistogramConfig;
 
-    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
-    if(values == null){
+    final SignalContainer? channel = signalData[meas]?[signal];
+    if(channel == null){
       return;
     }
 
-    num min = double.infinity;
-    num max = double.negativeInfinity;
-    for(final num value in values.iterable){
-      if(value < min){
-        min = value;
-      }
-      if(value > max){
-        max = value;
-      }
-    }
+    final List meta = StatisticsProcessor.calcMeta(channel);
 
-    final double binSpan = (max - min) / conf.binCount;
-    bins.addAll(List<Bin>.generate(conf.binCount, (index) => Bin(start: min + index * binSpan, stop: min + (index + 1) * binSpan, value: 0)));
-    for(final num value in values.iterable){
-      bins[math.min((value - min) ~/ binSpan, conf.binCount - 1)].value++;
+    final double binSpan = (meta[1] - meta[0]) / conf.binCount;
+    bins.addAll(List<Bin>.generate(conf.binCount, (index) => Bin(start: meta[0] + index * binSpan, stop: meta[0] + (index + 1) * binSpan, value: 0)));
+
+    for(int i = 0; i < channel.values.size; i++){
+      if(meta[2] == null || (meta[2] <= channel.timestamps[i] && channel.timestamps[i] <= meta[3])){
+        bins[math.min((channel.values[i] - meta[0]) ~/ binSpan, conf.binCount - 1)].value++;
+      }
     }
   }
 }
@@ -146,31 +142,32 @@ class PDF extends Plot{
   void recalc(final String meas, final String signal, final PlotConfig config){
     final PDFConfig conf = config as PDFConfig;
         
-    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
-    if(values == null){
+    final SignalContainer? channel = signalData[meas]?[signal];
+    if(channel == null){
       return;
     }
 
-    num min = double.infinity;
-    num max = double.negativeInfinity;
-    for(final num value in values.iterable){
-      if(value < min){
-        min = value;
-      }
-      if(value > max){
-        max = value;
-      }
-    }
+    final List meta = StatisticsProcessor.calcMeta(channel);
 
-    final num trueRange = max - min;
-    min = min - trueRange * 0.1;
-    max = max + trueRange * 0.1;
+    final num trueRange = meta[1] - meta[0];
+    meta[0] = meta[0] - trueRange * 0.1;
+    meta[1] = meta[1] + trueRange * 0.1;
 
     const int resolution = 300; // TODO pdfconf
-    final double cellDist = (max - min) / resolution;
+    final double cellDist = (meta[1] - meta[0]) / resolution;
+
+    TypedDataListContainer<Float32List> values = TypedDataListContainer(list: Float32List(0));
+
+    for(int i = 0; i < channel.values.size; i++){
+      if(meta[2] == null || (meta[2] <= channel.timestamps[i] && channel.timestamps[i] <= meta[3])){
+        values.pushBack(channel.values[i]);
+      }
+    }
+    values.shrinkToFit();
+
     line = KDE.estimatePDFBinning(
       values,
-      Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+      Vector.fromList(List<num>.generate(resolution, (index) => meta[0] + index * cellDist)),
       math.pow(10, conf.bw).toDouble()
     );
   }
@@ -185,31 +182,32 @@ class CDF extends Plot{
   void recalc(final String meas, final String signal, final PlotConfig config){
     final CDFConfig conf = config as CDFConfig;
         
-    final TypedDataListContainer? values = signalData[meas]?[signal]?.values;
-    if(values == null){
+    final SignalContainer? channel = signalData[meas]?[signal];
+    if(channel == null){
       return;
     }
 
-    num min = double.infinity;
-    num max = double.negativeInfinity;
-    for(final num value in values.iterable){
-      if(value < min){
-        min = value;
-      }
-      if(value > max){
-        max = value;
-      }
-    }
+    final List meta = StatisticsProcessor.calcMeta(channel);
 
-    final num trueRange = max - min;
-    min = min - trueRange * 0.1;
-    max = max + trueRange * 0.1;
+    final num trueRange = meta[1] - meta[0];
+    meta[0] = meta[0] - trueRange * 0.1;
+    meta[1] = meta[1] + trueRange * 0.1;
 
     const int resolution = 300; // TODO pdfconf
-    final double cellDist = (max - min) / resolution;
+    final double cellDist = (meta[1] - meta[0]) / resolution;
+
+    TypedDataListContainer<Float32List> values = TypedDataListContainer(list: Float32List(0));
+
+    for(int i = 0; i < channel.values.size; i++){
+      if(meta[2] == null || (meta[2] <= channel.timestamps[i] && channel.timestamps[i] <= meta[3])){
+        values.pushBack(channel.values[i]);
+      }
+    }
+    values.shrinkToFit();
+
     line = KDE.estimateCDFBinning(
       values,
-      Vector.fromList(List<num>.generate(resolution, (index) => min + index * cellDist)),
+      Vector.fromList(List<num>.generate(resolution, (index) => meta[0] + index * cellDist)),
       math.pow(10, conf.bw).toDouble()
     );
   }
@@ -226,19 +224,34 @@ abstract class StatisticsProcessor{
 
     final SignalContainer channel = signalData[measurement]![signal]!;
 
-    num min = double.infinity;
-    num max = double.negativeInfinity;
-    for(final num value in channel.values.iterable){
-      if(value > max){
-        max = value;
-      }
-      if(value < min){
-        min = value;
-      }
+    final List meta = calcMeta(channel);
+
+    num integral = signalIntegral(measurement, signal, meta[2] ?? channel.timestamps.first.toDouble(), meta[3] ?? channel.timestamps.last.toDouble());
+    num avg = integral / ((meta[3] ?? channel.timestamps.last) - (meta[2] ?? channel.timestamps.first)) * 1000; // ms to s
+    return Stat(min: meta[0], max: meta[1], integral: integral, avg: avg);
+  }
+
+  static List calcMeta(final SignalContainer channel){
+    double min = double.infinity;
+    double max = double.negativeInfinity;
+
+    double? timeStart;
+    double? timeStop;
+    if(StatisticsViewController.notifier.value["laps.selected"] != null){
+      timeStart = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.selected"]].dx;
+      timeStop = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.selected"]].dy;
     }
 
-    num integral = signalIntegral(measurement, signal, channel.timestamps.first.toDouble(), channel.timestamps.last.toDouble());
-    num avg = integral / (channel.timestamps.last - channel.timestamps.first) * 1000; // ms to s
-    return Stat(min: min, max: max, integral: integral, avg: avg);
+    for(int i = 0; i < channel.values.size; i++){
+      if(StatisticsViewController.notifier.value["laps.selected"] == null || (timeStart! <= channel.timestamps[i] && channel.timestamps[i] <= timeStop!)){
+        if(channel.values[i] > max){
+          max = channel.values[i].toDouble();
+        }
+        if(channel.values[i] < min){
+          min = channel.values[i].toDouble();
+        }
+      }
+    }
+    return [min, max, timeStart, timeStop];
   }
 }

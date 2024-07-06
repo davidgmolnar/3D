@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../data/lapdata.dart';
 import '../../../io/logger.dart';
 import '../../../ui/input_widgets/search_list_selector.dart';
 import '../../../ui/input_widgets/search_selector.dart';
@@ -62,7 +63,26 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               }
             }
           ),
-          TextButton(
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+            child: DropdownButton<int?>(
+              value: StatisticsViewController.notifier.value["laps.selected"],
+              items: [DropdownMenuItem<int>(value: null, child: Text("Full duration", style: StyleManager.textStyle,)), 
+                ...List.generate(StatisticsViewController.notifier.value["laps"].length, (index) => index)
+                .map((lapIndex) => DropdownMenuItem<int>(
+                  value: lapIndex,
+                  child: Text(
+                    LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex),
+                    style: StyleManager.textStyle,
+                  )
+                ))
+              ],
+              onChanged: (final int? selected){
+                StatisticsViewController.notifier.update("laps.selected", selected);
+              }
+            ),
+          ),
+          IconButton(
             onPressed: (){
               if(StatisticsViewController.notifier.value["data.selected_names"].isNotEmpty && StatisticsViewController.notifier.value["data.meas"] != null){
                 StatisticsViewController.sendRequest();
@@ -71,7 +91,7 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
                 noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Set measurement and signals first"), 5000));
               }
             },
-            child: Text("Refresh signals", style: StyleManager.textStyle,)
+            icon: Icon(Icons.refresh_outlined, color: StyleManager.globalStyle.primaryColor,),
           ),
           Container(
             width: 1,
