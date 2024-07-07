@@ -404,3 +404,91 @@ abstract class UnitSystem{
     return true;
   }
 }
+
+class CompoundUnit{
+  int? power;
+  double? multiplier;
+  double? offset;
+  final List<UnitAlias> nom;
+  final List<UnitAlias> denom;
+
+  CompoundUnit({required this.power, required this.multiplier, required this.offset, required this.nom, required this.denom});
+
+  static CompoundUnit scalar(){
+    return CompoundUnit(power: null, multiplier: null, offset: null, nom: [], denom: []);
+  }
+
+  static CompoundUnit fromAlias(final UnitAlias alias){
+    return CompoundUnit(power: null, multiplier: null, offset: null, nom: [alias], denom: []);
+  }
+
+  bool isScalar(){
+    return nom.isEmpty && denom.isEmpty;
+  }
+}
+
+abstract class UnitManipulation{
+  static CompoundUnit unitMult(final CompoundUnit lhs, final CompoundUnit rhs){
+    // össze kell pakolni
+    // majd simplify
+  }
+
+  static CompoundUnit unitDiv(final CompoundUnit lhs, final CompoundUnit rhs){
+    // össze kell pakolni
+    // majd simplify
+  }
+}
+
+abstract class UnitConstraints{
+  static bool isSameOrConvertible2(final CompoundUnit lhs, final CompoundUnit rhs){
+    // simplify copy both
+    // reduce elements from one and the other too
+    // check remainder in other
+  }
+
+  static bool isScalar1(final CompoundUnit lhs){
+    return lhs.isScalar();
+  }
+
+  static bool isScalar2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return lhs.isScalar();
+  }
+
+  static bool isRadians1(final CompoundUnit lhs){
+    return lhs.denom.isEmpty && lhs.nom.singleOrNull == "radians";
+  }
+
+  static bool none1(final CompoundUnit lhs){
+    return true;
+  }
+
+  static bool none2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return true;
+  }
+}
+
+// ez nem így, együtt kéne kezelni a multi/offset/power dolgokkal és (CompoundUnit, CompoundUnit) -> CompoundUnit signature kell
+abstract class ResultUnits{
+  static CompoundUnit unitOfEiher2(final CompoundUnit lhs, final CompoundUnit rhs){
+    if(lhs.isScalar()){
+      return rhs;
+    }
+    return lhs;
+  }  
+  
+  static CompoundUnit unitOfFirst2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return lhs;
+  }
+
+  static CompoundUnit unitOfSecond2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return rhs;
+  }
+
+  static CompoundUnit scalar2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return CompoundUnit.scalar();
+  }
+
+  static CompoundUnit radians2(final CompoundUnit lhs, final CompoundUnit rhs){
+    return CompoundUnit.fromAlias("radians");
+  }
+}

@@ -117,12 +117,12 @@ class GlobalCursorData extends StatelessWidget {
         ),
         Padding(
           padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
-          child: Text("Timestamp: ${cursorInfoNotifier.value.cursors[selectedCursor].timeStamp}"),
+          child: Text("Timestamp: ${msToTimeString(cursorInfoNotifier.value.cursors[selectedCursor].timeStamp, addMs: true)}"),
         ),
         if(cursorInfoNotifier.value.cursors[selectedCursor].isDelta)
           Padding(
             padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
-            child: Text("dt: ${cursorInfoNotifier.value.dt(selectedCursor)}"),
+            child: Text("dt: ${cursorInfoNotifier.value.dt(selectedCursor)} ms"),
           ),
       ],
     );
