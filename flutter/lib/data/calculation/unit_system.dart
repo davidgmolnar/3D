@@ -20,11 +20,9 @@ class UnitDescription{
 
 class ConversionHelper{
   final UnitAlias to;
-  final int? power;
-  final double? multiplier;
-  final double? offset;
+  final double multiplier;
 
-  ConversionHelper({required this.to, required this.power, required this.multiplier, required this.offset});
+  ConversionHelper({required this.to, required this.multiplier});
 }
 
 class UnitConversionTable{
@@ -34,12 +32,7 @@ class UnitConversionTable{
     return conversionsToBase.entries.map((entry) => {
       "from": entry.key,
       "to": entry.value.to,
-      if(entry.value.power != null)
-        "power": entry.value.power
-      else if(entry.value.multiplier != null)
-        "multiplier": entry.value.multiplier
-      else if(entry.value.offset != null)
-        "offset": entry.value.offset
+      "multiplier": entry.value.multiplier
     }).toList();
   }
 }
@@ -120,8 +113,7 @@ abstract class UnitSystem{
       "watts": UnitDescription(representations: ["W"], isBase: true, dim: "power"),
       "kilowatts": UnitDescription(representations: ["kW"], isBase: false, dim: "power"),
 
-      "kelvins": UnitDescription(representations: ["K"], isBase: true, dim: "temperature"),
-      "celsius": UnitDescription(representations: ["°C"], isBase: false, dim: "temperature"),
+      "celsius": UnitDescription(representations: ["°C"], isBase: true, dim: "temperature"),
       
       "joules": UnitDescription(representations: ["J"], isBase: true, dim: "energy"),
       "kilojoules": UnitDescription(representations: ["kJ"], isBase: false, dim: "energy"),
@@ -134,31 +126,29 @@ abstract class UnitSystem{
   });
 
     _conversionTable.conversionsToBase.addAll({
-      "millimeters": ConversionHelper(to: "meters", power: null, multiplier: 0.001, offset: null),
-      "kilometers": ConversionHelper(to: "meters", power: null, multiplier: 1000, offset: null),
+      "millimeters": ConversionHelper(to: "meters", multiplier: 0.001),
+      "kilometers": ConversionHelper(to: "meters", multiplier: 1000),
 
-      "milliseconds": ConversionHelper(to: "seconds", power: null, multiplier: 0.001, offset: null),
-      "minutes": ConversionHelper(to: "seconds", power: null, multiplier: 60, offset: null),
-      "hours": ConversionHelper(to: "seconds", power: null, multiplier: 3600, offset: null),
+      "milliseconds": ConversionHelper(to: "seconds", multiplier: 0.001),
+      "minutes": ConversionHelper(to: "seconds", multiplier: 60),
+      "hours": ConversionHelper(to: "seconds", multiplier: 3600),
       
-      "gramms": ConversionHelper(to: "kilogramms", power: null, multiplier: 0.001, offset: null),
+      "gramms": ConversionHelper(to: "kilogramms", multiplier: 0.001),
 
-      "kilonewtons": ConversionHelper(to: "newtons", power: null, multiplier: 1000, offset: null),
+      "kilonewtons": ConversionHelper(to: "newtons", multiplier: 1000),
 
-      "milliampere": ConversionHelper(to: "ampere", power: null, multiplier: 0.001, offset: null),
+      "milliampere": ConversionHelper(to: "ampere", multiplier: 0.001),
 
-      "millivolts": ConversionHelper(to: "volts", power: null, multiplier: 0.001, offset: null),
+      "millivolts": ConversionHelper(to: "volts", multiplier: 0.001),
 
-      "milliwatts": ConversionHelper(to: "watts", power: null, multiplier: 0.001, offset: null),
-      "kilowatts": ConversionHelper(to: "watts", power: null, multiplier: 1000, offset: null),
+      "milliwatts": ConversionHelper(to: "watts", multiplier: 0.001),
+      "kilowatts": ConversionHelper(to: "watts", multiplier: 1000),
 
-      "celsius": ConversionHelper(to: "kelvins", power: null, multiplier: null, offset: 273.15),
+      "kilojoules": ConversionHelper(to: "joules", multiplier: 1000),
 
-      "kilojoules": ConversionHelper(to: "joules", power: null, multiplier: 1000, offset: null),
+      "bars": ConversionHelper(to: "pascals", multiplier: 100000),
 
-      "bars": ConversionHelper(to: "pascals", power: null, multiplier: 100000, offset: null),
-
-      "degrees": ConversionHelper(to: "radians", power: null, multiplier: 180/pi, offset: null),
+      "degrees": ConversionHelper(to: "radians", multiplier: 180/pi),
     });
 
     _compositionTable.compositions.addAll({
@@ -257,20 +247,6 @@ abstract class UnitSystem{
     return true;
   }
 
-  static bool _checkConversionHelpers(){
-    for(final ConversionHelper helper in _conversionTable.conversionsToBase.values){
-      int count = 0;
-      count += helper.power != null ? 1 : 0;
-      count += helper.multiplier != null ? 1 : 0;
-      count += helper.offset != null ? 1 : 0;
-      if(count != 1){
-        localLogger.error("One and only one of {power, multiplier, offset} must be set, $count was given for a conversion to ${helper.to}");
-        return false;
-      }
-    }
-    return true;
-  }
-
   static bool _checkNonBaseIsConvertible(){
     for(final MapEntry<UnitAlias, UnitDescription> entry in _unitDescriptions.entries.where((entry) => !entry.value.isBase)){
       if(!_conversionTable.conversionsToBase.containsKey(entry.key)){
@@ -309,7 +285,6 @@ abstract class UnitSystem{
     success &= _checkDimHasOneBase();
     success &= _checkConversionStaysWithinDim();
     success &= _checkConversionIsToBase();
-    success &= _checkConversionHelpers();
     success &= _checkNonBaseIsConvertible();
     success &= _checkCompositionUsesBaseUnits();
     
@@ -359,7 +334,7 @@ abstract class UnitSystem{
           localLogger.error("Duplicate unit conversion detected for alias ${conv["from"]}");
           success = false;
         }
-        _conversionTable.conversionsToBase[conv["from"]] = ConversionHelper(to: conv["to"], power: conv["power"], multiplier: conv["multiplier"], offset: conv["offset"]);
+        _conversionTable.conversionsToBase[conv["from"]] = ConversionHelper(to: conv["to"], multiplier: conv["multiplier"]);
       }
     }catch (ex){
       success = false;
@@ -403,47 +378,379 @@ abstract class UnitSystem{
     }
     return true;
   }
+
+  static ConversionResult _convertComplexBaseUnitToSimpleBaseElements(final UnitAlias unit, final int exponent){
+
+  }  
+  
+  static ConversionResult _convertComplexUnitToSimpleBaseElements(final UnitAlias unit, final int exponent){
+
+  }
+
+  static ConversionResult _convertSimpleUnitToSimpleBase(final UnitAlias unit, final int exponent){
+    
+  }
+
+  static CompoundUnit reduceToBase(final CompoundUnit unit){
+    double multiplier = unit.multiplier ?? 1;
+
+    final Map<UnitAlias, int> nomReduced = {};
+
+    for(final MapEntry<UnitAlias, int> elem in unit.nom.entries){
+      if(_unitDescriptions[elem.key]!.isBase){
+        if(!_compositionTable.compositions.containsKey(elem.key)){
+          if(nomReduced.containsKey(elem.key)){
+            nomReduced[elem.key] = nomReduced[elem.key]! + elem.value;
+          }
+          else{
+            nomReduced[elem.key] = elem.value;
+          }
+        }
+        else{
+          final ConversionResult res = _convertComplexBaseUnitToSimpleBaseElements(elem.key, elem.value);
+          multiplier *= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! + resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = resElem.value;
+            }
+          }
+        }
+      }
+      else{
+        if(!_compositionTable.compositions.containsKey(elem.key)){
+          final ConversionResult res = _convertSimpleUnitToSimpleBase(elem.key, elem.value);
+          multiplier *= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! + resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = resElem.value;
+            }
+          }
+        }
+        else{
+          final ConversionResult res = _convertComplexUnitToSimpleBaseElements(elem.key, elem.value);
+          multiplier *= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! + resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = resElem.value;
+            }
+          }
+        }
+      }
+    }
+
+    for(final MapEntry<UnitAlias, int> elem in unit.denom.entries){
+      if(_unitDescriptions[elem.key]!.isBase){
+        if(!_compositionTable.compositions.containsKey(elem.key)){
+          if(nomReduced.containsKey(elem.key)){
+            nomReduced[elem.key] = nomReduced[elem.key]! - elem.value;
+          }
+          else{
+            nomReduced[elem.key] = -elem.value;
+          }
+        }
+        else{
+          final ConversionResult res = _convertComplexBaseUnitToSimpleBaseElements(elem.key, elem.value);
+          multiplier /= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! - resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = -resElem.value;
+            }
+          }
+        }
+      }
+      else{
+        if(!_compositionTable.compositions.containsKey(elem.key)){
+          final ConversionResult res = _convertSimpleUnitToSimpleBase(elem.key, elem.value);
+          multiplier /= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! - resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = -resElem.value;
+            }
+          }
+        }
+        else{
+          final ConversionResult res = _convertComplexUnitToSimpleBaseElements(elem.key, elem.value);
+          multiplier /= res.multiplier;
+          
+          for(final MapEntry<UnitAlias, int> resElem in res.unitSeries.entries){
+            if(nomReduced.containsKey(resElem.key)){
+              nomReduced[resElem.key] = nomReduced[resElem.key]! - resElem.value;
+            }
+            else{
+              nomReduced[resElem.key] = -resElem.value;
+            }
+          }
+        }
+      }
+    }
+
+    return CompoundUnit(multiplier: multiplier == 1 ? null : multiplier, nom: nomReduced, denom: {});
+  } 
+
+  static CompoundUnit compose(final CompoundUnit unit){
+    CompoundUnit base = reduceToBase(unit)..simplify();
+    
+    for(final MapEntry<UnitAlias, int> elem in base.denom.entries){
+      if(base.nom.containsKey(elem.key)){
+        base.nom[elem.key] = base.nom[elem.key]! - elem.value;
+      }
+      else{
+        base.nom[elem.key] = -elem.value;
+      }
+    }
+    base.denom.clear();
+
+    for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
+      for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+        final List<int> convertAmounts = [];
+        for(final MapEntry<UnitAlias, int> compPart in compOption){
+          if(base.nom.containsKey(compPart.key)){
+            int amount = (base.nom[compPart.key]! / compPart.value).floor();
+            if(amount < 0){
+              amount = 0;
+            }
+            convertAmounts.add(amount);
+          }
+          else{
+            convertAmounts.add(0);
+            break;
+          }
+        }
+        
+        if(convertAmounts.isEmpty){
+          continue;
+        }
+        final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
+        if(maxPossibleConvert > 0){
+          for(final MapEntry<UnitAlias, int> compPart in compOption){
+            base.nom[compPart.key] = base.nom[compPart.key]! - compPart.value * maxPossibleConvert;
+          }
+          if(base.nom.containsKey(composition.key)){
+            base.nom[composition.key] = base.nom[composition.key]! + maxPossibleConvert;
+          }
+          else{
+            base.nom[composition.key] = maxPossibleConvert;
+          }
+        }
+      }
+    }
+
+    for(final MapEntry<UnitAlias, int> elem in base.nom.entries){
+      if(base.denom.containsKey(elem.key)){
+        base.denom[elem.key] = base.denom[elem.key]! - elem.value;
+      }
+      else{
+        base.denom[elem.key] = -elem.value;
+      }
+    }
+    base.nom.clear();
+
+    for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
+      for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+        final List<int> convertAmounts = [];
+        for(final MapEntry<UnitAlias, int> compPart in compOption){
+          if(base.denom.containsKey(compPart.key)){
+            int amount = (base.denom[compPart.key]! / compPart.value).floor();
+            if(amount < 0){
+              amount = 0;
+            }
+            convertAmounts.add(amount);
+          }
+          else{
+            convertAmounts.add(0);
+            break;
+          }
+        }
+        
+        if(convertAmounts.isEmpty){
+          continue;
+        }
+        final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
+        if(maxPossibleConvert > 0){
+          for(final MapEntry<UnitAlias, int> compPart in compOption){
+            base.denom[compPart.key] = base.denom[compPart.key]! - compPart.value * maxPossibleConvert;
+          }
+          if(base.denom.containsKey(composition.key)){
+            base.denom[composition.key] = base.denom[composition.key]! + maxPossibleConvert;
+          }
+          else{
+            base.denom[composition.key] = maxPossibleConvert;
+          }
+        }
+      }
+    }
+
+    return base..simplify();
+  }
+}
+
+class ConversionResult{
+  final double multiplier;
+  final Map<UnitAlias, int> unitSeries;
+
+  ConversionResult({required this.multiplier, required this.unitSeries});
 }
 
 class CompoundUnit{
-  int? power;
   double? multiplier;
-  double? offset;
-  final List<UnitAlias> nom;
-  final List<UnitAlias> denom;
+  final Map<UnitAlias, int> nom;
+  final Map<UnitAlias, int> denom;
 
-  CompoundUnit({required this.power, required this.multiplier, required this.offset, required this.nom, required this.denom});
+  CompoundUnit({required this.multiplier, required this.nom, required this.denom});
 
   static CompoundUnit scalar(){
-    return CompoundUnit(power: null, multiplier: null, offset: null, nom: [], denom: []);
+    return CompoundUnit(multiplier: null, nom: {}, denom: {});
   }
 
   static CompoundUnit fromAlias(final UnitAlias alias){
-    return CompoundUnit(power: null, multiplier: null, offset: null, nom: [alias], denom: []);
+    return CompoundUnit(multiplier: null, nom: {alias: 1}, denom: {});
   }
 
   bool isScalar(){
     return nom.isEmpty && denom.isEmpty;
   }
+
+  void simplify(){
+    final List<UnitAlias> removeKeys = [];
+    final List<UnitAlias> moveToDenomKeys = [];
+    for(final MapEntry<UnitAlias, int> elem in denom.entries){
+      if(nom.containsKey(elem.key)){
+        nom[elem.key] = nom[elem.key]! - elem.value;
+      }
+      else{
+        nom[elem.key] = -elem.value;
+      }
+
+      if(nom[elem.key] == 0){
+        removeKeys.add(elem.key);
+      }
+      else if(nom[elem.key]! < 0){
+        moveToDenomKeys.add(elem.key);
+      }
+    }
+
+    denom.clear();
+
+    for(final UnitAlias unit in removeKeys){
+      nom.remove(unit);
+    }
+
+    for(final UnitAlias unit in moveToDenomKeys){
+      denom[unit] = -nom.remove(unit)!;
+    }
+  }
+
+  CompoundUnit compose(){
+    return UnitSystem.compose(this);
+  }
+
+  CompoundUnit reducedToBaseSimplified(){
+    return UnitSystem.reduceToBase(this)..simplify();
+  }
 }
 
 abstract class UnitManipulation{
   static CompoundUnit unitMult(final CompoundUnit lhs, final CompoundUnit rhs){
-    // össze kell pakolni
-    // majd simplify
+    final CompoundUnit res = CompoundUnit.scalar();
+    final Map<UnitAlias, int> nom = {};
+    final Map<UnitAlias, int> denom = {};
+    nom.addAll(lhs.nom);
+    denom.addAll(lhs.denom);
+
+    for(final MapEntry<UnitAlias, int> elem in rhs.nom.entries){
+      if(nom.containsKey(elem.key)){
+        nom[elem.key] = nom[elem.key]! + elem.value;
+      }
+      else{
+        nom[elem.key] = elem.value;
+      }
+    }
+
+    for(final MapEntry<UnitAlias, int> elem in rhs.denom.entries){
+      if(nom.containsKey(elem.key)){
+        denom[elem.key] = denom[elem.key]! + elem.value;
+      }
+      else{
+        denom[elem.key] = elem.value;
+      }
+    }
+
+    return res..simplify()..compose();
   }
 
   static CompoundUnit unitDiv(final CompoundUnit lhs, final CompoundUnit rhs){
-    // össze kell pakolni
-    // majd simplify
+    final CompoundUnit res = CompoundUnit.scalar();
+    final Map<UnitAlias, int> nom = {};
+    final Map<UnitAlias, int> denom = {};    
+    nom.addAll(lhs.nom);
+    denom.addAll(lhs.denom);
+
+    for(final MapEntry<UnitAlias, int> elem in rhs.nom.entries){
+      if(nom.containsKey(elem.key)){
+        nom[elem.key] = nom[elem.key]! - elem.value;
+      }
+      else{
+        nom[elem.key] = -elem.value;
+      }
+    }
+
+    for(final MapEntry<UnitAlias, int> elem in rhs.denom.entries){
+      if(nom.containsKey(elem.key)){
+        denom[elem.key] = denom[elem.key]! - elem.value;
+      }
+      else{
+        denom[elem.key] = -elem.value;
+      }
+    }
+  
+    return res..simplify()..compose();
   }
 }
 
 abstract class UnitConstraints{
   static bool isSameOrConvertible2(final CompoundUnit lhs, final CompoundUnit rhs){
-    // simplify copy both
-    // reduce elements from one and the other too
-    // check remainder in other
+    final CompoundUnit lhsReduced = lhs.reducedToBaseSimplified();
+    final CompoundUnit rhsReduced = rhs.reducedToBaseSimplified();
+    
+    for(final MapEntry<UnitAlias, int> elem in lhsReduced.nom.entries){
+      if(rhs.nom.containsKey(elem.key) && rhs.nom[elem.key] == elem.value){
+        rhs.nom.remove(elem.key);
+      }
+      else{
+        return false;
+      }
+    }
+
+    for(final MapEntry<UnitAlias, int> elem in lhsReduced.denom.entries){
+      if(rhs.denom.containsKey(elem.key) && rhs.denom[elem.key] == elem.value){
+        rhs.denom.remove(elem.key);
+      }
+      else{
+        return false;
+      }
+    }
+
+    return rhsReduced.nom.isEmpty && rhsReduced.denom.isEmpty;
   }
 
   static bool isScalar1(final CompoundUnit lhs){
@@ -455,7 +762,7 @@ abstract class UnitConstraints{
   }
 
   static bool isRadians1(final CompoundUnit lhs){
-    return lhs.denom.isEmpty && lhs.nom.singleOrNull == "radians";
+    return lhs.denom.isEmpty && lhs.nom.keys.singleOrNull == "radians";
   }
 
   static bool none1(final CompoundUnit lhs){
@@ -467,8 +774,11 @@ abstract class UnitConstraints{
   }
 }
 
-// ez nem így, együtt kéne kezelni a multi/offset/power dolgokkal és (CompoundUnit, CompoundUnit) -> CompoundUnit signature kell
 abstract class ResultUnits{
+  static CompoundUnit unitOfInput1(final CompoundUnit inp){
+    return inp;
+  }
+
   static CompoundUnit unitOfEiher2(final CompoundUnit lhs, final CompoundUnit rhs){
     if(lhs.isScalar()){
       return rhs;
