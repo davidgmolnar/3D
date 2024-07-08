@@ -672,6 +672,17 @@ class CompoundUnit{
 abstract class UnitManipulation{
   static CompoundUnit unitMult(final CompoundUnit lhs, final CompoundUnit rhs){
     final CompoundUnit res = CompoundUnit.scalar();
+
+    if(rhs.multiplier != null && lhs.multiplier == null){
+      res.multiplier = rhs.multiplier;
+    }
+    else if(rhs.multiplier == null && lhs.multiplier != null){
+      res.multiplier = lhs.multiplier;
+    }
+    else if(rhs.multiplier != null && lhs.multiplier != null){
+      res.multiplier = lhs.multiplier! * rhs.multiplier!;
+    }
+
     final Map<UnitAlias, int> nom = {};
     final Map<UnitAlias, int> denom = {};
     nom.addAll(lhs.nom);
@@ -700,6 +711,17 @@ abstract class UnitManipulation{
 
   static CompoundUnit unitDiv(final CompoundUnit lhs, final CompoundUnit rhs){
     final CompoundUnit res = CompoundUnit.scalar();
+
+    if(rhs.multiplier != null && lhs.multiplier == null){
+      res.multiplier = 1 / rhs.multiplier!;
+    }
+    else if(rhs.multiplier == null && lhs.multiplier != null){
+      res.multiplier = lhs.multiplier;
+    }
+    else if(rhs.multiplier != null && lhs.multiplier != null){
+      res.multiplier = lhs.multiplier! / rhs.multiplier!;
+    }
+    
     final Map<UnitAlias, int> nom = {};
     final Map<UnitAlias, int> denom = {};    
     nom.addAll(lhs.nom);
