@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 import '../../io/file_system.dart';
 import '../../io/logger.dart';
 
@@ -666,6 +668,18 @@ class CompoundUnit{
 
   CompoundUnit reducedToBaseSimplified(){
     return UnitSystem.reduceToBase(this)..simplify();
+  }
+
+  String toSimpleString(){
+    
+  }
+
+  Text toLatexText(){
+    /// https://pub.dev/packages/latext
+  }
+
+  static CompoundUnit fromString(final String str){
+
   }
 }
 
