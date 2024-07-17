@@ -382,15 +382,34 @@ abstract class UnitSystem{
   }
 
   static ConversionResult _convertComplexBaseUnitToSimpleBaseElements(final UnitAlias unit, final int exponent){
+    final List<UnitAlias> unitsTouched = [unit];
+
+    final List<List<MapEntry<UnitAlias, int>>> compositions = _compositionTable.compositions[unit]!;
+    final int allBaseComposition = compositions.indexWhere((final List<MapEntry<UnitAlias, int>> composition) => composition.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
+    if(allBaseComposition == -1){
+      final Map<UnitAlias, int> components = Map.fromEntries(compositions.first);
+      // while need be
+      //    find non simple units, add them to touched
+      //    look for a composition using units that are not in touched
+      //    apply comp
+      // return
+    }
+    else{
+      final List<MapEntry<UnitAlias, int>> composition = compositions[allBaseComposition].map((final MapEntry<UnitAlias, int> part) => MapEntry<UnitAlias, int>(part.key, part.value * exponent)).toList();
+      return ConversionResult(multiplier: 1, unitSeries: Map.fromEntries(composition));
+    }
 
   }  
   
   static ConversionResult _convertComplexUnitToSimpleBaseElements(final UnitAlias unit, final int exponent){
-
+    final ConversionHelper helper = _conversionTable.conversionsToBase[unit]!;
+    final ConversionResult res = _convertComplexBaseUnitToSimpleBaseElements(helper.to, exponent);
+    return ConversionResult(multiplier: helper.multiplier * res.multiplier, unitSeries: res.unitSeries);
   }
 
   static ConversionResult _convertSimpleUnitToSimpleBase(final UnitAlias unit, final int exponent){
-    
+    final ConversionHelper helper = _conversionTable.conversionsToBase[unit]!;
+    return ConversionResult(multiplier: helper.multiplier, unitSeries: {helper.to: exponent});
   }
 
   static CompoundUnit reduceToBase(final CompoundUnit unit){
