@@ -388,11 +388,36 @@ abstract class UnitSystem{
     final int allBaseComposition = compositions.indexWhere((final List<MapEntry<UnitAlias, int>> composition) => composition.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
     if(allBaseComposition == -1){
       final Map<UnitAlias, int> components = Map.fromEntries(compositions.first);
-      // while need be
-      //    find non simple units, add them to touched
-      //    look for a composition using units that are not in touched
-      //    apply comp
-      // return
+      while(components.keys.any((alias) => _compositionTable.compositions.containsKey(alias))){
+        Iterable<String> complexUnitsToConvert = components.keys.where((alias) => _compositionTable.compositions.containsKey(alias) && !unitsTouched.contains(alias));
+        if(complexUnitsToConvert.isEmpty){
+          break;
+        }
+        for(final UnitAlias toConvert in complexUnitsToConvert){
+          final List<List<MapEntry<UnitAlias, int>>> compositionsToCheck = _compositionTable.compositions[toConvert]!;
+          final int allBaseCompositionPart = compositionsToCheck.indexWhere((final List<MapEntry<UnitAlias, int>> composition) => composition.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
+          late final List<MapEntry<UnitAlias, int>> compositionToUse;
+          if(allBaseCompositionPart == -1){
+            compositionToUse = compositionsToCheck.first;
+          }
+          else{
+            compositionToUse = compositionsToCheck[allBaseCompositionPart];
+          }
+          
+          final int partExponent = components[toConvert]!;
+          for(final MapEntry<UnitAlias, int> part in compositionToUse){
+            if(components.containsKey(part.key)){
+              components[part.key] = components[part.key]! + part.value * partExponent;
+            }
+            else{
+              components[part.key] = part.value * partExponent;
+            }
+          }
+          components.remove(toConvert);
+          unitsTouched.add(toConvert);
+        }
+      }
+      return ConversionResult(multiplier: 1, unitSeries: components);
     }
     else{
       final List<MapEntry<UnitAlias, int>> composition = compositions[allBaseComposition].map((final MapEntry<UnitAlias, int> part) => MapEntry<UnitAlias, int>(part.key, part.value * exponent)).toList();
@@ -413,7 +438,7 @@ abstract class UnitSystem{
   }
 
   static CompoundUnit reduceToBase(final CompoundUnit unit){
-    double multiplier = unit.multiplier ?? 1;
+    double multiplier = unit.multiplier;
 
     final Map<UnitAlias, int> nomReduced = {};
 
@@ -525,7 +550,7 @@ abstract class UnitSystem{
       }
     }
 
-    return CompoundUnit(multiplier: multiplier == 1 ? null : multiplier, nom: nomReduced, denom: {});
+    return CompoundUnit(multiplier: multiplier, nom: nomReduced, denom: {});
   } 
 
   static CompoundUnit compose(final CompoundUnit unit){
@@ -541,36 +566,41 @@ abstract class UnitSystem{
     }
     base.denom.clear();
 
-    for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
-      for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
-        final List<int> convertAmounts = [];
-        for(final MapEntry<UnitAlias, int> compPart in compOption){
-          if(base.nom.containsKey(compPart.key)){
-            int amount = (base.nom[compPart.key]! / compPart.value).floor();
-            if(amount < 0){
-              amount = 0;
-            }
-            convertAmounts.add(amount);
-          }
-          else{
-            convertAmounts.add(0);
-            break;
-          }
-        }
-        
-        if(convertAmounts.isEmpty){
-          continue;
-        }
-        final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
-        if(maxPossibleConvert > 0){
+    bool didConvert = true;
+    while(didConvert){
+      didConvert = false;
+      for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
+        for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+          final List<int> convertAmounts = [];
           for(final MapEntry<UnitAlias, int> compPart in compOption){
-            base.nom[compPart.key] = base.nom[compPart.key]! - compPart.value * maxPossibleConvert;
+            if(base.nom.containsKey(compPart.key)){
+              int amount = (base.nom[compPart.key]! / compPart.value).floor();
+              if(amount < 0){
+                amount = 0;
+              }
+              convertAmounts.add(amount);
+            }
+            else{
+              convertAmounts.add(0);
+              break;
+            }
           }
-          if(base.nom.containsKey(composition.key)){
-            base.nom[composition.key] = base.nom[composition.key]! + maxPossibleConvert;
+          
+          if(convertAmounts.isEmpty){
+            continue;
           }
-          else{
-            base.nom[composition.key] = maxPossibleConvert;
+          final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
+          if(maxPossibleConvert > 0){
+            didConvert = true;
+            for(final MapEntry<UnitAlias, int> compPart in compOption){
+              base.nom[compPart.key] = base.nom[compPart.key]! - compPart.value * maxPossibleConvert;
+            }
+            if(base.nom.containsKey(composition.key)){
+              base.nom[composition.key] = base.nom[composition.key]! + maxPossibleConvert;
+            }
+            else{
+              base.nom[composition.key] = maxPossibleConvert;
+            }
           }
         }
       }
@@ -586,36 +616,41 @@ abstract class UnitSystem{
     }
     base.nom.clear();
 
-    for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
-      for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
-        final List<int> convertAmounts = [];
-        for(final MapEntry<UnitAlias, int> compPart in compOption){
-          if(base.denom.containsKey(compPart.key)){
-            int amount = (base.denom[compPart.key]! / compPart.value).floor();
-            if(amount < 0){
-              amount = 0;
-            }
-            convertAmounts.add(amount);
-          }
-          else{
-            convertAmounts.add(0);
-            break;
-          }
-        }
-        
-        if(convertAmounts.isEmpty){
-          continue;
-        }
-        final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
-        if(maxPossibleConvert > 0){
+    didConvert = true;
+    while(didConvert){
+      didConvert = false;
+      for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
+        for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+          final List<int> convertAmounts = [];
           for(final MapEntry<UnitAlias, int> compPart in compOption){
-            base.denom[compPart.key] = base.denom[compPart.key]! - compPart.value * maxPossibleConvert;
+            if(base.denom.containsKey(compPart.key)){
+              int amount = (base.denom[compPart.key]! / compPart.value).floor();
+              if(amount < 0){
+                amount = 0;
+              }
+              convertAmounts.add(amount);
+            }
+            else{
+              convertAmounts.add(0);
+              break;
+            }
           }
-          if(base.denom.containsKey(composition.key)){
-            base.denom[composition.key] = base.denom[composition.key]! + maxPossibleConvert;
+          
+          if(convertAmounts.isEmpty){
+            continue;
           }
-          else{
-            base.denom[composition.key] = maxPossibleConvert;
+          final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
+          if(maxPossibleConvert > 0){
+            didConvert = true;
+            for(final MapEntry<UnitAlias, int> compPart in compOption){
+              base.denom[compPart.key] = base.denom[compPart.key]! - compPart.value * maxPossibleConvert;
+            }
+            if(base.denom.containsKey(composition.key)){
+              base.denom[composition.key] = base.denom[composition.key]! + maxPossibleConvert;
+            }
+            else{
+              base.denom[composition.key] = maxPossibleConvert;
+            }
           }
         }
       }
@@ -633,18 +668,18 @@ class ConversionResult{
 }
 
 class CompoundUnit{
-  double? multiplier;
+  double multiplier;
   final Map<UnitAlias, int> nom;
   final Map<UnitAlias, int> denom;
 
   CompoundUnit({required this.multiplier, required this.nom, required this.denom});
 
   static CompoundUnit scalar(){
-    return CompoundUnit(multiplier: null, nom: {}, denom: {});
+    return CompoundUnit(multiplier: 1, nom: {}, denom: {});
   }
 
   static CompoundUnit fromAlias(final UnitAlias alias){
-    return CompoundUnit(multiplier: null, nom: {alias: 1}, denom: {});
+    return CompoundUnit(multiplier: 1, nom: {alias: 1}, denom: {});
   }
 
   bool isScalar(){
@@ -661,16 +696,18 @@ class CompoundUnit{
       else{
         nom[elem.key] = -elem.value;
       }
-
-      if(nom[elem.key] == 0){
-        removeKeys.add(elem.key);
-      }
-      else if(nom[elem.key]! < 0){
-        moveToDenomKeys.add(elem.key);
-      }
     }
 
     denom.clear();
+
+    for(final UnitAlias key in nom.keys){
+      if(nom[key] == 0){
+        removeKeys.add(key);
+      }
+      else if(nom[key]! < 0){
+        moveToDenomKeys.add(key);
+      }
+    }
 
     for(final UnitAlias unit in removeKeys){
       nom.remove(unit);
@@ -689,7 +726,7 @@ class CompoundUnit{
     return UnitSystem.reduceToBase(this)..simplify();
   }
 
-  String toSimpleString(){
+  /*String toSimpleString(){
     
   }
 
@@ -699,22 +736,13 @@ class CompoundUnit{
 
   static CompoundUnit fromString(final String str){
 
-  }
+  }*/
 }
 
 abstract class UnitManipulation{
   static CompoundUnit unitMult(final CompoundUnit lhs, final CompoundUnit rhs){
     final CompoundUnit res = CompoundUnit.scalar();
-
-    if(rhs.multiplier != null && lhs.multiplier == null){
-      res.multiplier = rhs.multiplier;
-    }
-    else if(rhs.multiplier == null && lhs.multiplier != null){
-      res.multiplier = lhs.multiplier;
-    }
-    else if(rhs.multiplier != null && lhs.multiplier != null){
-      res.multiplier = lhs.multiplier! * rhs.multiplier!;
-    }
+    res.multiplier = lhs.multiplier * rhs.multiplier;
 
     final Map<UnitAlias, int> nom = {};
     final Map<UnitAlias, int> denom = {};
@@ -739,21 +767,16 @@ abstract class UnitManipulation{
       }
     }
 
-    return res..simplify()..compose();
+    res.nom.addAll(nom);
+    res.denom.addAll(denom);
+
+    res.simplify();
+    return res.compose();
   }
 
   static CompoundUnit unitDiv(final CompoundUnit lhs, final CompoundUnit rhs){
     final CompoundUnit res = CompoundUnit.scalar();
-
-    if(rhs.multiplier != null && lhs.multiplier == null){
-      res.multiplier = 1 / rhs.multiplier!;
-    }
-    else if(rhs.multiplier == null && lhs.multiplier != null){
-      res.multiplier = lhs.multiplier;
-    }
-    else if(rhs.multiplier != null && lhs.multiplier != null){
-      res.multiplier = lhs.multiplier! / rhs.multiplier!;
-    }
+    res.multiplier = lhs.multiplier / rhs.multiplier;
     
     final Map<UnitAlias, int> nom = {};
     final Map<UnitAlias, int> denom = {};    
@@ -777,8 +800,12 @@ abstract class UnitManipulation{
         denom[elem.key] = -elem.value;
       }
     }
-  
-    return res..simplify()..compose();
+    
+    res.nom.addAll(nom);
+    res.denom.addAll(denom);
+
+    res.simplify();
+    return res.compose();
   }
 }
 
