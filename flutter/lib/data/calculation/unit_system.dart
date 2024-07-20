@@ -110,6 +110,7 @@ abstract class UnitSystem{
 
       "millivolts": UnitDescription(representations: ["mV"], isBase: false, dim: "voltage"),
       "volts": UnitDescription(representations: ["V"], isBase: true, dim: "voltage"),
+      "kilovolts": UnitDescription(representations: ["kV"], isBase: false, dim: "voltage"),
 
       "milliwatts": UnitDescription(representations: ["mW"], isBase: false, dim: "power"),
       "watts": UnitDescription(representations: ["W"], isBase: true, dim: "power"),
@@ -142,6 +143,7 @@ abstract class UnitSystem{
       "milliampere": ConversionHelper(to: "ampere", multiplier: 0.001),
 
       "millivolts": ConversionHelper(to: "volts", multiplier: 0.001),
+      "kilovolts": ConversionHelper(to: "volts", multiplier: 1000),
 
       "milliwatts": ConversionHelper(to: "watts", multiplier: 0.001),
       "kilowatts": ConversionHelper(to: "watts", multiplier: 1000),
@@ -171,6 +173,9 @@ abstract class UnitSystem{
       "pascals": [
         const [MapEntry("newtons", 1), MapEntry("meters", -2)],
         const [MapEntry("joules", 1), MapEntry("meters", -3)],
+      ],
+      "volts": [
+        const [MapEntry("kilogramms", 1), MapEntry("meters", 2), MapEntry("seconds", -3), MapEntry("ampere", -1)]
       ]
     });
   }
@@ -389,7 +394,7 @@ abstract class UnitSystem{
     if(allBaseComposition == -1){
       final Map<UnitAlias, int> components = Map.fromEntries(compositions.first);
       while(components.keys.any((alias) => _compositionTable.compositions.containsKey(alias))){
-        Iterable<String> complexUnitsToConvert = components.keys.where((alias) => _compositionTable.compositions.containsKey(alias) && !unitsTouched.contains(alias));
+        List<String> complexUnitsToConvert = components.keys.where((alias) => _compositionTable.compositions.containsKey(alias) && !unitsTouched.contains(alias)).toList();
         if(complexUnitsToConvert.isEmpty){
           break;
         }
@@ -467,7 +472,8 @@ abstract class UnitSystem{
         }
       }
       else{
-        if(!_compositionTable.compositions.containsKey(elem.key)){
+        final UnitAlias baseAlias = _conversionTable.conversionsToBase[elem.key]!.to;
+        if(!_compositionTable.compositions.containsKey(baseAlias)){
           final ConversionResult res = _convertSimpleUnitToSimpleBase(elem.key, elem.value);
           multiplier *= res.multiplier;
           
@@ -815,8 +821,8 @@ abstract class UnitConstraints{
     final CompoundUnit rhsReduced = rhs.reducedToBaseSimplified();
     
     for(final MapEntry<UnitAlias, int> elem in lhsReduced.nom.entries){
-      if(rhs.nom.containsKey(elem.key) && rhs.nom[elem.key] == elem.value){
-        rhs.nom.remove(elem.key);
+      if(rhsReduced.nom.containsKey(elem.key) && rhsReduced.nom[elem.key] == elem.value){
+        rhsReduced.nom.remove(elem.key);
       }
       else{
         return false;
@@ -824,8 +830,8 @@ abstract class UnitConstraints{
     }
 
     for(final MapEntry<UnitAlias, int> elem in lhsReduced.denom.entries){
-      if(rhs.denom.containsKey(elem.key) && rhs.denom[elem.key] == elem.value){
-        rhs.denom.remove(elem.key);
+      if(rhsReduced.denom.containsKey(elem.key) && rhsReduced.denom[elem.key] == elem.value){
+        rhsReduced.denom.remove(elem.key);
       }
       else{
         return false;
