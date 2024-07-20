@@ -40,16 +40,16 @@ class UnitConversionTable{
 }
 
 class UnitCompositionTable{
-  final Map<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> compositions = {};
+  final Map<UnitAlias,   List<MapEntry<double, List<MapEntry<UnitAlias, int>>>>> compositions = {};
   //        CompoundUnit [   [     {SimpleUnit: exponent},{SimpleUnit: exponent}],[{SimpleUnit: exponent},{SimpleUnit: exponent}]]
 
   void load(List data){
     for(final Map comp in data){
-      final List<List<MapEntry<UnitAlias, int>>> compOptions = [];
+      final List<MapEntry<double, List<MapEntry<UnitAlias, int>>>> compOptions = [];
       for(final Map compOption in comp["composition_options"]){
-        compOptions.add([]);
-        for(final MapEntry<UnitAlias, int> compOptionComponent in compOption.cast<UnitAlias, int>().entries){
-          compOptions.last.add(compOptionComponent);
+        compOptions.add(MapEntry(compOption["amount"]!, []));
+        for(final MapEntry<UnitAlias, int> compOptionComponent in compOption["composition"]!.cast<UnitAlias, int>().entries){
+          compOptions.last.value.add(compOptionComponent);
         }
       }
       compositions[comp["to"]] = compOptions;
@@ -60,7 +60,7 @@ class UnitCompositionTable{
     return compositions.entries.map((entry) => {
       "to": entry.key,
       "composition_options": entry.value.map((e) => 
-        Map.fromEntries(e)
+        {"amount": e.key, "composition": Map.fromEntries(e.value)}
       ).toList()
     }).toList();
   }
@@ -99,7 +99,8 @@ abstract class UnitSystem{
       "minutes": UnitDescription(representations: ["min"], isBase: false, dim: "time"),
       "hours": UnitDescription(representations: ["h"], isBase: false, dim: "time"),
       
-      "gramms": UnitDescription(representations: ["g"], isBase: false, dim: "mass"),
+      "g": UnitDescription(representations: ["g"], isBase: true, dim: "acceleration"),
+
       "kilogramms": UnitDescription(representations: ["kg"], isBase: true, dim: "mass"),
 
       "newtons": UnitDescription(representations: ["N"], isBase: true, dim: "force"),
@@ -126,6 +127,9 @@ abstract class UnitSystem{
 
       "radians": UnitDescription(representations: ["rad"], isBase: true, dim: "angle"),
       "degrees": UnitDescription(representations: ["°", "deg"], isBase: false, dim: "angle"),
+
+      "percent": UnitDescription(representations: ["%"], isBase: true, dim: "percentage"),
+      "ppm": UnitDescription(representations: ["ppm"], isBase: false, dim: "percentage"),
   });
 
     _conversionTable.conversionsToBase.addAll({
@@ -135,8 +139,6 @@ abstract class UnitSystem{
       "milliseconds": ConversionHelper(to: "seconds", multiplier: 0.001),
       "minutes": ConversionHelper(to: "seconds", multiplier: 60),
       "hours": ConversionHelper(to: "seconds", multiplier: 3600),
-      
-      "gramms": ConversionHelper(to: "kilogramms", multiplier: 0.001),
 
       "kilonewtons": ConversionHelper(to: "newtons", multiplier: 1000),
 
@@ -153,29 +155,35 @@ abstract class UnitSystem{
       "bars": ConversionHelper(to: "pascals", multiplier: 100000),
 
       "degrees": ConversionHelper(to: "radians", multiplier: 180/pi),
+
+      "ppm": ConversionHelper(to: "percent", multiplier: 10000)
     });
 
     _compositionTable.compositions.addAll({
+      "g": [
+        const MapEntry(9.80665, [MapEntry("meters", 1), MapEntry("seconds", -2)]),
+      ],
       "newtons": [
-        const [MapEntry("kilogramms", 1), MapEntry("meters", 1), MapEntry("seconds", -2)],
-        const [MapEntry("pascals", 1), MapEntry("meters", 2)],
-        const [MapEntry("joules", 1), MapEntry("meters", -1)],
+        const MapEntry(1, [MapEntry("kilogramms", 1), MapEntry("meters", 1), MapEntry("seconds", -2)]),
+        const MapEntry(1 / 9.80665, [MapEntry("kilogramms", 1), MapEntry("g", 1)]),
+        const MapEntry(1, [MapEntry("pascals", 1), MapEntry("meters", 2)]),
+        const MapEntry(1, [MapEntry("joules", 1), MapEntry("meters", -1)]),
       ],
       "watts": [
-        const [MapEntry("joules", 1), MapEntry("seconds", -1)],
-        const [MapEntry("volts", 1), MapEntry("ampere", 1)],
+        const MapEntry(1, [MapEntry("joules", 1), MapEntry("seconds", -1)]),
+        const MapEntry(1, [MapEntry("volts", 1), MapEntry("ampere", 1)]),
       ],
       "joules": [
-        const [MapEntry("newtons", 1), MapEntry("meters", 1)],
-        const [MapEntry("watts", 1), MapEntry("seconds", 1)],
-        const [MapEntry("pascals", 1), MapEntry("meters", 3)],
+        const MapEntry(1, [MapEntry("newtons", 1), MapEntry("meters", 1)]),
+        const MapEntry(1, [MapEntry("watts", 1), MapEntry("seconds", 1)]),
+        const MapEntry(1, [MapEntry("pascals", 1), MapEntry("meters", 3)]),
       ],
       "pascals": [
-        const [MapEntry("newtons", 1), MapEntry("meters", -2)],
-        const [MapEntry("joules", 1), MapEntry("meters", -3)],
+        const MapEntry(1, [MapEntry("newtons", 1), MapEntry("meters", -2)]),
+        const MapEntry(1, [MapEntry("joules", 1), MapEntry("meters", -3)]),
       ],
       "volts": [
-        const [MapEntry("kilogramms", 1), MapEntry("meters", 2), MapEntry("seconds", -3), MapEntry("ampere", -1)]
+        const MapEntry(1, [MapEntry("kilogramms", 1), MapEntry("meters", 2), MapEntry("seconds", -3), MapEntry("ampere", -1)])
       ]
     });
   }
@@ -204,13 +212,13 @@ abstract class UnitSystem{
       }
     }
 
-    for(final MapEntry<String, List<List<MapEntry<String, int>>>> entry in _compositionTable.compositions.entries){
+    for(final MapEntry<String, List<MapEntry<double, List<MapEntry<UnitAlias, int>>>>> entry in _compositionTable.compositions.entries){
       if(!_unitDescriptions.containsKey(entry.key)){
         localLogger.error("Unit alias ${entry.key} was referenced in composition table, but was not declared in unit descriptions");
         return false;
       }
 
-      if(entry.value.any((e) => e.map((e) => e.key).any((alias) => !_unitDescriptions.containsKey(alias)))){
+      if(entry.value.any((e) => e.value.map((e) => e.key).any((alias) => !_unitDescriptions.containsKey(alias)))){
         localLogger.error("Some unit alias(es) were referenced as a component in composition table, but was not declared in unit descriptions");
         return false;
       }
@@ -265,13 +273,13 @@ abstract class UnitSystem{
   }
 
   static bool _checkCompositionUsesBaseUnits(){
-    for(final MapEntry<String, List<List<MapEntry<String, int>>>> entry in _compositionTable.compositions.entries){
+    for(final MapEntry<String, List<MapEntry<double, List<MapEntry<UnitAlias, int>>>>> entry in _compositionTable.compositions.entries){
       if(!_unitDescriptions[entry.key]!.isBase){
         localLogger.error("Composition to non base unit ${entry.key} cannot be declared");
         return false;
       }
 
-      if(entry.value.any((element) => element.map((e) => e.key).any((alias) => !_unitDescriptions[alias]!.isBase))){
+      if(entry.value.any((element) => element.value.map((e) => e.key).any((alias) => !_unitDescriptions[alias]!.isBase))){
         localLogger.error("Compositions cannot use non base units as components");
         return false;
       }
@@ -389,24 +397,27 @@ abstract class UnitSystem{
   static ConversionResult _convertComplexBaseUnitToSimpleBaseElements(final UnitAlias unit, final int exponent){
     final List<UnitAlias> unitsTouched = [unit];
 
-    final List<List<MapEntry<UnitAlias, int>>> compositions = _compositionTable.compositions[unit]!;
-    final int allBaseComposition = compositions.indexWhere((final List<MapEntry<UnitAlias, int>> composition) => composition.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
+    final List<MapEntry<double, List<MapEntry<UnitAlias, int>>>> compositions = _compositionTable.compositions[unit]!;
+    final int allBaseComposition = compositions.indexWhere((final MapEntry<double, List<MapEntry<UnitAlias, int>>> composition) => composition.value.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
     if(allBaseComposition == -1){
-      final Map<UnitAlias, int> components = Map.fromEntries(compositions.first);
+      final Map<UnitAlias, int> components = Map.fromEntries(compositions.first.value);
+      double multiplier = compositions.first.key;
       while(components.keys.any((alias) => _compositionTable.compositions.containsKey(alias))){
         List<String> complexUnitsToConvert = components.keys.where((alias) => _compositionTable.compositions.containsKey(alias) && !unitsTouched.contains(alias)).toList();
         if(complexUnitsToConvert.isEmpty){
           break;
         }
         for(final UnitAlias toConvert in complexUnitsToConvert){
-          final List<List<MapEntry<UnitAlias, int>>> compositionsToCheck = _compositionTable.compositions[toConvert]!;
-          final int allBaseCompositionPart = compositionsToCheck.indexWhere((final List<MapEntry<UnitAlias, int>> composition) => composition.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
+          final List<MapEntry<double, List<MapEntry<UnitAlias, int>>>> compositionsToCheck = _compositionTable.compositions[toConvert]!;
+          final int allBaseCompositionPart = compositionsToCheck.indexWhere((final MapEntry<double, List<MapEntry<UnitAlias, int>>> composition) => composition.value.every((final MapEntry<UnitAlias, int> part) => !_compositionTable.compositions.containsKey(part.key)));
           late final List<MapEntry<UnitAlias, int>> compositionToUse;
           if(allBaseCompositionPart == -1){
-            compositionToUse = compositionsToCheck.first;
+            compositionToUse = compositionsToCheck.first.value;
+            multiplier *= compositionsToCheck.first.key;
           }
           else{
-            compositionToUse = compositionsToCheck[allBaseCompositionPart];
+            compositionToUse = compositionsToCheck[allBaseCompositionPart].value;
+            multiplier *= compositionsToCheck[allBaseCompositionPart].key;
           }
           
           final int partExponent = components[toConvert]!;
@@ -422,11 +433,11 @@ abstract class UnitSystem{
           unitsTouched.add(toConvert);
         }
       }
-      return ConversionResult(multiplier: 1, unitSeries: components);
+      return ConversionResult(multiplier: multiplier, unitSeries: components);
     }
     else{
-      final List<MapEntry<UnitAlias, int>> composition = compositions[allBaseComposition].map((final MapEntry<UnitAlias, int> part) => MapEntry<UnitAlias, int>(part.key, part.value * exponent)).toList();
-      return ConversionResult(multiplier: 1, unitSeries: Map.fromEntries(composition));
+      final List<MapEntry<UnitAlias, int>> composition = compositions[allBaseComposition].value.map((final MapEntry<UnitAlias, int> part) => MapEntry<UnitAlias, int>(part.key, part.value * exponent)).toList();
+      return ConversionResult(multiplier: compositions[allBaseComposition].key, unitSeries: Map.fromEntries(composition));
     }
 
   }  
@@ -575,10 +586,10 @@ abstract class UnitSystem{
     bool didConvert = true;
     while(didConvert){
       didConvert = false;
-      for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
-        for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+      for(final MapEntry<String, List<MapEntry<double, List<MapEntry<String, int>>>>> composition in _compositionTable.compositions.entries){
+        for(final MapEntry<double, List<MapEntry<UnitAlias, int>>> compOption in composition.value){
           final List<int> convertAmounts = [];
-          for(final MapEntry<UnitAlias, int> compPart in compOption){
+          for(final MapEntry<UnitAlias, int> compPart in compOption.value){
             if(base.nom.containsKey(compPart.key)){
               int amount = (base.nom[compPart.key]! / compPart.value).floor();
               if(amount < 0){
@@ -598,7 +609,7 @@ abstract class UnitSystem{
           final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
           if(maxPossibleConvert > 0){
             didConvert = true;
-            for(final MapEntry<UnitAlias, int> compPart in compOption){
+            for(final MapEntry<UnitAlias, int> compPart in compOption.value){
               base.nom[compPart.key] = base.nom[compPart.key]! - compPart.value * maxPossibleConvert;
             }
             if(base.nom.containsKey(composition.key)){
@@ -607,6 +618,7 @@ abstract class UnitSystem{
             else{
               base.nom[composition.key] = maxPossibleConvert;
             }
+            base.multiplier *= compOption.key;
           }
         }
       }
@@ -625,10 +637,10 @@ abstract class UnitSystem{
     didConvert = true;
     while(didConvert){
       didConvert = false;
-      for(final MapEntry<UnitAlias,   List<List<MapEntry<UnitAlias, int>>>> composition in _compositionTable.compositions.entries){
-        for(final List<MapEntry<UnitAlias, int>> compOption in composition.value){
+      for(final MapEntry<String, List<MapEntry<double, List<MapEntry<String, int>>>>> composition in _compositionTable.compositions.entries){
+        for(final MapEntry<double, List<MapEntry<UnitAlias, int>>> compOption in composition.value){
           final List<int> convertAmounts = [];
-          for(final MapEntry<UnitAlias, int> compPart in compOption){
+          for(final MapEntry<UnitAlias, int> compPart in compOption.value){
             if(base.denom.containsKey(compPart.key)){
               int amount = (base.denom[compPart.key]! / compPart.value).floor();
               if(amount < 0){
@@ -648,7 +660,7 @@ abstract class UnitSystem{
           final int maxPossibleConvert = convertAmounts.fold(double.maxFinite.toInt(), (prev, elem) => min(prev, elem));
           if(maxPossibleConvert > 0){
             didConvert = true;
-            for(final MapEntry<UnitAlias, int> compPart in compOption){
+            for(final MapEntry<UnitAlias, int> compPart in compOption.value){
               base.denom[compPart.key] = base.denom[compPart.key]! - compPart.value * maxPossibleConvert;
             }
             if(base.denom.containsKey(composition.key)){
@@ -657,6 +669,7 @@ abstract class UnitSystem{
             else{
               base.denom[composition.key] = maxPossibleConvert;
             }
+            base.multiplier /= compOption.key;
           }
         }
       }
