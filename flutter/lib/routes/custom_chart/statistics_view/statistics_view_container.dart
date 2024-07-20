@@ -13,14 +13,14 @@ class StatisticsViewContainer extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 50,
+          height: 40,
           child: StatisticsViewToolbar()
         ),
         Expanded(
           child: StatisticsViewDataContainer()
         ),
         SizedBox(
-          height: 400,
+          height: 300,
           child: StatisticsViewPlotContainer()
         ),
       ],

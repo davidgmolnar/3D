@@ -63,24 +63,16 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               }
             }
           ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-            child: DropdownButton<int?>(
-              value: StatisticsViewController.notifier.value["laps.selected"],
-              items: [DropdownMenuItem<int>(value: null, child: Text("Full duration", style: StyleManager.textStyle,)), 
-                ...List.generate(StatisticsViewController.notifier.value["laps"].length, (index) => index)
-                .map((lapIndex) => DropdownMenuItem<int>(
-                  value: lapIndex,
-                  child: Text(
-                    LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex),
-                    style: StyleManager.textStyle,
-                  )
-                ))
-              ],
-              onChanged: (final int? selected){
-                StatisticsViewController.notifier.update("laps.selected", selected);
-              }
-            ),
+          SearchListSelector(
+            selection: StatisticsViewController.notifier.value["laps.selected"].cast<int>().map((final int lapIndex) => LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex)).toList().cast<String>(),
+            hintText: "Select laps",
+            options: List.generate(StatisticsViewController.notifier.value["laps"].length, (lapIndex) => LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex)),
+            onSelected: (final List<String> lapStringReps){
+              final List<int> lapIndexes = lapStringReps.map((rep) {
+                return int.parse(rep.split(':').first.substring(4)) - 1;
+              }).toList();
+              StatisticsViewController.notifier.update("laps.selected", lapIndexes);
+            }
           ),
           IconButton(
             onPressed: (){
@@ -128,3 +120,14 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
     super.dispose();
   }
 }
+
+/* TODOS
+Add a select lap to plot selector
+
+Modify laps selection, instead of SearchListSelector it needs a List selector, no point in searching that
+
+Add borders to StatisticsViewDataContainer table for visibility or use checkerboard bgcolor/secondary color
+Add special colors to largest/smallest in a column
+
+Be able to export current state of statisticsviewcontroller except plotdata and lapdata
+ */

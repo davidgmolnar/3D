@@ -42,9 +42,7 @@ abstract class StatisticsViewLoadHelper{
     LapData.reload();
     StatisticsViewController.notifier.value["laps"].clear();
     StatisticsViewController.notifier.update("laps", LapData.laps());
-    if(StatisticsViewController.notifier.value["laps.selected"] != null && StatisticsViewController.notifier.value["laps"].length <= StatisticsViewController.notifier.value["laps.selected"]){
-      StatisticsViewController.notifier.update("laps.selected", null);
-    }
+    StatisticsViewController.notifier.value["laps.selected"].clear();
   }
 
   static void saveVisible(final String meas, final List<String> signals){

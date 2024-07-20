@@ -19,7 +19,7 @@ class StatisticsViewPlotContainer extends StatefulWidget {
 class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContainer> {
   @override
   void initState() {
-    StatisticsViewController.notifier.addListener(_reDrawNeeded, ["plot.signal", "plot.type", "plot.configs", "data.meas", "laps.selected"]);
+    StatisticsViewController.notifier.addListener(_reDrawNeeded, ["plot.signal", "plot.type", "plot.configs", "data.meas", "laps.plot_selected"]);
     super.initState();
   }
 

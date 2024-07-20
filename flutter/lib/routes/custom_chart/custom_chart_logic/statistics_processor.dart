@@ -11,6 +11,17 @@ import '../../../data/signal_container.dart';
 import '../../../data/typed_data_list_container.dart';
 import 'statistics_view_controller.dart';
 
+enum StatType{
+  // ignore: constant_identifier_names
+  MIN,
+  // ignore: constant_identifier_names
+  MAX,
+  // ignore: constant_identifier_names
+  AVG,
+  // ignore: constant_identifier_names
+  INT
+}
+
 class Stat{
   final num min;
   final num avg;
@@ -28,6 +39,19 @@ class Stat{
       integral: integral ?? this.integral,
       avg: avg ?? this.avg,
     );
+  }
+
+  num get(final StatType type){
+    switch (type) {
+      case StatType.MIN:
+        return min;
+      case StatType.MAX:
+        return max;
+      case StatType.AVG:
+        return avg;
+      case StatType.INT:
+        return integral;
+    }
   }
 }
 
@@ -120,7 +144,7 @@ class Histogram extends Plot{
       return;
     }
 
-    final List meta = StatisticsProcessor.calcMeta(channel);
+    final List meta = StatisticsProcessor.calcPlotMeta(channel);
 
     final double binSpan = (meta[1] - meta[0]) / conf.binCount;
     bins.addAll(List<Bin>.generate(conf.binCount, (index) => Bin(start: meta[0] + index * binSpan, stop: meta[0] + (index + 1) * binSpan, value: 0)));
@@ -147,7 +171,7 @@ class PDF extends Plot{
       return;
     }
 
-    final List meta = StatisticsProcessor.calcMeta(channel);
+    final List meta = StatisticsProcessor.calcPlotMeta(channel);
 
     final num trueRange = meta[1] - meta[0];
     meta[0] = meta[0] - trueRange * 0.1;
@@ -187,7 +211,7 @@ class CDF extends Plot{
       return;
     }
 
-    final List meta = StatisticsProcessor.calcMeta(channel);
+    final List meta = StatisticsProcessor.calcPlotMeta(channel);
 
     final num trueRange = meta[1] - meta[0];
     meta[0] = meta[0] - trueRange * 0.1;
@@ -214,36 +238,72 @@ class CDF extends Plot{
 }
 
 abstract class StatisticsProcessor{
-  static Stat stat(final String measurement, final String signal){
+  static List<Stat> stat(final String measurement, final String signal){
     if(!signalData.containsKey(measurement)){
-      return const Stat(min: 0, max: 0, integral: 0, avg: 0);
+      return const [Stat(min: 0, max: 0, integral: 0, avg: 0)];
     }
     if(!signalData[measurement]!.containsKey(signal)){
-      return const Stat(min: 0, max: 0, integral: 0, avg: 0);
+      return const [Stat(min: 0, max: 0, integral: 0, avg: 0)];
     }
 
     final SignalContainer channel = signalData[measurement]![signal]!;
 
-    final List meta = calcMeta(channel);
+    final List<Stat> lapStats = [];
+    if(StatisticsViewController.notifier.value["laps.selected"].isEmpty){
+      final List meta = calcMeta(channel, -1);
 
-    num integral = signalIntegral(measurement, signal, meta[2] ?? channel.timestamps.first.toDouble(), meta[3] ?? channel.timestamps.last.toDouble());
-    num avg = integral / ((meta[3] ?? channel.timestamps.last) - (meta[2] ?? channel.timestamps.first)) * 1000; // ms to s
-    return Stat(min: meta[0], max: meta[1], integral: integral, avg: avg);
+      num integral = signalIntegral(measurement, signal, meta[2] ?? channel.timestamps.first.toDouble(), meta[3] ?? channel.timestamps.last.toDouble());
+      num avg = integral / ((meta[3] ?? channel.timestamps.last) - (meta[2] ?? channel.timestamps.first)) * 1000; // ms to s
+      lapStats.add(Stat(min: meta[0], max: meta[1], integral: integral, avg: avg));
+    }
+
+    for(final int lapIndex in StatisticsViewController.notifier.value["laps.selected"]){
+      final List meta = calcMeta(channel, lapIndex);
+
+      num integral = signalIntegral(measurement, signal, meta[2] ?? channel.timestamps.first.toDouble(), meta[3] ?? channel.timestamps.last.toDouble());
+      num avg = integral / ((meta[3] ?? channel.timestamps.last) - (meta[2] ?? channel.timestamps.first)) * 1000; // ms to s
+      lapStats.add(Stat(min: meta[0], max: meta[1], integral: integral, avg: avg));
+    }
+    return lapStats;
   }
 
-  static List calcMeta(final SignalContainer channel){
+  static List calcMeta(final SignalContainer channel, final int lapIndex){
     double min = double.infinity;
     double max = double.negativeInfinity;
 
     double? timeStart;
     double? timeStop;
-    if(StatisticsViewController.notifier.value["laps.selected"] != null){
-      timeStart = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.selected"]].dx;
-      timeStop = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.selected"]].dy;
+    if(StatisticsViewController.notifier.value["laps.selected"].isNotEmpty){
+      timeStart = StatisticsViewController.notifier.value["laps"][lapIndex].dx;
+      timeStop = StatisticsViewController.notifier.value["laps"][lapIndex].dy;
     }
 
     for(int i = 0; i < channel.values.size; i++){
-      if(StatisticsViewController.notifier.value["laps.selected"] == null || (timeStart! <= channel.timestamps[i] && channel.timestamps[i] <= timeStop!)){
+      if(StatisticsViewController.notifier.value["laps.selected"].isEmpty || (timeStart! <= channel.timestamps[i] && channel.timestamps[i] <= timeStop!)){
+        if(channel.values[i] > max){
+          max = channel.values[i].toDouble();
+        }
+        if(channel.values[i] < min){
+          min = channel.values[i].toDouble();
+        }
+      }
+    }
+    return [min, max, timeStart, timeStop];
+  }
+
+  static List calcPlotMeta(final SignalContainer channel){
+    double min = double.infinity;
+    double max = double.negativeInfinity;
+
+    double? timeStart;
+    double? timeStop;
+    if(StatisticsViewController.notifier.value["laps.plot_selected"] != null){
+      timeStart = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.plot_selected"]].dx;
+      timeStop = StatisticsViewController.notifier.value["laps"][StatisticsViewController.notifier.value["laps.plot_selected"]].dy;
+    }
+
+    for(int i = 0; i < channel.values.size; i++){
+      if(StatisticsViewController.notifier.value["laps.plot_selected"] == null || (timeStart! <= channel.timestamps[i] && channel.timestamps[i] <= timeStop!)){
         if(channel.values[i] > max){
           max = channel.values[i].toDouble();
         }

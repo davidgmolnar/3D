@@ -745,7 +745,7 @@ class CompoundUnit{
     return UnitSystem.reduceToBase(this)..simplify();
   }
 
-  /*String toSimpleString(){
+  String toSimpleString(){
     
   }
 
@@ -755,7 +755,7 @@ class CompoundUnit{
 
   static CompoundUnit fromString(final String str){
 
-  }*/
+  }
 }
 
 abstract class UnitManipulation{
