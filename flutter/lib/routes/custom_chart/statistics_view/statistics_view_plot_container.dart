@@ -38,7 +38,7 @@ class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContaine
   Widget build(BuildContext context) {
     if(StatisticsViewController.notifier.value["plot.signal"] == null){
       return Container(
-        height: 400,
+        height: 300,
         decoration: BoxDecoration(
           border: Border(top: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))
         )
@@ -46,7 +46,7 @@ class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContaine
     }
     final double width = MediaQuery.of(context).size.width;
     return Container(
-      height: 400,
+      height: 300,
       decoration: BoxDecoration(
         border: Border(top: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))
       ),
@@ -54,11 +54,11 @@ class _StatisticsViewPlotContainerState extends State<StatisticsViewPlotContaine
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            height: 399,
+            height: 299,
             width: width - 300,
             child: Center(
               child: CustomPaint(
-                size: Size(width - 340, 380),
+                size: Size(width - 340, 280),
                 painter: StatisticsViewController.notifier.value["plot.type"] == StatistiscsViewPlotType.HIST ?
                   HistogramPainter(hist: StatisticsViewController.notifier.value["plot.datas"][StatisticsViewController.notifier.value["plot.type"]] as Histogram)
                   :

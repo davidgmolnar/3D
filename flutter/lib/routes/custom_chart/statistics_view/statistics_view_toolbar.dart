@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/lapdata.dart';
 import '../../../io/logger.dart';
+import '../../../ui/input_widgets/list_selector.dart';
 import '../../../ui/input_widgets/search_list_selector.dart';
 import '../../../ui/input_widgets/search_selector.dart';
 import '../../../ui/notifications/notification_logic.dart' as noti;
@@ -63,7 +64,7 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               }
             }
           ),
-          SearchListSelector(
+          ListSelector(
             selection: StatisticsViewController.notifier.value["laps.selected"].cast<int>().map((final int lapIndex) => LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex)).toList().cast<String>(),
             hintText: "Select laps",
             options: List.generate(StatisticsViewController.notifier.value["laps"].length, (lapIndex) => LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex)),
@@ -71,6 +72,7 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               final List<int> lapIndexes = lapStringReps.map((rep) {
                 return int.parse(rep.split(':').first.substring(4)) - 1;
               }).toList();
+              lapIndexes.sort();
               StatisticsViewController.notifier.update("laps.selected", lapIndexes);
             }
           ),
@@ -108,7 +110,15 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
                 StatisticsViewController.notifier.update("plot.signal", p0);
               },
             ),
-          )
+          ),
+          DropdownButton<int>(
+            value: StatisticsViewController.notifier.value["laps.plot_selected"],
+            items: [DropdownMenuItem<int>(value: null, child: Text("Full log", style: StyleManager.textStyle,),),
+              ...StatisticsViewController.notifier.value["laps.selected"].cast<int>().map((final int lapIndex) => DropdownMenuItem<int>(value: lapIndex, child: Text(LapData.rep(StatisticsViewController.notifier.value["laps"][lapIndex], lapIndex), style: StyleManager.textStyle,))).toList()],
+            onChanged: (selected){
+              StatisticsViewController.notifier.update("laps.plot_selected", selected);
+            }
+          ),
         ],
       ),
     );
@@ -122,12 +132,5 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
 }
 
 /* TODOS
-Add a select lap to plot selector
-
-Modify laps selection, instead of SearchListSelector it needs a List selector, no point in searching that
-
-Add borders to StatisticsViewDataContainer table for visibility or use checkerboard bgcolor/secondary color
-Add special colors to largest/smallest in a column
-
-Be able to export current state of statisticsviewcontroller except plotdata and lapdata
+Be able to export current state of statisticsviewcontroller except plotdata and lapdata, and reload it, also run calfile where needed
  */

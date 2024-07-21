@@ -1,3 +1,5 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
+
 import '../../../data/data.dart';
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
@@ -114,6 +116,7 @@ void customChartHandleDataReceived(Map data) async {
       customChartWindowType = CustomChartWindowType.values[data['type']];
       localLogger.info("CustomChartWindowType changed to ${customChartWindowType.name}", doNoti: false);
       if(customChartWindowType == CustomChartWindowType.STATISTICS){
+        appWindow.maximize();
         StatisticsViewLoadHelper.registerToCache();
       }
       StyleManager.updater();
