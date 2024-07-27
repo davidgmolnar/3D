@@ -13,6 +13,7 @@ abstract class FileSystem{
   static String get customCharacteristicsGroupDir => "CustomCharacteristicsGroups/";
   static String get channelDir => "Channels/";
   static String get unitSystemDir => "UnitSystem/";
+  static String get statPresetDir => "UnitSystem/";
 
   static Future<String?> get getCurrentDirectory async {
     if(_currentDirectory != null){

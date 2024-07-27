@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../data/lapdata.dart';
 import '../../../io/logger.dart';
+import '../../../ui/dialogs/dialog_base.dart';
+import '../../../ui/dialogs/string_input_dialog.dart';
 import '../../../ui/input_widgets/list_selector.dart';
 import '../../../ui/input_widgets/search_list_selector.dart';
 import '../../../ui/input_widgets/search_selector.dart';
@@ -44,6 +47,10 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               value: StatisticsViewController.notifier.value["data.meas"],
               items: [DropdownMenuItem<String>(value: null, child: Text("Select measurement", style: StyleManager.textStyle,)), ...StatisticsViewController.notifier.value["data.all_names"].keys.map((meas) => DropdownMenuItem<String>(value: meas, child: Text(meas, style: StyleManager.textStyle,)))],
               onChanged: (final String? selected){
+                if(StatisticsViewController.notifier.value["data.meas"] != null){
+                  StatisticsViewController.notifier.value["data.selected_names"].clear();
+                  StatisticsViewController.notifier.value["plot.signal"] = null;
+                }
                 StatisticsViewController.notifier.update("data.meas", selected);
                 if(selected != null && StatisticsViewController.notifier.value["data.selected_names"].isNotEmpty){
                   StatisticsViewController.sendRequest();
@@ -86,6 +93,43 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
               }
             },
             icon: Icon(Icons.refresh_outlined, color: StyleManager.globalStyle.primaryColor,),
+          ),
+          IconButton(
+            onPressed: () async {
+              if(StatisticsViewController.notifier.value["data.meas"] == null){
+                noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Set measurement first"), 5000));
+                return;
+              }
+
+              // ask for preset name in dialog but from available selection dropdown
+              // check if preset exists
+
+              final List<String> missing = await StatisticsViewController.loadState(presetName, StatisticsViewController.notifier.value["data.meas"]);
+              if(missing.isNotEmpty){
+                noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Missing signals: $missing"), 5000));
+                return;
+              }
+              noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Successfully loaded preset $presetName"), 5000));
+            },
+            icon: Icon(FontAwesomeIcons.fileImport, color: StyleManager.globalStyle.primaryColor,),
+          ),
+          IconButton(
+            onPressed: () async {
+              showDialog<Widget>(context: context, builder: (BuildContext context){
+                return DialogBase(
+                  title: "Input dialog",
+                  dialog: StringInputDialog(
+                    hintText: "Specify preset name",
+                    onFinished: (presetName) {
+                      StatisticsViewController.saveState(presetName);
+                    },
+                  ),
+                  minWidth: 400,
+                  maxHeight: 150,
+                );
+              });
+            },
+            icon: Icon(FontAwesomeIcons.fileExport, color: StyleManager.globalStyle.primaryColor,),
           ),
           Container(
             width: 1,
@@ -133,4 +177,10 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
 
 /* TODOS
 Be able to export current state of statisticsviewcontroller except plotdata and lapdata, and reload it, also run calfile where needed
+  Phase 1.
+  Check if signals are in fscache loaded signals. If not in there throw error, else load them
+
+  Phase 2.
+  When saving calfiles will need to be specified
+  Instead of throwing error immediately send missing signal names to master along with the list of calfiles to run, it will run the list, and update signals in statview
  */
