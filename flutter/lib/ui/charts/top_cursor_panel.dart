@@ -30,7 +30,7 @@ class TopCursorDisplay extends StatefulWidget {
 }
 
 class _TopCursorDisplayState extends State<TopCursorDisplay> {
-  _TopCursorType _type = _TopCursorType.DATA;
+  _TopCursorType _type = _TopCursorType.FUNCTIONS;
   int __selectedCursor = 0;
 
   @override
@@ -213,7 +213,9 @@ class _CursorFunctionsDisplayState extends State<CursorFunctionsDisplay> {
   void initState() {
     CursorFunctionsDisplay.selected = widget.selectedCursor;
     CursorFunctionsDisplay.selectedCursorValuesDescription = cursorInfoNotifier.value.getCursorValuesDescription(CursorFunctionsDisplay.selected);
-    CursorFunctionsDisplay.valueDescription = CursorFunctionsDisplay.selectedCursorValuesDescription.first;
+    if(CursorFunctionsDisplay.selectedCursorValuesDescription.isNotEmpty){
+      CursorFunctionsDisplay.valueDescription = CursorFunctionsDisplay.selectedCursorValuesDescription.first;
+    }
     super.initState();
   }
 
@@ -221,6 +223,9 @@ class _CursorFunctionsDisplayState extends State<CursorFunctionsDisplay> {
   Widget build(BuildContext context) {
     int i = 0;
     CursorFunctionsDisplay.selected = widget.selectedCursor;
+    if(CursorFunctionsDisplay.selectedCursorValuesDescription.isEmpty){
+      return Text("No signals are currently visible", style: StyleManager.textStyle,);
+    }
     return Row(
       children: [
         ButtonWithRotatingText(

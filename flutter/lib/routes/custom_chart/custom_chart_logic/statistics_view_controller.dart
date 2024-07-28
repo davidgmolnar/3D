@@ -6,6 +6,7 @@ import '../../../data/sci/kde.dart';
 import '../../../io/file_system.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../multiprocess/childprocess_api.dart';
+import '../statistics_view/statistics_view_data_container.dart';
 import 'statistics_processor.dart';
 
 enum StatistiscsViewPlotType{
@@ -82,7 +83,8 @@ abstract class StatisticsViewController{
 
   static Future<bool> saveState(final String presetName) async {
     final Map<String, dynamic> stateToSave = {
-      "data.selected_names": notifier.value["data.selected_names"]
+      "data.selected_names": notifier.value["data.selected_names"],
+      "stat_line_data": StatisticsViewDataContainer.statLineData.map((key, value) => MapEntry(key, value.map((e) => e.index).toList()))
     };
 
     List<FileSystemEntity> entities = await FileSystem.tryListElementsInLocalAsync(FileSystem.statPresetDir);
@@ -113,6 +115,12 @@ abstract class StatisticsViewController{
 
       StatisticsViewController.notifier.value["data.selected_names"].clear();
       StatisticsViewController.notifier.value["data.selected_names"].addAll(signalsToLoad);
+
+      final Map<String, dynamic> loadedStatLineData = data["stat_line_data"];
+      StatisticsViewDataContainer.statLineData.clear();
+      StatisticsViewDataContainer.statLineData.addEntries(loadedStatLineData.entries.map((e) => MapEntry(e.key, e.value.map((e) => StatType.values[e]).toList().cast<StatType>())));
+      
+      StatisticsViewController.sendRequest();
     }
     return [];
   }

@@ -22,7 +22,6 @@ class StringInputDialog extends StatelessWidget {
             decoration: InputDecoration(hintText: hintText),
           ),
         ),
-        const Spacer(),
         IconButton(
           onPressed: (){
             onFinished(controller.text);

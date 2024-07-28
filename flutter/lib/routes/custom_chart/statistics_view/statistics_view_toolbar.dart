@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../data/lapdata.dart';
+import '../../../io/file_system.dart';
 import '../../../io/logger.dart';
 import '../../../ui/dialogs/dialog_base.dart';
+import '../../../ui/dialogs/dropdown_input_dialog.dart';
 import '../../../ui/dialogs/string_input_dialog.dart';
 import '../../../ui/input_widgets/list_selector.dart';
 import '../../../ui/input_widgets/search_list_selector.dart';
@@ -101,15 +103,37 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
                 return;
               }
 
-              // ask for preset name in dialog but from available selection dropdown
-              // check if preset exists
-
-              final List<String> missing = await StatisticsViewController.loadState(presetName, StatisticsViewController.notifier.value["data.meas"]);
-              if(missing.isNotEmpty){
-                noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Missing signals: $missing"), 5000));
+              final List<String> presetNames = (await FileSystem.tryListElementsInLocalAsync(FileSystem.statPresetDir)).where((element) => element.uri.path.endsWith(".3DSTATPRESET")).map((e) => e.uri.path.split('/').last.split('\\').last.split('.').first).toList();             
+              if(presetNames.isEmpty){
+                noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("No previous Statisitics View presets have been found"), 5000));
                 return;
               }
-              noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Successfully loaded preset $presetName"), 5000));
+
+              // ignore: use_build_context_synchronously
+              showDialog<Widget>(context: context, builder: (BuildContext context){
+                return DialogBase(
+                  title: "Input dialog",
+                  dialog: DropdownInputDialog(
+                    hintText: "Specify preset name",
+                    options: presetNames,
+                    onFinished: (final String? presetName) async {
+                      if(presetName == null){
+                        return;
+                      }
+
+                      final List<String> missing = await StatisticsViewController.loadState(presetName, StatisticsViewController.notifier.value["data.meas"]);
+
+                      if(missing.isNotEmpty){
+                        noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Missing signals: $missing"), 5000));
+                        return;
+                      }
+                      noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Successfully loaded preset $presetName"), 5000));
+                    },
+                  ),
+                  minWidth: 400,
+                  maxHeight: 100,
+                );
+              });
             },
             icon: Icon(FontAwesomeIcons.fileImport, color: StyleManager.globalStyle.primaryColor,),
           ),
@@ -120,12 +144,18 @@ class _StatisticsViewToolbarState extends State<StatisticsViewToolbar> {
                   title: "Input dialog",
                   dialog: StringInputDialog(
                     hintText: "Specify preset name",
-                    onFinished: (presetName) {
-                      StatisticsViewController.saveState(presetName);
+                    onFinished: (presetName) async {
+                      final bool success = await StatisticsViewController.saveState(presetName);
+                      if(!success){
+                        noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("A preset with this name already exists"), 5000));
+                      }
+                      else{
+                        noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Preset saved"), 5000));
+                      }
                     },
                   ),
                   minWidth: 400,
-                  maxHeight: 150,
+                  maxHeight: 100,
                 );
               });
             },

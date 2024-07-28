@@ -256,7 +256,7 @@ class HistogramPainter extends CustomPainter {
 
     }
     catch(ex, stack){
-      localLogger.info("$ex $stack");
+      localLogger.info("$ex ${stack.toString().split("\n").sublist(0, 5).join("\n")}");
     }
   }
 
@@ -364,7 +364,7 @@ class PDFPainter extends CustomPainter {
 
     }
     catch(ex, stack){
-      localLogger.info("$ex $stack");
+      localLogger.info("$ex ${stack.toString().split("\n").sublist(0, 5).join("\n")}");
     }
   }
 
@@ -472,7 +472,7 @@ class CDFPainter extends CustomPainter {
 
     }
     catch(ex, stack){
-      localLogger.info("$ex $stack");
+      localLogger.info("$ex ${stack.toString().split("\n").sublist(0, 5).join("\n")}");
     }
   }
 

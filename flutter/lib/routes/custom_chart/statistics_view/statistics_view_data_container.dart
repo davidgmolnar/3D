@@ -10,13 +10,15 @@ import '../custom_chart_logic/statistics_view_controller.dart';
 class StatisticsViewDataContainer extends StatefulWidget {
   const StatisticsViewDataContainer({super.key});
 
+  
+  static final Map<String, List<StatType>> statLineData = {};
+
   @override
   State<StatisticsViewDataContainer> createState() => _StatisticsViewDataContainerState();
 }
 
 class _StatisticsViewDataContainerState extends State<StatisticsViewDataContainer> {
   Map<String, List<Stat>> statistics = {};
-  Map<String, List<StatType>> statLineData = {};
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -30,10 +32,12 @@ class _StatisticsViewDataContainerState extends State<StatisticsViewDataContaine
       statistics.clear();
       for(final String signal in StatisticsViewController.notifier.value["data.selected_names"]) {
         statistics[signal] = StatisticsProcessor.stat(StatisticsViewController.notifier.value["data.meas"]!, signal);
-        if(!statLineData.containsKey(signal) || statLineData[signal]!.isEmpty){
-          statLineData[signal] = [StatType.MIN, StatType.MAX];
+        if(!StatisticsViewDataContainer.statLineData.containsKey(signal) || StatisticsViewDataContainer.statLineData[signal]!.isEmpty){
+          StatisticsViewDataContainer.statLineData[signal] = [StatType.MIN, StatType.MAX];
         }
       }
+
+      StatisticsViewDataContainer.statLineData.removeWhere((key, value) => !StatisticsViewController.notifier.value["data.selected_names"].contains(key));
       setState(() {});
     }
   }
@@ -44,7 +48,7 @@ class _StatisticsViewDataContainerState extends State<StatisticsViewDataContaine
       return Container();
     }
     final List<MapEntry<String, StatType>> unravel = [];
-    for(MapEntry<String, List<StatType>> entry in statLineData.entries){
+    for(MapEntry<String, List<StatType>> entry in StatisticsViewDataContainer.statLineData.entries){
       for(int i = 0; i < entry.value.length; i++){
         unravel.add(MapEntry(entry.key, entry.value[i]));
       }
@@ -56,7 +60,7 @@ class _StatisticsViewDataContainerState extends State<StatisticsViewDataContaine
         width: (unravel.length + 1) * 100.0,
         child: Column(
           children: [
-            StatisticsViewDataHeader(statLineData: statLineData,),
+            StatisticsViewDataHeader(statLineData: StatisticsViewDataContainer.statLineData,),
             Expanded(
               child: ListView.builder(
                 itemCount: unravel.length + 1,
