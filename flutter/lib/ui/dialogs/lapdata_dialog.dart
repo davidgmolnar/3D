@@ -114,9 +114,7 @@ class _LapDataDialogState extends State<LapDataDialog> {
                           },
                           child: Text(
                             "Lap $index: ${msToTimeString(laps[index].dx, addMs: true)} - ${msToTimeString(laps[index].dy, addMs: true)}",
-                            style: StyleManager.textStyle.copyWith(
-                              color: selectedCursors[index] ? StyleManager.globalStyle.primaryColor : StyleManager.globalStyle.secondaryColor
-                            ),
+                            style: StyleManager.textStyle
                           ),
                         );
                       },
