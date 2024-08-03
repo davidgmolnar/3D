@@ -68,6 +68,7 @@ class LapMarker extends StatelessWidget {
           onHorizontalDragUpdate: (details) {
             placedLapMarkers.update((lapMarkers) {
               lapMarkers[lapMarkerIndex] += ChartController.moveInCursonTime(details.delta.dx);
+              LapData.updateTemp(lapMarkerIndex, lapMarkers[lapMarkerIndex]);
             });
           },
           child: SizedBox(
@@ -104,7 +105,8 @@ class LapMarkerTooltip extends StatelessWidget {
           Icon(Icons.flag, color: StyleManager.globalStyle.primaryColor,),
           IconButton(onPressed: (){
             placedLapMarkers.update((value) {
-              value.removeAt(lapMarkerIndex);
+              final double removed = value.removeAt(lapMarkerIndex);
+              LapData.removeTemp(removed);
             });
           }, icon: Icon(Icons.close, color: StyleManager.globalStyle.primaryColor,))
         ],
@@ -115,6 +117,7 @@ class LapMarkerTooltip extends StatelessWidget {
 
 abstract class LapData{
   static final Set<double> _lapMarkersMs = {};
+  static final List<double> _temporaryLapMarkers = [];
 
   static void add(double lapMarkerMs){
     _lapMarkersMs.add(lapMarkerMs);
@@ -131,20 +134,50 @@ abstract class LapData{
     _save();
   }
 
+  static void addTemp(double lapMarkerMs){
+    _temporaryLapMarkers.add(lapMarkerMs);
+    _save();
+  }
+
+  static void removeTemp(double lapMarkerMs){
+    _temporaryLapMarkers.remove(lapMarkerMs);
+    _save();
+  }
+
+  static void clearTemp(){
+    _temporaryLapMarkers.clear();
+    _save();
+  }
+
+  static void updateTemp(final int index, final double newValue){
+    _temporaryLapMarkers[index] = newValue;
+    _save();
+  }
+
   static void _save(){
     FSCache.write(FSCache.lapdataPath, _lapMarkersMs.toList());
+    FSCache.write(FSCache.tempLapdataPath, _temporaryLapMarkers);
   }
 
   static void reload(){
     final List<double>? loaded = FSCache.read<List>(FSCache.lapdataPath)?.cast<double>();
+    final List<double>? loadedTemp = FSCache.read<List>(FSCache.tempLapdataPath)?.cast<double>();
     if(loaded != null){
       _lapMarkersMs.clear();
       _lapMarkersMs.addAll(loaded);
+    }
+    if(loadedTemp != null){
+      _temporaryLapMarkers.clear();
+      _temporaryLapMarkers.addAll(loadedTemp);
     }
   }
 
   static List<double> lapMarkers(){
     return _lapMarkersMs.toList()..sort();
+  }
+
+  static List<double> tempLapMarkers(){
+    return _temporaryLapMarkers.toList()..sort();
   }
 
   static List<Offset> laps(){

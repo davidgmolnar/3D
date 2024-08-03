@@ -21,6 +21,7 @@ abstract class FSCache{
   static String get visibleTraceSettingsNamePath => "main.trace.visible_signals";
   static String get allTraceSettingsNamePath => "main.trace.all_signals";
   static String get lapdataPath => "main.lapdata";
+  static String get tempLapdataPath => "main.lapdata.temp";
 
   static Future<void> init() async {
     if(_initialized){

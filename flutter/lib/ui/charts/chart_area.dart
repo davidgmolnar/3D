@@ -290,7 +290,7 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
         onDoubleTapDown: (details) {
           placedLapMarkers.update((value) {
             value.add(ChartController.positionToTimeStamp(details.localPosition.dx));
-            value.sort();
+            LapData.addTemp(value.last);
           });
         },
         behavior: HitTestBehavior.opaque,
