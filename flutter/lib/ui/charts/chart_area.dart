@@ -7,6 +7,7 @@ import 'package:ml_linalg/dtype.dart';
 import 'package:ml_linalg/vector.dart';
 
 import '../../data/data.dart';
+import '../../data/lapdata.dart';
 import '../../data/settings.dart';
 import '../../io/logger.dart';
 import '../../multiprocess/childprocess.dart';
@@ -286,6 +287,12 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
             ChildProcess.sendCustomChartUpdate(setCustomChartMarkerAddPayload(timeStamp));
           }
         },
+        onDoubleTapDown: (details) {
+          placedLapMarkers.update((value) {
+            value.add(ChartController.positionToTimeStamp(details.localPosition.dx));
+            value.sort();
+          });
+        },
         behavior: HitTestBehavior.opaque,
         child: Stack(
           fit: StackFit.expand,
@@ -301,7 +308,8 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
                 child: CustomPaint(painter: TimeAxisPainter(valueAxisData: valueAxisData),)
               ),
             ),
-            const CursorOverlay()
+            const LapMarkersOverlay(),
+            const CursorOverlay(),
           ],
         ),
       ),
