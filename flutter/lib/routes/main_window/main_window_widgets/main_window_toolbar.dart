@@ -10,7 +10,6 @@ import '../../../ui/dialogs/chart_grid_setup_dialog.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
 import '../../../ui/dialogs/dialog_base.dart';
 import '../../../ui/dialogs/edit_parameters_dialog.dart';
-import '../../../ui/dialogs/lapdata_dialog.dart';
 import '../../../ui/theme/theme.dart';
 import '../../../ui/toolbar/toolbar_item.dart';
 import '../../custom_chart/custom_chart_logic/custom_chart_window_type.dart';
@@ -121,18 +120,7 @@ class MainWindowToolbar extends StatelessWidget {
   static void _logWindow (){}
 
   static void _lapDataDialog (){
-    if(mainWindowNavigatorKey.currentContext == null){
-      localLogger.error("Could not show LapDataDialog because mainWindowNavigatorKey.currentContext was somehow null", doNoti: false);
-      return;
-    }
-    showDialog<Widget>(context: mainWindowNavigatorKey.currentContext!, builder: (BuildContext context){
-      return const DialogBase(
-        title: "Laptime Editor",
-        dialog: LapDataDialog(),
-        minWidth: 700,
-        maxHeight: 600,
-      );
-    });
+    ChildProcessController.addConnection(WindowType.LAP_EDITOR, WindowSetupInfo("Lap Editor", const Size(700,600), _getCenterOffset(const Size(700,600))));
   }
 
   static const List<Widget> _mainWindowToolbarItems = [

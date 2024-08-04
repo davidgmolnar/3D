@@ -5,6 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../data/calculation/constants.dart';
+import '../data/lapdata.dart';
 import '../data/settings.dart';
 import '../io/file_system.dart';
 import '../io/fscache.dart';
@@ -13,6 +14,7 @@ import '../multiprocess/childprocess.dart';
 import '../multiprocess/childprocess_api.dart';
 import '../multiprocess/childprocess_controller.dart';
 import '../ui/theme/theme.dart';
+import 'lap_editor/screen.dart';
 import 'log/screen.dart';
 import 'main_window/screen.dart';
 import 'map_chart/screen.dart';
@@ -27,6 +29,7 @@ Map<WindowType,String> windowTypeTitle = {
   WindowType.CUSTOM_CHART: "Chart",
   WindowType.MAP_CHART: "Map",
   WindowType.LOG: "Log",
+  WindowType.LAP_EDITOR: "Lap Editor",
 };
 
 class WindowSetupInfo{
@@ -83,6 +86,9 @@ void runSelectedApp() async {
   }
   else if(windowType == WindowType.SETTINGS){
     runApp(const SettingApp());
+  }
+  else if(windowType == WindowType.LAP_EDITOR){
+    runApp(const LapEditorApp());
   }
   else{
     localLogger.critical("Failed to select app type to start, app type was ${windowType.name}");
@@ -142,8 +148,12 @@ Future<void> postStartup(var root) async {
   }
   Const.loadFromDisk();
   SettingsProvider.loadFromDisk();
+  LapData.init();
   windowManager.addListener(root);
   windowManager.setPreventClose(true);
+  if(windowType == WindowType.LAP_EDITOR){
+    windowManager.setResizable(false);
+  }
 }
 
 Future<void> shutdown() async {

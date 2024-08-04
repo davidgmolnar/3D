@@ -119,6 +119,14 @@ abstract class LapData{
   static final Set<double> _lapMarkersMs = {};
   static final List<double> _temporaryLapMarkers = [];
 
+  static final UpdateableValueNotifier<void> notifier = UpdateableValueNotifier(null);
+
+  static void init(){
+    FSCache.addListener(reload, [FSCache.lapdataPath, FSCache.tempLapdataPath]);
+    reload();
+    notifier.update((value) { });
+  }
+
   static void add(double lapMarkerMs){
     _lapMarkersMs.add(lapMarkerMs);
     _save();
@@ -155,8 +163,8 @@ abstract class LapData{
   }
 
   static void _save(){
-    FSCache.write(FSCache.lapdataPath, _lapMarkersMs.toList());
-    FSCache.write(FSCache.tempLapdataPath, _temporaryLapMarkers);
+    FSCache.write(FSCache.lapdataPath, _lapMarkersMs.toList(), doNotify: false);
+    FSCache.write(FSCache.tempLapdataPath, _temporaryLapMarkers, doNotify: false);
   }
 
   static void reload(){

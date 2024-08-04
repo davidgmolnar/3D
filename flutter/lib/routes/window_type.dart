@@ -6,7 +6,8 @@ enum WindowType{
   SETTINGS,
   CUSTOM_CHART,
   MAP_CHART,
-  LOG
+  LOG,
+  LAP_EDITOR
 }
 
 WindowType windowType = WindowType.INITIAL;
@@ -26,6 +27,8 @@ extension FromString on WindowType{
         return WindowType.MAP_CHART;
       case "LOG":
         return WindowType.LOG;
+      case "LAP_EDITOR":
+        return WindowType.LAP_EDITOR;
       default:
         return null;
     }

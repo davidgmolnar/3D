@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../data/data.dart';
 import '../../data/lapdata.dart';
-import '../charts/cursor_displays.dart';
 import '../input_widgets/sliders.dart';
 import '../theme/theme.dart';
 
@@ -14,19 +13,24 @@ class LapDataDialog extends StatefulWidget {
 }
 
 class _LapDataDialogState extends State<LapDataDialog> {
-  List<bool> selectedCursors = [];
+  List<bool> selectedTempLapMarkers = [];
+  List<double> tempLapMarkers = [];
   bool showLaps = false;
 
   @override
   void initState() {
-    selectedCursors = List.filled(cursorInfoNotifier.value.cursors.length, false);
-    cursorInfoNotifier.addListener(onCursorUpdate);
+    LapData.notifier.addListener(onCacheUpdate);
+    LapData.reload();
+    tempLapMarkers = LapData.tempLapMarkers();
+    selectedTempLapMarkers = List.filled(tempLapMarkers.length, false);
     super.initState();
   }
 
-  void onCursorUpdate(){
-    selectedCursors = List.filled(cursorInfoNotifier.value.cursors.length, false);
-    setState(() {});
+  void onCacheUpdate(){
+    LapData.reload();
+    tempLapMarkers = LapData.tempLapMarkers();
+    selectedTempLapMarkers = List.filled(tempLapMarkers.length, false);
+    update();
   }
 
   void update(){
@@ -34,12 +38,12 @@ class _LapDataDialogState extends State<LapDataDialog> {
   }
 
   void moveSelectedToLapData(){
-    for(int i = 0; i < selectedCursors.length; i++){
-      if(selectedCursors[i]){
-        LapData.add(cursorInfoNotifier.value.cursors[i].timeStamp);
+    for(int i = 0; i < selectedTempLapMarkers.length; i++){
+      if(selectedTempLapMarkers[i]){
+        LapData.add(tempLapMarkers[i]);
       }
     }
-    selectedCursors = List.filled(cursorInfoNotifier.value.cursors.length, false);
+    selectedTempLapMarkers = List.filled(tempLapMarkers.length, false);
     update();
   }
 
@@ -53,18 +57,18 @@ class _LapDataDialogState extends State<LapDataDialog> {
           Expanded(
             child: ListView.builder(
               itemExtent: 50,
-              itemCount: selectedCursors.length,
+              itemCount: selectedTempLapMarkers.length,
               cacheExtent: 200,
               itemBuilder: (context, index) {
                 return TextButton(
                   onPressed: () {
-                    selectedCursors[index] = !selectedCursors[index];
+                    selectedTempLapMarkers[index] = !selectedTempLapMarkers[index];
                     update();
                   },
                   child: Text(
-                    cursorInfoNotifier.value.cursors[index].represent(index),
+                    "Temp lap marker $index: ${msToTimeString(tempLapMarkers[index], addMs: true)}",
                     style: StyleManager.textStyle.copyWith(
-                      color: selectedCursors[index] ? StyleManager.globalStyle.primaryColor : StyleManager.globalStyle.secondaryColor
+                      color: selectedTempLapMarkers[index] ? StyleManager.globalStyle.primaryColor : StyleManager.globalStyle.secondaryColor
                     ),
                   ),
                 );
@@ -150,7 +154,7 @@ class _LapDataDialogState extends State<LapDataDialog> {
 
   @override
   void dispose() {
-    cursorInfoNotifier.removeListener(onCursorUpdate);
+    LapData.notifier.removeListener(onCacheUpdate);
     super.dispose();
   }
 }

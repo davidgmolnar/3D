@@ -133,12 +133,17 @@ abstract class FSCache{
     }
   }
 
-  static void write<T>(final String path, final T value){
+  static void write<T>(final String path, final T value, {final bool doNotify = true}){
     if(!_initialized){
       return;
     }
     if(_notifier.value[path] != value){
-      _notifier.update(path, value);
+      if(doNotify){
+        _notifier.update(path, value);
+      }
+      else{
+        _notifier.value[path] = value;
+      }
       _syncToDisk();
     }
   }
