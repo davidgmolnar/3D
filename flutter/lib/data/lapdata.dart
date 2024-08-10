@@ -23,10 +23,20 @@ class _LapMarkersOverlayState extends State<LapMarkersOverlay> {
   void initState() {
     placedLapMarkers.addListener(update);
     ChartController.shownDurationNotifier.addListener(update);
+    FSCache.addListener(updateReload, [FSCache.lapdataPath, FSCache.tempLapdataPath]);
     super.initState();
   }
 
-  void update() => setState(() {});
+  void update(){
+    setState(() {});
+  }
+
+  void updateReload(){
+    LapData.reload();
+    placedLapMarkers.value.clear();
+    placedLapMarkers.value.addAll(LapData.tempLapMarkers());
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +54,7 @@ class _LapMarkersOverlayState extends State<LapMarkersOverlay> {
   void dispose() {
     placedLapMarkers.removeListener(update);
     ChartController.shownDurationNotifier.removeListener(update);
+    FSCache.removeListener(updateReload);
     super.dispose();
   }
 }
@@ -67,8 +78,11 @@ class LapMarker extends StatelessWidget {
           behavior: HitTestBehavior.opaque,
           onHorizontalDragUpdate: (details) {
             placedLapMarkers.update((lapMarkers) {
-              lapMarkers[lapMarkerIndex] += ChartController.moveInCursonTime(details.delta.dx);
-              LapData.updateTemp(lapMarkerIndex, lapMarkers[lapMarkerIndex]);
+              try{
+                lapMarkers[lapMarkerIndex] += ChartController.moveInCursonTime(details.delta.dx);
+                LapData.updateTemp(lapMarkerIndex, lapMarkers[lapMarkerIndex]);
+              // ignore: empty_catches
+              }catch(ex){}
             });
           },
           child: SizedBox(

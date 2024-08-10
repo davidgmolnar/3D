@@ -43,6 +43,11 @@ class _LapDataDialogState extends State<LapDataDialog> {
         LapData.add(tempLapMarkers[i]);
       }
     }
+    for(int i = selectedTempLapMarkers.length - 1; i >= 0; i--){
+      if(selectedTempLapMarkers[i]){
+        LapData.removeTemp(tempLapMarkers[i]);
+      }
+    }
     selectedTempLapMarkers = List.filled(tempLapMarkers.length, false);
     update();
   }

@@ -6,7 +6,7 @@ import '../../data/settings_classes.dart';
 import '../theme/theme.dart';
 import 'chart_logic/axis_data.dart';
 
-const double _chartScalerWidth = 20;
+const double chartScalerWidth = 20;
 const tickLenght = 3;
 
 class ChartScalerContainer extends StatefulWidget {
@@ -45,7 +45,7 @@ class _ChartScalerContainerState extends State<ChartScalerContainer> {
       builder: (context, constraints) {
         return Container(
           padding: EdgeInsets.all(StyleManager.globalStyle.padding),
-          width: visibleGroups.length * _chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1,
+          width: visibleGroups.length * chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1,
           height: constraints.maxHeight,
           decoration: BoxDecoration(border: Border(right: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))),
           child: ListView.builder(
@@ -124,7 +124,7 @@ class _ChartScalerState extends State<ChartScaler> {
           }
         },
         child: Container(
-          width: _chartScalerWidth,
+          width: chartScalerWidth,
           decoration: BoxDecoration(
             border: Border(right: BorderSide(width: 1, color: TraceSettingsProvider.colorOfScalingGroup(widget.scalingGroup)))),
           child: CustomPaint(painter: ChartScalerPainter(valueAxisData: valueAxisData, color: TraceSettingsProvider.colorOfScalingGroup(widget.scalingGroup))),

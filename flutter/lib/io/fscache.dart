@@ -78,9 +78,9 @@ abstract class FSCache{
           final Map<String, dynamic> loadedEntries = Importer.jsonFromBytes(await file.readAsBytes()).cast<String, dynamic>();
           for(final String key in loadedEntries.keys){
             if(_notifier.value.containsKey(key)){
-              if(_notifier.value[key] != loadedEntries[key]){
+              //if(_notifier.value[key] != loadedEntries[key]){
                 _notifier.update(key, loadedEntries[key]!);
-              }
+              //}
             }
             else{
               _notifier.update(key, loadedEntries[key]!);
