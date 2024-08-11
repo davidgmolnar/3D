@@ -56,104 +56,102 @@ class _LapDataDialogState extends State<LapDataDialog> {
   Widget build(BuildContext context) {
     final List<double> lapMarkers = LapData.lapMarkers();
     final List<Offset> laps = LapData.laps();
-    return Expanded(
-      child: Row(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemExtent: 50,
-              itemCount: selectedTempLapMarkers.length,
-              cacheExtent: 200,
-              itemBuilder: (context, index) {
-                return TextButton(
-                  onPressed: () {
-                    selectedTempLapMarkers[index] = !selectedTempLapMarkers[index];
-                    update();
-                  },
-                  child: Text(
-                    "Temp lap marker $index: ${msToTimeString(tempLapMarkers[index], addMs: true)}",
-                    style: StyleManager.textStyle.copyWith(
-                      color: selectedTempLapMarkers[index] ? StyleManager.globalStyle.primaryColor : StyleManager.globalStyle.secondaryColor
-                    ),
+    return Row(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemExtent: 50,
+            itemCount: selectedTempLapMarkers.length,
+            cacheExtent: 200,
+            itemBuilder: (context, index) {
+              return TextButton(
+                onPressed: () {
+                  selectedTempLapMarkers[index] = !selectedTempLapMarkers[index];
+                  update();
+                },
+                child: Text(
+                  "Temp lap marker $index: ${msToTimeString(tempLapMarkers[index], addMs: true)}",
+                  style: StyleManager.textStyle.copyWith(
+                    color: selectedTempLapMarkers[index] ? StyleManager.globalStyle.primaryColor : StyleManager.globalStyle.secondaryColor
                   ),
-                );
-              },
-            )
-          ),
-          Container(
-            width: 48,
-            decoration: BoxDecoration(
-              color: StyleManager.globalStyle.secondaryColor,
-              border: Border.symmetric(vertical: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: moveSelectedToLapData,
-                  icon: Icon(Icons.keyboard_arrow_right, color: StyleManager.globalStyle.primaryColor,)
-                )
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                SlidingSwitch(
-                  labels: const ["Lap markers", "Laps"],
-                  active: "Lap markers",
-                  elementWidth: 150,
-                  onChanged: (final String selected){
-                    showLaps = selected == "Laps";
-                    update();
-                  }
                 ),
-                showLaps ? 
-                  Expanded(
-                    child: ListView.builder(
-                      itemExtent: 50,
-                      itemCount: laps.length,
-                      cacheExtent: 200,
-                      itemBuilder:(context, index) {
-                        return TextButton(
-                          onPressed: () {
-                            LapData.remove(laps[index].dx);
-                            LapData.remove(laps[index].dy);
-                            update();
-                          },
-                          child: Text(
-                            "Lap $index: ${msToTimeString(laps[index].dx, addMs: true)} - ${msToTimeString(laps[index].dy, addMs: true)}",
-                            style: StyleManager.textStyle
-                          ),
-                        );
-                      },
-                    ),
-                  )
-                  :
-                  Expanded(
-                    child: ListView.builder(
-                      itemExtent: 50,
-                      itemCount: lapMarkers.length,
-                      cacheExtent: 200,
-                      itemBuilder:(context, index) {
-                        return TextButton(
-                          onPressed: () {
-                            LapData.remove(lapMarkers[index]);
-                            update();
-                          },
-                          child: Text(
-                            "Flag $index: ${msToTimeString(lapMarkers[index], addMs: true)}",
-                            style: StyleManager.textStyle
-                          ),
-                        );
-                      },
-                    ),
-                  )
-              ]
-            )
+              );
+            },
+          )
+        ),
+        Container(
+          width: 48,
+          decoration: BoxDecoration(
+            color: StyleManager.globalStyle.secondaryColor,
+            border: Border.symmetric(vertical: BorderSide(width: 1, color: StyleManager.globalStyle.primaryColor))
           ),
-        ],
-      ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: moveSelectedToLapData,
+                icon: Icon(Icons.keyboard_arrow_right, color: StyleManager.globalStyle.primaryColor,)
+              )
+            ],
+          ),
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              SlidingSwitch(
+                labels: const ["Lap markers", "Laps"],
+                active: "Lap markers",
+                elementWidth: 150,
+                onChanged: (final String selected){
+                  showLaps = selected == "Laps";
+                  update();
+                }
+              ),
+              showLaps ? 
+                Expanded(
+                  child: ListView.builder(
+                    itemExtent: 50,
+                    itemCount: laps.length,
+                    cacheExtent: 200,
+                    itemBuilder:(context, index) {
+                      return TextButton(
+                        onPressed: () {
+                          LapData.remove(laps[index].dx);
+                          LapData.remove(laps[index].dy);
+                          update();
+                        },
+                        child: Text(
+                          "Lap $index: ${msToTimeString(laps[index].dx, addMs: true)} - ${msToTimeString(laps[index].dy, addMs: true)}",
+                          style: StyleManager.textStyle
+                        ),
+                      );
+                    },
+                  ),
+                )
+                :
+                Expanded(
+                  child: ListView.builder(
+                    itemExtent: 50,
+                    itemCount: lapMarkers.length,
+                    cacheExtent: 200,
+                    itemBuilder:(context, index) {
+                      return TextButton(
+                        onPressed: () {
+                          LapData.remove(lapMarkers[index]);
+                          update();
+                        },
+                        child: Text(
+                          "Flag $index: ${msToTimeString(lapMarkers[index], addMs: true)}",
+                          style: StyleManager.textStyle
+                        ),
+                      );
+                    },
+                  ),
+                )
+            ]
+          )
+        ),
+      ],
     );
   }
 
