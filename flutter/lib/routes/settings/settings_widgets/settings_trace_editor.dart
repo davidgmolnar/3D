@@ -143,6 +143,13 @@ class _SettingsTraceEditorState extends State<SettingsTraceEditor> {
   @override
   void initState() {
     TraceSettingsProvider.traceSettingNotifier.addListener(update);
+    if(TraceSettingsProvider.traceSettingNotifier.value.keys.length == 1){
+      shownMeasurement = TraceSettingsProvider.traceSettingNotifier.value.keys.single;
+      filter = "";
+      _textEditingController.text = "";
+      _loadList();
+      _refreshList();
+    }
     super.initState();
   }
 
