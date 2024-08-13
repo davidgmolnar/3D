@@ -227,6 +227,7 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
     Map<String, List<String>> vis = TraceSettingsProvider.visibleSignals;
     if(prevVisibleSignals == null || prevVisibleSignals != vis){
       prevVisibleSignals = vis;
+      ChartBottomOverviewChartLinePainter.storage.clear();
       needUpdate = true;
     }
     
@@ -264,6 +265,8 @@ class ChartBottomOverviewChartLinePainter extends CustomPainter {
 
   final Map<String, List<String>> vis;
 
+  static Map<MapEntry<String, String>, Path> storage = {};
+
   ChartBottomOverviewChartLinePainter({super.repaint, required this.vis});
 
   @override
@@ -271,40 +274,48 @@ class ChartBottomOverviewChartLinePainter extends CustomPainter {
     canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
     canvas.scale(1, -1);
     canvas.translate(0, -size.height);
-
-    final Iterable<MapEntry<String, String>> visSignals = vis.entries.expand((element) => element.value.map((e) => MapEntry(element.key, e)));
     
-    final List<double> maximums = [];
-    final List<double> minimums = [];
-    for(final MapEntry<String, String> sig in visSignals){
-      final double minV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => min(value, element)).toDouble();
-      final double maxV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => max(value, element)).toDouble();
-      minimums.add(minV);
-      maximums.add(maxV);
-    }
-
-    if(minimums.isEmpty || maximums.isEmpty){
-      return;
-    }
-
-    final double canvasYMax = maximums.reduce((value, element) => max(value, element));
-    final double canvasYMin = minimums.reduce((value, element) => min(value, element));
-    final double canvasXmax = TraceSettingsProvider.lastVisibleTimestamp;
-    final double canvasXmin = TraceSettingsProvider.firstVisibleTimestamp;
-    final double canvasYRange = canvasYMax - canvasYMin;
-    final double canvasXRange = canvasXmax - canvasXmin;
-    final double xScale = size.width / canvasXRange;
-    final double yScale = size.height / canvasYRange;
-
-    for(final MapEntry<String, String> sig in visSignals){
-      final Path sigPath = Path();
-      final Paint paint = Paint()..color = TraceSettingsProvider.traceSettingNotifier.value[sig.key]!.firstWhere((element) => element.signal == sig.value).color..style = PaintingStyle.stroke;
-
-      sigPath.moveTo((signalData[sig.key]![sig.value]!.timestamps.first - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values.first - canvasYMin) * yScale);
-      for(int i = 1; i < signalData[sig.key]![sig.value]!.timestamps.size; i += signalData[sig.key]![sig.value]!.timestamps.size ~/ 2500){
-        sigPath.lineTo((signalData[sig.key]![sig.value]!.timestamps[i] - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values[i] - canvasYMin) * yScale);
+    if(storage.isEmpty){
+      final Iterable<MapEntry<String, String>> visSignals = vis.entries.expand((element) => element.value.map((e) => MapEntry(element.key, e)));
+      
+      final List<double> maximums = [];
+      final List<double> minimums = [];
+      for(final MapEntry<String, String> sig in visSignals){
+        final double minV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => min(value, element)).toDouble();
+        final double maxV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => max(value, element)).toDouble();
+        minimums.add(minV);
+        maximums.add(maxV);
       }
-      canvas.drawPath(sigPath, paint);
+
+      if(minimums.isEmpty || maximums.isEmpty){
+        return;
+      }
+
+      final double canvasYMax = maximums.reduce((value, element) => max(value, element));
+      final double canvasYMin = minimums.reduce((value, element) => min(value, element));
+      final double canvasXmax = TraceSettingsProvider.lastVisibleTimestamp;
+      final double canvasXmin = TraceSettingsProvider.firstVisibleTimestamp;
+      final double canvasYRange = canvasYMax - canvasYMin;
+      final double canvasXRange = canvasXmax - canvasXmin;
+      final double xScale = size.width / canvasXRange;
+      final double yScale = size.height / canvasYRange;
+
+      for(final MapEntry<String, String> sig in visSignals){
+        final Path sigPath = Path();
+        final Paint paint = Paint()..color = TraceSettingsProvider.traceSettingNotifier.value[sig.key]!.firstWhere((element) => element.signal == sig.value).color..style = PaintingStyle.stroke;
+
+        sigPath.moveTo((signalData[sig.key]![sig.value]!.timestamps.first - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values.first - canvasYMin) * yScale);
+        for(int i = 1; i < signalData[sig.key]![sig.value]!.timestamps.size; i += signalData[sig.key]![sig.value]!.timestamps.size ~/ 2500){
+          sigPath.lineTo((signalData[sig.key]![sig.value]!.timestamps[i] - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values[i] - canvasYMin) * yScale);
+        }
+        canvas.drawPath(sigPath, paint);
+        storage[sig] = sigPath;
+      }
+    }
+    else{
+      for(final MapEntry<String, String> sig in storage.keys){
+        canvas.drawPath(storage[sig]!, Paint()..color = TraceSettingsProvider.traceSettingNotifier.value[sig.key]!.firstWhere((element) => element.signal == sig.value).color..style = PaintingStyle.stroke);
+      }
     }
   }
 
