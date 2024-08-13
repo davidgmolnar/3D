@@ -1,8 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
+import '../../data/data.dart';
 import '../../data/lapdata.dart';
 import '../../data/settings.dart';
-import '../../data/settings_classes.dart';
 import '../../io/fscache.dart';
 import '../theme/theme.dart';
 import 'chart_logic/chart_controller.dart';
@@ -206,27 +208,35 @@ class ChartBottomOverviewChartLine extends StatefulWidget {
 }
 
 class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartLine> {
-  double? prevChartAreaHeight;
-  Map<String, List<TraceSetting>>? prevVisibleSignals;
+  Map<String, List<String>>? prevVisibleSignals;
+  double? prevFirstVisibleTimestamp;
+  double? prevLastVisibleTimestamp;
 
   @override
   void initState() {
-    ChartController.shownDurationNotifier.addListener(update); // to know chart area height
     TraceSettingsProvider.traceSettingNotifier.addListener(update); // to know visible signals
+    prevVisibleSignals = TraceSettingsProvider.visibleSignals;
+    prevFirstVisibleTimestamp = TraceSettingsProvider.firstVisibleTimestamp;
+    prevLastVisibleTimestamp = TraceSettingsProvider.lastVisibleTimestamp;
     super.initState();
   }
 
   void update(){
     bool needUpdate = false;
 
-    if(prevChartAreaHeight == null || prevChartAreaHeight != ChartController.chartHeigth){
-      prevChartAreaHeight = ChartController.chartHeigth;
+    Map<String, List<String>> vis = TraceSettingsProvider.visibleSignals;
+    if(prevVisibleSignals == null || prevVisibleSignals != vis){
+      prevVisibleSignals = vis;
+      needUpdate = true;
+    }
+    
+    if(prevFirstVisibleTimestamp == null || prevFirstVisibleTimestamp != TraceSettingsProvider.firstVisibleTimestamp){
+      prevFirstVisibleTimestamp = TraceSettingsProvider.firstVisibleTimestamp;
       needUpdate = true;
     }
 
-    Map<String, List<TraceSetting>> vis = TraceSettingsProvider.visibleSignalsData;
-    if(prevVisibleSignals == null || prevVisibleSignals != vis){
-      prevVisibleSignals = vis;
+    if(prevLastVisibleTimestamp == null || prevLastVisibleTimestamp != TraceSettingsProvider.lastVisibleTimestamp){
+      prevLastVisibleTimestamp = TraceSettingsProvider.lastVisibleTimestamp;
       needUpdate = true;
     }
 
@@ -237,7 +247,9 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return CustomPaint(
+      painter: ChartBottomOverviewChartLinePainter(vis: prevVisibleSignals!),
+    );
   }
 
   @override
@@ -246,4 +258,59 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
     TraceSettingsProvider.traceSettingNotifier.removeListener(update);
     super.dispose();
   }
+}
+
+class ChartBottomOverviewChartLinePainter extends CustomPainter {
+
+  final Map<String, List<String>> vis;
+
+  ChartBottomOverviewChartLinePainter({super.repaint, required this.vis});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Rect.fromPoints(Offset.zero, Offset(size.width, size.height)));
+    canvas.scale(1, -1);
+    canvas.translate(0, -size.height);
+
+    final Iterable<MapEntry<String, String>> visSignals = vis.entries.expand((element) => element.value.map((e) => MapEntry(element.key, e)));
+    
+    final List<double> maximums = [];
+    final List<double> minimums = [];
+    for(final MapEntry<String, String> sig in visSignals){
+      final double minV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => min(value, element)).toDouble();
+      final double maxV = signalData[sig.key]![sig.value]!.values.iterable.fold<num>(0.0, (value, element) => max(value, element)).toDouble();
+      minimums.add(minV);
+      maximums.add(maxV);
+    }
+
+    if(minimums.isEmpty || maximums.isEmpty){
+      return;
+    }
+
+    final double canvasYMax = maximums.reduce((value, element) => max(value, element));
+    final double canvasYMin = minimums.reduce((value, element) => min(value, element));
+    final double canvasXmax = TraceSettingsProvider.lastVisibleTimestamp;
+    final double canvasXmin = TraceSettingsProvider.firstVisibleTimestamp;
+    final double canvasYRange = canvasYMax - canvasYMin;
+    final double canvasXRange = canvasXmax - canvasXmin;
+    final double xScale = size.width / canvasXRange;
+    final double yScale = size.height / canvasYRange;
+
+    for(final MapEntry<String, String> sig in visSignals){
+      final Path sigPath = Path();
+      final Paint paint = Paint()..color = TraceSettingsProvider.traceSettingNotifier.value[sig.key]!.firstWhere((element) => element.signal == sig.value).color..style = PaintingStyle.stroke;
+
+      sigPath.moveTo((signalData[sig.key]![sig.value]!.timestamps.first - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values.first - canvasYMin) * yScale);
+      for(int i = 1; i < signalData[sig.key]![sig.value]!.timestamps.size; i += signalData[sig.key]![sig.value]!.timestamps.size ~/ 2500){
+        sigPath.lineTo((signalData[sig.key]![sig.value]!.timestamps[i] - canvasXmin) * xScale, (signalData[sig.key]![sig.value]!.values[i] - canvasYMin) * yScale);
+      }
+      canvas.drawPath(sigPath, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(ChartBottomOverviewChartLinePainter oldDelegate) => false;
+
+  @override
+  bool shouldRebuildSemantics(ChartBottomOverviewChartLinePainter oldDelegate) => false;
 }

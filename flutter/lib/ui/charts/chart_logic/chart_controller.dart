@@ -65,6 +65,10 @@ abstract class ChartController{
     shownDurationNotifier.update((shown) {
       shown.timeOffset += delta;
       shown.timeDuration -= delta * 2;
+
+      if(shown.timeOffset < 0){
+        shown.timeOffset = 0;
+      }
     });
 
     _maybeUpdateChartGrid();
@@ -74,6 +78,10 @@ abstract class ChartController{
     shownDurationNotifier.update((shown) {
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
       shown.timeOffset -= delta;
+
+      if(shown.timeOffset < 0){
+        shown.timeOffset = 0;
+      }
     });
 
     _maybeUpdateChartGrid();

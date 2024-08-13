@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-
 import '../../io/file_system.dart';
 import '../../io/logger.dart';
 
@@ -677,6 +675,10 @@ abstract class UnitSystem{
 
     return base..simplify();
   }
+
+  static String getRepresentationForAlias(final UnitAlias alias) => _unitDescriptions[alias]!.representations.first;
+
+  static List<String> get allRepresentations => _unitDescriptions.values.fold([], (prev, e) => prev..addAll(e.representations));
 }
 
 class ConversionResult{
@@ -745,17 +747,57 @@ class CompoundUnit{
     return UnitSystem.reduceToBase(this)..simplify();
   }
 
-  String toSimpleString(){
+  /*String toSimpleString(){
     
+  }*/
+
+  String toLaTextString(){
+    if(isScalar()){
+      return "";
+    }
+    else if(denom.isEmpty){
+      final List<String> parts = nom.entries.map((e) {
+        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+      }).toList();
+      return "\$${parts.join(" \\cdot ")}\$";
+    }
+    else{
+      final List<String> nomParts = nom.entries.map((e) {
+        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+      }).toList();
+      final List<String> denomParts = denom.entries.map((e) {
+        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+      }).toList();
+      return "\$\\frac{${nomParts.isEmpty ? "1" : nomParts.join(" \\cdot ")}}{${denomParts.join(" \\cdot ")}}\$";
+    }
   }
 
-  Text toLatexText(){
-    /// https://pub.dev/packages/latext
-  }
+  /*static CompoundUnit fromString(final String inp){
+    final String str = inp.trim();
+    if(str.isEmpty){
+      return CompoundUnit.scalar();
+    }
 
-  static CompoundUnit fromString(final String str){
+    final Map<String, int> nom = {};
+    final Map<String, int> denom = {};
 
-  }
+    final List<String> matchers = List.unmodifiable(UnitSystem.allRepresentations);
+    int i = 0;
+    bool denomReached = false;
+    if(str.startsWith('1/')){
+      denomReached = true;
+      i = 2;
+    }
+
+    while(i < str.length){
+      // legnagyobb match
+      // ha van a token után szám akkor az a kitevő ha nincs akkor egy a kitevő, nincs '^' közvetlen utána van szám
+      // de közben nézni kell a '/' jelet meg az '1/' jelet
+      // talált token hosszal előre kell menni és azt be kell pakolni a megfelelő helyre
+    }    
+
+    return CompoundUnit(multiplier: 1, nom: nom, denom: denom);
+  }*/
 }
 
 abstract class UnitManipulation{
