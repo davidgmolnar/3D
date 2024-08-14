@@ -40,13 +40,18 @@ class _LapMarkersOverlayState extends State<LapMarkersOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final List<double> finalLapMarkers = LapData.lapMarkers();
     return Stack(
       fit: StackFit.expand,
       children: [
         for(int i = 0; i < placedLapMarkers.value.length; i++)
-          LapMarkerTooltip(lapMarkerIndex: i, pos: ChartController.timeStampToPosition(placedLapMarkers.value[i]),),
+          LapMarkerTooltip(lapMarkerIndex: i, pos: ChartController.timeStampToPosition(placedLapMarkers.value[i]), isFinal: false,),
         for(int i = 0; i < placedLapMarkers.value.length; i++)
           LapMarker(lapMarkerIndex: i, pos: ChartController.timeStampToPosition(placedLapMarkers.value[i]),),
+        for(int i = 0; i < finalLapMarkers.length; i++)
+          LapMarkerTooltip(lapMarkerIndex: i, pos: ChartController.timeStampToPosition(finalLapMarkers[i]), isFinal: true,),
+        for(int i = 0; i < finalLapMarkers.length; i++)
+          FinalLapMarker(lapMarkerIndex: i, pos: ChartController.timeStampToPosition(finalLapMarkers[i]),),
       ]);
   }
 
@@ -91,7 +96,7 @@ class LapMarker extends StatelessWidget {
               child: Container(
                 width: 1,
                 height: 2000, // inkorrekt de ez van
-                color: StyleManager.globalStyle.textColor,
+                color: StyleManager.globalStyle.secondaryColor,
               )
             )
           ),
@@ -101,10 +106,38 @@ class LapMarker extends StatelessWidget {
   }
 }
 
-class LapMarkerTooltip extends StatelessWidget {
-  const LapMarkerTooltip({super.key, required this.lapMarkerIndex, required this.pos});
+class FinalLapMarker extends StatelessWidget {
+  const FinalLapMarker({super.key, required this.lapMarkerIndex, required this.pos,});
 
   final int lapMarkerIndex;
+  final double? pos;
+
+  @override
+  Widget build(BuildContext context) {
+    if(pos == null){
+      return const SizedBox();
+    }
+    return Positioned(
+      left: pos,
+      child: SizedBox(
+        width: 1,
+        child: Center(
+          child: Container(
+            width: 1,
+            height: 2000, // inkorrekt de ez van
+            color: StyleManager.globalStyle.textColor,
+          )
+        )
+      ),
+    );
+  }
+}
+
+class LapMarkerTooltip extends StatelessWidget {
+  const LapMarkerTooltip({super.key, required this.lapMarkerIndex, required this.pos, required this.isFinal});
+
+  final int lapMarkerIndex;
+  final bool isFinal;
   final double? pos;
 
   @override
@@ -116,13 +149,18 @@ class LapMarkerTooltip extends StatelessWidget {
       left: pos! + lapMarkerHorizontalDragBuffer,
       child: Column(
         children: [
-          Icon(Icons.flag, color: StyleManager.globalStyle.primaryColor,),
+          Icon(Icons.flag, color: isFinal ? StyleManager.globalStyle.textColor : StyleManager.globalStyle.secondaryColor,),
           IconButton(onPressed: (){
             placedLapMarkers.update((value) {
-              final double removed = value.removeAt(lapMarkerIndex);
-              LapData.removeTemp(removed);
+              if(isFinal){
+                LapData.remove(LapData.lapMarkers()[lapMarkerIndex]);
+              }
+              else{
+                final double removed = value.removeAt(lapMarkerIndex);
+                LapData.removeTemp(removed);
+              }
             });
-          }, icon: Icon(Icons.close, color: StyleManager.globalStyle.primaryColor,))
+          }, icon: Icon(Icons.close, color: isFinal ? StyleManager.globalStyle.textColor : StyleManager.globalStyle.secondaryColor,))
         ],
       )
     );

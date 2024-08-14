@@ -227,7 +227,6 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
     Map<String, List<String>> vis = TraceSettingsProvider.visibleSignals;
     if(prevVisibleSignals == null || prevVisibleSignals != vis){
       prevVisibleSignals = vis;
-      ChartBottomOverviewChartLinePainter.storage.clear();
       needUpdate = true;
     }
     
@@ -242,6 +241,7 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
     }
 
     if(needUpdate){
+      ChartBottomOverviewChartLinePainter.storage.clear();
       setState(() {});
     }
   }
