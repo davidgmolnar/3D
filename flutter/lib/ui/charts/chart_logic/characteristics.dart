@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../../data/calculation/unit.dart';
+import '../../../data/calculation/unit_system.dart';
 import '../../../data/data.dart';
 import '../../../data/typed_data_list_container.dart';
 import '../../../io/logger.dart';
@@ -123,7 +123,7 @@ abstract class CharacteristicsProcessor{
       signalData[customCharacteristics!.measurement]![sig]!.values = newValues;
       signalData[customCharacteristics!.measurement]![sig]!.timestamps.clear();
       signalData[customCharacteristics!.measurement]![sig]!.timestamps = newTime;
-      signalData[customCharacteristics!.measurement]![sig]!.unit = unitDiv(
+      signalData[customCharacteristics!.measurement]![sig]!.unit = UnitManipulation.unitDiv(
         signalData[customCharacteristics!.measurement]![sig]!.unit,
         signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.unit
       );

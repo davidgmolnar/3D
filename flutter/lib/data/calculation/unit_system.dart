@@ -799,7 +799,7 @@ class CompoundUnit{
 
       Iterable<String> matched = tokens.where((token) => str.length - i >= token.length && str.substring(i, i + token.length) == token.toLowerCase());
       if(matched.isEmpty){
-        localLogger.warning("Failed to parse unit $str");
+        localLogger.warning("Failed to parse unit $str", doNoti: false);
         return CompoundUnit.scalar();
       }
       final String largestMatch = matched.fold("", (previousValue, element) => previousValue.length > element.length ? previousValue : element);
@@ -959,6 +959,10 @@ abstract class UnitConstraints{
 abstract class ResultUnits{
   static CompoundUnit unitOfInput1(final CompoundUnit inp){
     return inp;
+  }
+
+  static CompoundUnit scalar1(final CompoundUnit inp){
+    return CompoundUnit.scalar();
   }
 
   static CompoundUnit unitOfEiher2(final CompoundUnit lhs, final CompoundUnit rhs){

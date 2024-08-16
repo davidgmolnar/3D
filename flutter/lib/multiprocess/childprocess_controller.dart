@@ -94,6 +94,7 @@ abstract class ChildProcessController{
                 }
                 else{
                   localLogger.error("Childprocess on port ${response.childProcessPort} reported STOPPING, but this childprocess was not managed by master", doNoti: false);
+                  _sock?.send(_killSignal, InternetAddress.loopbackIPv4, response.childProcessPort);
                 }
                 break;
 

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:dart_dbc_parser/dart_dbc_parser.dart';
 import 'package:dart_dbc_parser/signal/dbc_signal.dart';
 
-import '../data/calculation/unit.dart';
+import '../data/calculation/unit_system.dart';
 import '../data/csv/csv_reformatter.dart';
 import '../data/settings.dart';
 import '../data/signal_container.dart';
@@ -199,10 +199,10 @@ abstract class Importer {
               lineProgressIndication(0, entry.asString(localLogger.loggerName));
               await Future.delayed(const Duration(milliseconds: 10));
             }
-            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer<Float32List>(list: Float32List(0)), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: Unit.tryParse(units[i]));
+            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer<Float32List>(list: Float32List(0)), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: CompoundUnit.fromString(units[i]));
           }
           else{
-            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer.emptyFromDBC(signal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: Unit.tryParse(units[i]));
+            storage[signals[i]] = SignalContainer(dbcName: signals[i], values: TypedDataListContainer.emptyFromDBC(signal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signals[i], unit: CompoundUnit.fromString(units[i]));
           }
         }
       }
@@ -376,7 +376,10 @@ abstract class Importer {
               break;
             }
           }
-          storage[signal] = SignalContainer(dbcName: signal, values: TypedDataListContainer.emptyFromDBC(dbcSignal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signal, unit: Unit.tryParse(can.database[canID]![signal]!.unit));
+          String dbcUnit = can.database[canID]![signal]!.unit;
+          dbcUnit = dbcUnit.replaceAll('!!!', '°');
+          dbcUnit = dbcUnit.replaceAll('^', '');
+          storage[signal] = SignalContainer(dbcName: signal, values: TypedDataListContainer.emptyFromDBC(dbcSignal), timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)), displayName: signal, unit: CompoundUnit.fromString(dbcUnit));
         }
 
         if(storage[signal]!.values.size > 1 && newSignalValues[signal]! == storage[signal]!.values.last && storage[signal]!.values.last == storage[signal]!.values[storage[signal]!.values.size - 2]){

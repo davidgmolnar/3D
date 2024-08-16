@@ -81,7 +81,9 @@ class CalculationIoController{
     });
 
     for(final String path in calIOInfoNotifier.value.selectedPaths){
-      final CompiledCalculation? script = await CalculationScriptRuntime.runCompilationOnly(File(path), calIOInfoNotifier.value.calculationOptions.cleanRebuild,
+      late final CompiledCalculation? script;
+      try{
+      script = await CalculationScriptRuntime.runCompilationOnly(File(path), calIOInfoNotifier.value.calculationOptions.cleanRebuild,
         progressIndication: (p0, p1) {
           if(p0 != 0){
             setLinePercentage(p0);
@@ -91,6 +93,9 @@ class CalculationIoController{
           }
         },
       );
+      }catch(ex, stack){
+        localLogger.info("The script is likely not UTF-8: $ex\n$stack");
+      }
 
       if(script != null){
         calIOInfoNotifier.update((value) {

@@ -2,7 +2,7 @@ import 'dart:math';
 
 import '../../io/file_system.dart';
 import '../../io/logger.dart';
-import 'unit.dart';
+import 'unit_system.dart';
 
 const String parameterPath = "CalculationParameters/";
 
@@ -80,7 +80,7 @@ abstract class Const{
             if(maybeUnit.toUpperCase() == "SEC"){
               maybeUnit = "s";
             }
-            return Units.values.map((e) => e.name).contains(maybeUnit);
+            return !CompoundUnit.fromString(maybeUnit).isScalar();
           }
         }
         return false;
@@ -97,7 +97,7 @@ abstract class Const{
       else if(maybeUnit == "km/h"){
         return true;
       }
-      return Units.values.map((e) => e.name).contains(maybeUnit);
+      return !CompoundUnit.fromString(maybeUnit).isScalar();
     }
     else{
       num? res = num.tryParse(str);
@@ -114,7 +114,7 @@ abstract class Const{
           else if(maybeUnit == "km/h"){
             return true;
           }
-          return Units.values.map((e) => e.name).contains(maybeUnit);
+          return !CompoundUnit.fromString(maybeUnit).isScalar();
         }
       }
       return false;

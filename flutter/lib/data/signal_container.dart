@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import '../io/exporter.dart';
 import '../io/importer.dart';
-import 'calculation/unit.dart';
+import 'calculation/unit_system.dart';
 import 'typed_data_list_container.dart';
 
 class SignalContainer{
@@ -10,14 +10,14 @@ class SignalContainer{
   TypedDataListContainer timestamps;
   final String dbcName;
   String displayName;
-  Unit? unit;
+  CompoundUnit unit;
 
   SignalContainer({
     required this.values,
     required this.timestamps,
     required this.dbcName,
     required this.displayName,
-    this.unit
+    required this.unit
   });
 
   Uint8List toBytes(){
@@ -89,7 +89,7 @@ class SignalContainer{
       timestamps: timestamps as TypedDataListContainer<Uint32List>,
       dbcName: Importer.safeUTF8Decode(dbcnData),
       displayName: Importer.safeUTF8Decode(dnData),
-      unit: null
+      unit: CompoundUnit.scalar()
     );    
   }
 }

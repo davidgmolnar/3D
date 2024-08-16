@@ -13,7 +13,7 @@ import '../typed_data_list_container.dart';
 import 'calculation_misc.dart';
 import 'calculation_script_parsing.dart';
 import 'constants.dart';
-import 'unit.dart';
+import 'unit_system.dart';
 
 class CalculationOptions{
   final bool cleanRebuild;
@@ -118,53 +118,53 @@ class CalculationScriptProcessor{
     // TODO unit constraints and result units, and proper unit conversion
     switch (inst.op) {
       case Operation.ADD:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0 + p1, null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 + p1, ResultUnits.unitOfEiher2);
       case Operation.SUB:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0 - p1, null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 - p1, ResultUnits.unitOfEiher2);
       case Operation.MULT:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0 * p1, (p0, p1) => unitMult(p0, p1));
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 * p1, (final CompoundUnit p0, final CompoundUnit p1) => UnitManipulation.unitMult(p0, p1));
       case Operation.DIV:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0 / p1, ((p0, p1) => unitDiv(p0, p1)));
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 / p1, (final CompoundUnit p0, final CompoundUnit p1) => UnitManipulation.unitDiv(p0, p1));
       case Operation.DERIVATE:
-        return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => (p1 - p0) / (t1 - t0) * 1000.0, (p0) => 0, (p0) => unitDiv(p0, const Unit(scalar: 1, components: {Units.s: 1})));
+        return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => (p1 - p0) / (t1 - t0) * 1000.0, (p0) => 0, (final CompoundUnit p0) => UnitManipulation.unitDiv(p0, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {})));
       case Operation.AND:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt(), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() & p1.toInt(), ResultUnits.unitOfEiher2);
       case Operation.NAND:
-        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() & p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int nand
+        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() & p1.toInt()) & 0x7FFFFFFFFFFFFFFF, ResultUnits.unitOfEiher2); // 63 bit unsigned int nand
       case Operation.OR:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() | p1.toInt(), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() | p1.toInt(), ResultUnits.unitOfEiher2);
       case Operation.NOR:
-        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() | p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int nor
+        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() | p1.toInt()) & 0x7FFFFFFFFFFFFFFF, ResultUnits.unitOfEiher2); // 63 bit unsigned int nor
       case Operation.XOR:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() ^ p1.toInt(), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0.toInt() ^ p1.toInt(), ResultUnits.unitOfEiher2);
       case Operation.XNOR:
-        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() ^ p1.toInt()) & 0x7FFFFFFFFFFFFFFF, null); // 63 bit unsigned int xnor
+        return await __twoOperandBase(inst, options, (p0, p1) => ~(p0.toInt() ^ p1.toInt()) & 0x7FFFFFFFFFFFFFFF, ResultUnits.unitOfEiher2); // 63 bit unsigned int xnor
       case Operation.NOT:
-        return await __oneOperandBase(inst, options, (p0) => ~p0.toInt() & 0x7FFFFFFFFFFFFFFF); // 63 bit unsigned int not
+        return await __oneOperandBase(inst, options, (p0) => ~p0.toInt() & 0x7FFFFFFFFFFFFFFF, ResultUnits.unitOfInput1); // 63 bit unsigned int not
       case Operation.ABS:
-        return await __oneOperandBase(inst, options, (p0) => p0.abs());
+        return await __oneOperandBase(inst, options, (p0) => p0.abs(), ResultUnits.unitOfInput1);
       case Operation.SQRT:
-        return await __oneOperandBase(inst, options, (p0) => p0 >= 0 ? sqrt(p0) : -1);
+        return await __oneOperandBase(inst, options, (p0) => p0 >= 0 ? sqrt(p0) : -1, ResultUnits.unitOfInput1);
       case Operation.SHIFT:
         return await __shift(inst, options);
       case Operation.POWER:
-        return await __twoOperandBase(inst, options, (p0, p1) => pow(p0, p1), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => pow(p0, p1), ResultUnits.unitOfFirst2);
       case Operation.MOD:
-        return await __twoOperandBase(inst, options, (p0, p1) => p0 % p1, null);
+        return await __twoOperandBase(inst, options, (p0, p1) => p0 % p1, ResultUnits.scalar2);
       case Operation.SIN:
-        return await __oneOperandBase(inst, options, (p0) => sin(p0));
+        return await __oneOperandBase(inst, options, (p0) => sin(p0), ResultUnits.scalar1);
       case Operation.COS:
-        return await __oneOperandBase(inst, options, (p0) => cos(p0));
+        return await __oneOperandBase(inst, options, (p0) => cos(p0), ResultUnits.scalar1);
       case Operation.TAN:
-        return await __oneOperandBase(inst, options, (p0) => tan(p0));
+        return await __oneOperandBase(inst, options, (p0) => tan(p0), ResultUnits.scalar1);
       case Operation.ARCSIN:
-        return await __oneOperandBase(inst, options, (p0) => asin(p0));
+        return await __oneOperandBase(inst, options, (p0) => asin(p0), ResultUnits.scalar1);
       case Operation.ARCCOS:
-        return await __oneOperandBase(inst, options, (p0) => acos(p0));
+        return await __oneOperandBase(inst, options, (p0) => acos(p0), ResultUnits.scalar1);
       case Operation.ARCTAN:
-        return await __oneOperandBase(inst, options, (p0) => atan(p0));
+        return await __oneOperandBase(inst, options, (p0) => atan(p0), ResultUnits.scalar1);
       case Operation.ARCTAN2:
-        return await __twoOperandBase(inst, options, (p0, p1) => atan2(p0, p1), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => atan2(p0, p1), ResultUnits.radians2);
       case Operation.F:
         return __f(inst, options);
       case Operation.NOP:
@@ -176,13 +176,13 @@ class CalculationScriptProcessor{
       case Operation.DELETE:
         return __delete(inst, options);
       case Operation.MIN:
-        return await __twoOperandBase(inst, options, (p0, p1) => min(p0, p1), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => min(p0, p1), ResultUnits.unitOfEiher2);
       case Operation.MAX:
-        return await __twoOperandBase(inst, options, (p0, p1) => max(p0, p1), null);
+        return await __twoOperandBase(inst, options, (p0, p1) => max(p0, p1), ResultUnits.unitOfEiher2);
       case Operation.IF:
         return await __if(inst, options);
       case Operation.INTEGRATE:
-        return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => p2 + (p0 + p1) / 2 * (t1 - t0) / 1000.0, (p0) => 0, (p0) => unitMult(p0, const Unit(scalar: 1, components: {Units.s: 1})));
+        return await __oneOperandBaseWithLookAhead(inst, options, (p0, t0, p1, t1, p2, t2) => p2 + (p0 + p1) / 2 * (t1 - t0) / 1000.0, (p0) => 0, (final CompoundUnit p0) => UnitManipulation.unitMult(p0, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {})));
       case Operation.RCLP:
         return await __rclp(inst, options);
       case Operation.CONST:
@@ -248,15 +248,18 @@ class CalculationScriptProcessor{
     return minTime;
   }
 
-  static void __commit(final String sig, final String meas, final TypedDataListContainer<TypedData> values, final TypedDataListContainer<Uint32List> timestamps, final Unit? unit){
+  static void __commit(final String sig, final String meas, final TypedDataListContainer<TypedData> values, final TypedDataListContainer<Uint32List> timestamps, final CompoundUnit unit){
     if(!signalData[meas]!.containsKey(sig)){
       signalData[meas]![sig] = SignalContainer(
         dbcName: sig,
         values: TypedDataListContainer<Float32List>(list: Float32List(0)),
         timestamps: TypedDataListContainer<Uint32List>(list: Uint32List(0)),
-        displayName: sig
+        displayName: sig,
+        unit: unit
       );
     }
+
+    // TODO apply multiplier from unit, reset unit multiplier to 1
 
     values.shrinkToFit();
     timestamps.shrinkToFit();
@@ -265,10 +268,6 @@ class CalculationScriptProcessor{
     signalData[meas]![sig]!.timestamps.clear();
     signalData[meas]![sig]!.values = values;
     signalData[meas]![sig]!.timestamps = timestamps;
-
-    if(unit != null){
-      signalData[meas]![sig]!.unit = unit;
-    }
   }
 
   static Future<DBCSignal?> __tryGetSignalByName(final String name) async {
@@ -311,7 +310,7 @@ class CalculationScriptProcessor{
     }
   }
 
-  static Future<LogEntry?> __twoOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num, num) op, final Unit? Function(Unit?, Unit?)? resultUnit) async {
+  static Future<LogEntry?> __twoOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num, num) op, final CompoundUnit Function(CompoundUnit, CompoundUnit) resultUnit) async {
     final TypedDataListContainer values = await __initializeValueContainer(inst.result);
     final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
     if(inst.numberOfChannelParameters == 0){
@@ -343,7 +342,8 @@ class CalculationScriptProcessor{
         }
       }
 
-      __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![channelOperand]!.unit);
+      final CompoundUnit res = channelFirst ? resultUnit(signalData[options.measurement]![channelOperand]!.unit, CompoundUnit.scalar()) : resultUnit(CompoundUnit.scalar(), signalData[options.measurement]![channelOperand]!.unit);
+      __commit(inst.result, options.measurement, values, timestamps, res);
       
     }
     else if(inst.numberOfChannelParameters == 2){
@@ -393,7 +393,7 @@ class CalculationScriptProcessor{
         }
       }
 
-      final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit): null;
+      final CompoundUnit unit = resultUnit(signalData[options.measurement]![op0]!.unit, signalData[options.measurement]![op1]!.unit);
       __commit(inst.result, options.measurement, values, timestamps, unit);
     }
 
@@ -477,6 +477,7 @@ class CalculationScriptProcessor{
     final String op0 = inst.operands[0];
     final String op2 = inst.operands[2];
     final bool Function(num, num)? callback = resolveIfCallback(inst.operands[1]);
+    final List<CompoundUnit> units = [];
     if(callback == null){
       return LogEntry.error("Could not resolve which binary comparison to use in IF(), comparison was ${inst.operands[1]}");
     }
@@ -489,6 +490,8 @@ class CalculationScriptProcessor{
       final String ch2 = op2.substring(1);
       int p0Index = signalData[options.measurement]![ch0]!.timestamps.toList<int>().indexWhere((point) => point >= time);
       int p2Index = signalData[options.measurement]![ch2]!.timestamps.toList<int>().indexWhere((point) => point >= time);
+      units.add(signalData[options.measurement]![ch0]!.unit);
+      units.add(signalData[options.measurement]![ch2]!.unit);
       for(; time < endTime; time += options.sampleTimeMs){
         while(signalData[options.measurement]![ch0]!.timestamps[p0Index] < time){
           p0Index++;
@@ -529,6 +532,8 @@ class CalculationScriptProcessor{
       final List<String> ops = [op0, op2];
       final String channelOperand = ops.firstWhere((element) => element[0] == '#').substring(1);
       final String constantOperand = ops.firstWhere((element) => element[0] != '#');
+      
+      units.add(signalData[options.measurement]![channelOperand]!.unit);
 
       LogEntry? constParseError;
       final num constantvalue = Const.parse(constantOperand, ((entry) {
@@ -626,12 +631,11 @@ class CalculationScriptProcessor{
         values.pushBack(newValue);
       }
     }
-
-    __commit(inst.result, options.measurement, values, timestamps, null);
+    __commit(inst.result, options.measurement, values, timestamps, units.length >= 2 ? ResultUnits.unitOfEiher2(units[0], units[1]) : units.single);
     return null;
   }
 
-  static Future<LogEntry?> __oneOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num) op) async {
+  static Future<LogEntry?> __oneOperandBase(final FrozenInstruction inst, final CalculationOptions options, final num Function(num) op, final CompoundUnit Function(CompoundUnit) resultUnit) async {
     final TypedDataListContainer values = await __initializeValueContainer(inst.result);
     final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
     if(inst.numberOfChannelParameters != 1){
@@ -648,11 +652,11 @@ class CalculationScriptProcessor{
       }
     }
 
-    __commit(inst.result, options.measurement, values, timestamps, signalData[options.measurement]![channelOperand]!.unit);
+    __commit(inst.result, options.measurement, values, timestamps, resultUnit(signalData[options.measurement]![channelOperand]!.unit));
     return null;
   }
 //                                                                                                                                          logvalue1 logvalue2 prevcalc
-  static Future<LogEntry?> __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalculationOptions options, final num Function(num, int, num, int, num, int) op, final num Function(num) initialValue, final Unit? Function(Unit?)? resultUnit) async {
+  static Future<LogEntry?> __oneOperandBaseWithLookAhead(final FrozenInstruction inst, final CalculationOptions options, final num Function(num, int, num, int, num, int) op, final num Function(num) initialValue, final CompoundUnit Function(CompoundUnit) resultUnit) async {
     final TypedDataListContainer values = await __initializeValueContainer(inst.result);
     final TypedDataListContainer<Uint32List> timestamps = TypedDataListContainer(list: Uint32List(0));
     if(inst.numberOfChannelParameters != 1){
@@ -674,7 +678,7 @@ class CalculationScriptProcessor{
       }
     }
 
-    final Unit? unit = resultUnit != null ? resultUnit(signalData[options.measurement]![channelOperand]!.unit): null; 
+    final CompoundUnit unit = resultUnit(signalData[options.measurement]![channelOperand]!.unit); 
     __commit(inst.result, options.measurement, values, timestamps, unit);
     return null;
   }
@@ -789,7 +793,7 @@ class CalculationScriptProcessor{
       timestamps.pushBack(ts);
     }
 
-    __commit(inst.result, options.measurement, values, timestamps, const Unit(scalar: 1, components: {}));
+    __commit(inst.result, options.measurement, values, timestamps, CompoundUnit.scalar());
     return null;
   }
 
@@ -872,7 +876,7 @@ class CalculationScriptProcessor{
       timestamps.pushBack(time);
     }
 
-    __commit(inst.result, options.measurement, values, timestamps, null);
+    __commit(inst.result, options.measurement, values, timestamps, CompoundUnit.scalar());
     return null;
   }
 

@@ -5,6 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../data/calculation/constants.dart';
+import '../data/calculation/unit_system.dart';
 import '../data/lapdata.dart';
 import '../data/settings.dart';
 import '../io/file_system.dart';
@@ -149,6 +150,7 @@ Future<void> postStartup(var root) async {
   Const.loadFromDisk();
   SettingsProvider.loadFromDisk();
   LapData.init();
+  await UnitSystem.loadFromDisk();
   windowManager.addListener(root);
   windowManager.setPreventClose(true);
   if(windowType == WindowType.LAP_EDITOR){
