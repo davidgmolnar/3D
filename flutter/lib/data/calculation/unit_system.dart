@@ -679,6 +679,8 @@ abstract class UnitSystem{
   static String getRepresentationForAlias(final UnitAlias alias) => _unitDescriptions[alias]!.representations.first;
 
   static List<String> get allRepresentations => _unitDescriptions.values.fold([], (prev, e) => prev..addAll(e.representations));
+
+  static UnitAlias aliasOf(final String rep) => _unitDescriptions.entries.firstWhere((element) => element.value.representations.contains(rep)).key;
 }
 
 class ConversionResult{
@@ -772,8 +774,8 @@ class CompoundUnit{
     }
   }
 
-  /*static CompoundUnit fromString(final String inp){
-    final String str = inp.trim();
+  static CompoundUnit fromString(final String inp){
+    final String str = inp.trim().toLowerCase();
     if(str.isEmpty){
       return CompoundUnit.scalar();
     }
@@ -781,7 +783,7 @@ class CompoundUnit{
     final Map<String, int> nom = {};
     final Map<String, int> denom = {};
 
-    final List<String> matchers = List.unmodifiable(UnitSystem.allRepresentations);
+    final List<String> tokens = List.unmodifiable(UnitSystem.allRepresentations);
     int i = 0;
     bool denomReached = false;
     if(str.startsWith('1/')){
@@ -790,14 +792,51 @@ class CompoundUnit{
     }
 
     while(i < str.length){
-      // legnagyobb match
-      // ha van a token után szám akkor az a kitevő ha nincs akkor egy a kitevő, nincs '^' közvetlen utána van szám
-      // de közben nézni kell a '/' jelet meg az '1/' jelet
-      // talált token hosszal előre kell menni és azt be kell pakolni a megfelelő helyre
+      if(str[i] == '/'){
+        i++;
+        denomReached = true;
+      }
+
+      Iterable<String> matched = tokens.where((token) => str.length - i >= token.length && str.substring(i, i + token.length) == token.toLowerCase());
+      if(matched.isEmpty){
+        localLogger.warning("Failed to parse unit $str");
+        return CompoundUnit.scalar();
+      }
+      final String largestMatch = matched.fold("", (previousValue, element) => previousValue.length > element.length ? previousValue : element);
+      i += largestMatch.length;
+      
+      int j = 1;
+      bool found = false;
+      while(i + j <= str.length){
+        final int? exp = int.tryParse(str.substring(i, (i + j).toInt()));
+        if(exp != null){
+          found = true;
+          if(i + j + 1 <= str.length){
+            j++;
+          }
+          else{
+            break;
+          }
+        }
+        else{
+          j--;
+          break;
+        }
+      }
+
+      final int exp = found ? int.parse(str.substring(i, i + j)) : 1;
+      i += j;
+
+      if(denomReached){
+        denom[UnitSystem.aliasOf(largestMatch)] = exp;
+      }
+      else{
+        nom[UnitSystem.aliasOf(largestMatch)] = exp;
+      }
     }    
 
     return CompoundUnit(multiplier: 1, nom: nom, denom: denom);
-  }*/
+  }
 }
 
 abstract class UnitManipulation{

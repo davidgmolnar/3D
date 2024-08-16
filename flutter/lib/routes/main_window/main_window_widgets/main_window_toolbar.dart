@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../data/settings.dart';
+import '../../../data/settings_classes.dart';
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
@@ -123,6 +124,12 @@ class MainWindowToolbar extends StatelessWidget {
     ChildProcessController.addConnection(WindowType.LAP_EDITOR, WindowSetupInfo("Lap Editor", const Size(700,600), _getCenterOffset(const Size(700,600))));
   }
 
+  static void _toggleTheme(){
+    final Setting theme = SettingsProvider.get("visual.theme")!;
+    SettingsProvider.update("visual.theme", (theme.value + 1) % theme.selection!.length);
+    StyleManager.updater();
+  }
+
   static const List<Widget> _mainWindowToolbarItems = [
     ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
@@ -144,6 +151,7 @@ class MainWindowToolbar extends StatelessWidget {
     ], iconHeight: toolbarItemSize, invertColors: false,),
     ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
     ToolbarItem(iconData: Icons.flag, onPressed: _lapDataDialog),
+    ToolbarItem(iconData: Icons.visibility, onPressed: _toggleTheme),
   ];
 
   static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
@@ -161,6 +169,7 @@ class MainWindowToolbar extends StatelessWidget {
     ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
     ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
     ToolbarDropdownItem(onPressed: _lapDataDialog, text: "Laps"),
+    ToolbarDropdownItem(onPressed: _toggleTheme, text: "Toggle Theme"),
   ];
 
   static int _mainWindowToolbarItemsHiddenSkip(int i) => 

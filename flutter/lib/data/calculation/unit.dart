@@ -217,7 +217,7 @@ class Unit{
       if(denominator[unit]! < -1){
         text.add(TextSpan(
           text: (-denominator[unit]!).toString(),
-          style: style.copyWith(fontFeatures: [const FontFeature.superscripts()]),
+          style: style.copyWith(fontFeatures: [const FontFeature.subscripts()]),
         ));
       }
     }
