@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:latext/latext.dart';
 
+import '../../data/calculation/unit_system.dart';
 import '../../data/data.dart';
 import '../../data/settings.dart';
 import '../../data/custom_notifiers.dart';
@@ -129,7 +131,7 @@ class CursorTooltip extends StatelessWidget {
     return Positioned(
       left: pos! + cursorHorizontalDragBuffer,
       child: Container(
-        width: 280,
+        width: 400,
         color: StyleManager.globalStyle.secondaryColor.withOpacity(0.6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -150,6 +152,7 @@ class CursorTooltip extends StatelessWidget {
                     cursorInfoNotifier.update((value) {
                       if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta){
                         value.cursors[cursorIndex].isDelta = false;
+                        value.cursors[cursorIndex].deltaType = DeltaDisplayType.ABSDIFF;
                       }
                       else{
                         final bool wouldBeTheLast = cursorInfoNotifier.value.countAbsolutes == 1;
@@ -201,9 +204,9 @@ class CursorTooltip extends StatelessWidget {
                 elementWidth: 90,
               ),
             cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
-              CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex))
+              CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex), cursorIndex: cursorIndex)
               :
-              CursorDataDisplay(values: cursorInfoNotifier.value.cursors[cursorIndex].values)
+              CursorDataDisplay(values: cursorInfoNotifier.value.cursors[cursorIndex].values, cursorIndex: cursorIndex)
           ]
         ),
       )
@@ -212,9 +215,32 @@ class CursorTooltip extends StatelessWidget {
 }
 
 class CursorDataDisplay extends StatelessWidget {
-  const CursorDataDisplay({super.key, required this.values});
+  const CursorDataDisplay({super.key, required this.values, required this.cursorIndex});
 
   final Map<String, Map<String, num>> values;
+  final int cursorIndex;
+
+  CompoundUnit _getUnit(final CompoundUnit sigUnit){
+    switch(cursorInfoNotifier.value.cursors[cursorIndex].deltaType){
+      case DeltaDisplayType.ABSDIFF:
+        return sigUnit;
+      case DeltaDisplayType.DERIVATE:
+        return UnitManipulation.unitDiv(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
+      case DeltaDisplayType.INTEGRAL:
+        return UnitManipulation.unitMult(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
+    }
+  }
+
+  num _getValue(final num value, final CompoundUnit displayUnit){
+    switch(cursorInfoNotifier.value.cursors[cursorIndex].deltaType){
+      case DeltaDisplayType.ABSDIFF:
+        return value;
+      case DeltaDisplayType.DERIVATE:
+        return value * displayUnit.multiplier;
+      case DeltaDisplayType.INTEGRAL:
+        return value * displayUnit.multiplier;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,15 +262,24 @@ class CursorDataDisplay extends StatelessWidget {
                   SizedBox(
                     height: 30,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Padding(
                           padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
                           child: Text(signal, style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
                         ),
+                        const Spacer(),
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                          child: Text(representNumber(values[meas]![signal].toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                          child: Text(representNumber(_getValue(values[meas]![signal]!, _getUnit(signalData[meas]![signal]!.unit)).toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                          child: LaTexT(
+                            laTeXCode: Text(
+                              _getUnit(signalData[meas]![signal]!.unit).toLaTextString(),
+                              style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize),
+                            ),
+                          ),
                         )
                       ],
                     )

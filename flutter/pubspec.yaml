@@ -44,6 +44,7 @@ dependencies:
   dart_dbc_parser: ^1.0.5
   window_manager: ^0.3.8
   ml_linalg: ^13.12.2
+  latext: ^0.4.1
 
 dev_dependencies:
   flutter_test:

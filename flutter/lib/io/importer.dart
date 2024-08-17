@@ -128,7 +128,7 @@ abstract class Importer {
         indicationStep = lines.length ~/ indicationCount;
       }
       List<String> signals = lines[0].trim().split(',');
-      List<String> units = lines[1].trim().split(',');
+      List<String> units = lines[1].trim().split(',').map((e) => e.replaceAll('^', '')).toList();
       if(!signals.contains('Time')){
         final LogEntry entry = LogEntry.error("File ${file.absolute.path} does not have 'Time' channel declaration, skipping file");
         context.add(entry);

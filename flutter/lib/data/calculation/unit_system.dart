@@ -152,7 +152,7 @@ abstract class UnitSystem{
 
       "bars": ConversionHelper(to: "pascals", multiplier: 100000),
 
-      "degrees": ConversionHelper(to: "radians", multiplier: 180/pi),
+      "degrees": ConversionHelper(to: "radians", multiplier: pi/180),
 
       "ppm": ConversionHelper(to: "percent", multiplier: 10000)
     });
@@ -536,7 +536,8 @@ abstract class UnitSystem{
         }
       }
       else{
-        if(!_compositionTable.compositions.containsKey(elem.key)){
+        final UnitAlias baseAlias = _conversionTable.conversionsToBase[elem.key]!.to;
+        if(!_compositionTable.compositions.containsKey(baseAlias)){
           final ConversionResult res = _convertSimpleUnitToSimpleBase(elem.key, elem.value);
           multiplier /= res.multiplier;
           
@@ -616,7 +617,7 @@ abstract class UnitSystem{
             else{
               base.nom[composition.key] = maxPossibleConvert;
             }
-            base.multiplier *= compOption.key;
+            base.multiplier /= pow(compOption.key, maxPossibleConvert);
           }
         }
       }
@@ -667,7 +668,7 @@ abstract class UnitSystem{
             else{
               base.denom[composition.key] = maxPossibleConvert;
             }
-            base.multiplier /= compOption.key;
+            base.multiplier *= pow(compOption.key, maxPossibleConvert);
           }
         }
       }
@@ -676,7 +677,8 @@ abstract class UnitSystem{
     return base..simplify();
   }
 
-  static String getRepresentationForAlias(final UnitAlias alias) => _unitDescriptions[alias]!.representations.first;
+  // ignore: unnecessary_string_escapes
+  static String getRepresentationForAlias(final UnitAlias alias) => alias == "percent" ? "\\%" : _unitDescriptions[alias]!.representations.first;
 
   static List<String> get allRepresentations => _unitDescriptions.values.fold([], (prev, e) => prev..addAll(e.representations));
 
@@ -759,16 +761,16 @@ class CompoundUnit{
     }
     else if(denom.isEmpty){
       final List<String> parts = nom.entries.map((e) {
-        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+        return e.value == 1 ? UnitSystem.getRepresentationForAlias(e.key) : "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
       }).toList();
       return "\$${parts.join(" \\cdot ")}\$";
     }
     else{
       final List<String> nomParts = nom.entries.map((e) {
-        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+        return e.value == 1 ? UnitSystem.getRepresentationForAlias(e.key) : "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
       }).toList();
       final List<String> denomParts = denom.entries.map((e) {
-        return "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
+        return e.value == 1 ? UnitSystem.getRepresentationForAlias(e.key) : "${UnitSystem.getRepresentationForAlias(e.key)}^{${e.value}}";
       }).toList();
       return "\$\\frac{${nomParts.isEmpty ? "1" : nomParts.join(" \\cdot ")}}{${denomParts.join(" \\cdot ")}}\$";
     }
