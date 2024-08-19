@@ -108,8 +108,11 @@ abstract class ChildProcessController{
         }
       }
     },
-    onError: (err){
-      localLogger.critical("Main socket listener got an error ${err.toString()}");
+    onError: (err) async {
+      localLogger.error("Main socket listener got an error, reinitializing ${err.toString()}");
+      _sock!.close();
+      _sock = await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
+      _init();
     }
     );
   }
