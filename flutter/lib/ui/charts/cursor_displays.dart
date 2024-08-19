@@ -43,6 +43,7 @@ class CursorData{
   Map<String, Map<String, num>> values;
   bool isDelta;
   int? deltaTarget;
+  double boxWidth;
   DeltaDisplayType deltaType = DeltaDisplayType.ABSDIFF;
 
   CursorData({
@@ -50,10 +51,11 @@ class CursorData{
     required this.values,
     required this.isDelta,
     required this.deltaTarget,
+    required this.boxWidth,
   });
 
   factory CursorData.fromCurrent(final double timeStamp, final Map<String, Map<String, num>> values){
-    return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null);
+    return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null, boxWidth: 300);
   }
 
   String represent(final int index) {
@@ -144,99 +146,120 @@ class CursorTooltip extends StatelessWidget {
     }
     return Positioned(
       left: pos! + cursorHorizontalDragBuffer,
-      child: Container(
-        width: 400,
-        color: StyleManager.globalStyle.secondaryColor.withOpacity(0.6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: cursorInfoNotifier.value.cursors[cursorIndex].boxWidth,
+            color: StyleManager.globalStyle.secondaryColor.withOpacity(0.6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                  child: Text("${cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? "D" : "M"}$cursorIndex"),
-                ),
-                ButtonWithTwoText(
-                  key: UniqueKey(),
-                  isInitiallyActive: cursorInfoNotifier.value.cursors[cursorIndex].isDelta,
-                  textWhenActive: "Delta Marker",
-                  textWhenInactive: "Abs Marker",
-                  onPressed: (p0) {
-                    cursorInfoNotifier.update((value) {
-                      if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta){
-                        value.cursors[cursorIndex].isDelta = false;
-                        value.cursors[cursorIndex].deltaType = DeltaDisplayType.ABSDIFF;
-                      }
-                      else{
-                        final bool wouldBeTheLast = cursorInfoNotifier.value.countAbsolutes == 1;
-                        if(!wouldBeTheLast){
-                          value.cursors[cursorIndex].isDelta = !value.cursors[cursorIndex].isDelta;
-                          value.cursors[cursorIndex].deltaTarget = value.cursors.indexWhere((cursorData) => !cursorData.isDelta);
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                      child: Text("${cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? "D" : "M"}$cursorIndex"),
+                    ),
+                    ButtonWithTwoText(
+                      key: UniqueKey(),
+                      isInitiallyActive: cursorInfoNotifier.value.cursors[cursorIndex].isDelta,
+                      textWhenActive: "Delta Marker",
+                      textWhenInactive: "Abs Marker",
+                      onPressed: (p0) {
+                        cursorInfoNotifier.update((value) {
+                          if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta){
+                            value.cursors[cursorIndex].isDelta = false;
+                            value.cursors[cursorIndex].deltaType = DeltaDisplayType.ABSDIFF;
+                          }
+                          else{
+                            final bool wouldBeTheLast = cursorInfoNotifier.value.countAbsolutes == 1;
+                            if(!wouldBeTheLast){
+                              value.cursors[cursorIndex].isDelta = !value.cursors[cursorIndex].isDelta;
+                              value.cursors[cursorIndex].deltaTarget = value.cursors.indexWhere((cursorData) => !cursorData.isDelta);
+                            }
+                          }
+                        });
+                      },
+                    ),
+                    if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
+                      ButtonWithRotatingText<int>(
+                        states: cursorInfoNotifier.value.allAbsolutes,
+                        initialState: cursorInfoNotifier.value.cursors[cursorIndex].deltaTarget!,
+                        onPressed: (selected) {
+                          cursorInfoNotifier.update((value) {
+                            value.cursors[cursorIndex].deltaTarget = selected;
+                          });
                         }
-                      }
-                    });
-                  },
+                      ),
+                    IconButton(
+                      onPressed: (){
+                        cursorInfoNotifier.update((value) {
+                          final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !value.cursors[cursorIndex].isDelta && value.cursors.length > 1;
+                          value.cursors.removeAt(cursorIndex);
+                          if(flipOneDelta){
+                            value.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
+                          }
+                          if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
+                            ChildProcess.sendCustomChartUpdate(setCustomChartMarkerRemovePayload(cursorIndex));
+                          }
+                        });
+                      },
+                      icon: const Icon(Icons.close, size: 20),
+                      splashRadius: 20,
+                    )
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                      child: Text("Timestamp: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
+                    ),
+                    if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                        child: Text("dt: ${msToTimeString(cursorInfoNotifier.value.dt(cursorIndex), addMs: true)}"),
+                      ),
+                  ],
                 ),
                 if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
-                  ButtonWithRotatingText<int>(
-                    states: cursorInfoNotifier.value.allAbsolutes,
-                    initialState: cursorInfoNotifier.value.cursors[cursorIndex].deltaTarget!,
-                    onPressed: (selected) {
+                  SlidingSwitch(
+                    labels: deltaDisplayTypeNames.values.toList(growable: false),
+                    active: deltaDisplayTypeNames[cursorInfoNotifier.value.cursors[cursorIndex].deltaType]!,
+                    onChanged: (selected) {
                       cursorInfoNotifier.update((value) {
-                        value.cursors[cursorIndex].deltaTarget = selected;
+                        value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
                       });
-                    }
+                    },
+                    elementWidth: 80,
                   ),
-                IconButton(
-                  onPressed: (){
-                    cursorInfoNotifier.update((value) {
-                      final bool flipOneDelta = cursorInfoNotifier.value.countAbsolutes == 1 && !value.cursors[cursorIndex].isDelta && value.cursors.length > 1;
-                      value.cursors.removeAt(cursorIndex);
-                      if(flipOneDelta){
-                        value.cursors.firstWhere((cursor) => cursor.isDelta).isDelta = false;
-                      }
-                      if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){
-                        ChildProcess.sendCustomChartUpdate(setCustomChartMarkerRemovePayload(cursorIndex));
-                      }
-                    });
-                  },
-                  icon: const Icon(Icons.close, size: 20),
-                  splashRadius: 20,
-                )
-              ],
+                cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
+                  CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex), cursorIndex: cursorIndex)
+                  :
+                  CursorDataDisplay(values: cursorInfoNotifier.value.cursors[cursorIndex].values, cursorIndex: cursorIndex)
+              ]
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                  child: Text("Timestamp: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
-                ),
-                if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                    child: Text("dt: ${msToTimeString(cursorInfoNotifier.value.dt(cursorIndex), addMs: true)}"),
-                  ),
-              ],
-            ),
-            if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
-              SlidingSwitch(
-                labels: deltaDisplayTypeNames.values.toList(growable: false),
-                active: deltaDisplayTypeNames[cursorInfoNotifier.value.cursors[cursorIndex].deltaType]!,
-                onChanged: (selected) {
-                  cursorInfoNotifier.update((value) {
-                    value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
-                  });
-                },
-                elementWidth: 80,
+          ),
+          MouseRegion(
+            cursor: SystemMouseCursors.resizeLeftRight,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onHorizontalDragUpdate: (details) {
+                cursorInfoNotifier.update((cursorInfo) {
+                  cursorInfo.cursors[cursorIndex].boxWidth += details.delta.dx;
+                  cursorInfo.cursors[cursorIndex].boxWidth = cursorInfo.cursors[cursorIndex].boxWidth.clamp(200, 700);
+                });
+              },
+              child: const SizedBox(
+                height: 270,
+                width: 2,
               ),
-            cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
-              CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex), cursorIndex: cursorIndex)
-              :
-              CursorDataDisplay(values: cursorInfoNotifier.value.cursors[cursorIndex].values, cursorIndex: cursorIndex)
-          ]
-        ),
+            ),
+          )
+        ],
       )
     );
   }
@@ -281,6 +304,7 @@ class CursorDataDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
+      width: cursorInfoNotifier.value.cursors[cursorIndex].boxWidth,
       height: 210,
       child: ListView(
         children: [
@@ -299,21 +323,32 @@ class CursorDataDisplay extends StatelessWidget {
                     height: 30,
                     child: Row(
                       children: [
-                        Padding(
-                          padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
-                          child: Text(signal, style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
-                        ),
-                        const Spacer(),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                          child: Text(representNumber(_getValue(values[meas]![signal]!, _getUnit(signalData[meas]![signal]!.unit)).toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                          child: LaTexT(
-                            laTeXCode: Text(
-                              _getUnit(signalData[meas]![signal]!.unit).toLaTextString(),
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(left: StyleManager.globalStyle.padding),
+                            child: Text(signal,
                               style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 100,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                            child: Text(representNumber(_getValue(values[meas]![signal]!, _getUnit(signalData[meas]![signal]!.unit)).toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                            child: LaTexT(
+                              laTeXCode: Text(
+                                _getUnit(signalData[meas]![signal]!.unit).toLaTextString(),
+                                style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize),
+                              ),
                             ),
                           ),
                         )
