@@ -206,6 +206,20 @@ class CursorTooltip extends StatelessWidget {
                 )
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                  child: Text("Timestamp: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
+                ),
+                if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
+                    child: Text("dt: ${msToTimeString(cursorInfoNotifier.value.dt(cursorIndex), addMs: true)}"),
+                  ),
+              ],
+            ),
             if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
               SlidingSwitch(
                 labels: deltaDisplayTypeNames.values.toList(growable: false),
