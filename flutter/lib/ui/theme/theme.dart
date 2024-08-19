@@ -36,9 +36,9 @@ abstract class StyleManager{
       bgColor: const Color.fromARGB(255, 23, 24, 34),
       primaryColor: const Color.fromARGB(255, 22, 108, 189),
       secondaryColor: const Color.fromARGB(255, 42, 45, 62),
-      fontSize: 14,
-      subTitleFontSize: 20,
-      titleFontSize: 30,
+      fontSize: 13,
+      subTitleFontSize: 18,
+      titleFontSize: 26,
       padding: 8.0
     ),
     "BRIGHT": Style(
@@ -47,9 +47,9 @@ abstract class StyleManager{
       bgColor: Colors.white,
       primaryColor: const Color.fromARGB(255, 88, 88, 88),
       secondaryColor: const Color.fromARGB(255, 219, 219, 219),
-      fontSize: 14,
-      subTitleFontSize: 20,
-      titleFontSize: 30,
+      fontSize: 13,
+      subTitleFontSize: 18,
+      titleFontSize: 26,
       padding: 8.0
     ),
   };

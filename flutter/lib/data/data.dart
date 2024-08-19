@@ -57,6 +57,29 @@ num signalIntegral(final String meas, final String signal, final double ref, fin
   }
 }
 
+num signalMinMax(final String meas, final String signal, final double ref, final double stop, final num Function(num, num) which, final num initialValue){
+  final int inc = ref < stop ? 1 : -1;
+  int? currIndex = binarySearchIndexAtTimeStamp(signalData[meas]![signal]!.timestamps, ref);
+  if(currIndex == null){
+    return 0;
+  }
+  else{
+    num resValue = initialValue;
+    num currVal = signalData[meas]![signal]!.values[currIndex];
+    num currTs = signalData[meas]![signal]!.timestamps[currIndex];
+    while(ref < stop ? currTs <= stop : currTs >= stop){
+      resValue = which(resValue, currVal);
+      currIndex = currIndex! + inc;
+      if(currIndex >= signalData[meas]![signal]!.values.size || currIndex < 0){
+        break;
+      }
+      currVal = signalData[meas]![signal]!.values[currIndex];
+      currTs = signalData[meas]![signal]!.timestamps[currIndex];
+    }
+    return resValue;
+  }
+}
+
 num? binarySearchValueAtTimeStamp(final TypedDataListContainer<TypedData> values, final TypedDataListContainer<TypedData> timeStamps, final double timeStamp){
   if(timeStamp > timeStamps.last || timeStamp < timeStamps.first){
     return null;

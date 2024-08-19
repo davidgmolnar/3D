@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:latext/latext.dart';
 
@@ -21,13 +23,19 @@ enum DeltaDisplayType{
   // ignore: constant_identifier_names
   DERIVATE,
   // ignore: constant_identifier_names
-  INTEGRAL
+  INTEGRAL,
+  // ignore: constant_identifier_names
+  MAX,
+  // ignore: constant_identifier_names
+  MIN,
 }
 
 const Map<DeltaDisplayType, String> deltaDisplayTypeNames = {
   DeltaDisplayType.ABSDIFF: "Y Diff",
   DeltaDisplayType.DERIVATE: "Derivate",
   DeltaDisplayType.INTEGRAL: "Integral",
+  DeltaDisplayType.MAX: "Max",
+  DeltaDisplayType.MIN: "Min",
 };
 
 class CursorData{
@@ -92,6 +100,12 @@ class CursorInfo{
         }
         else if(cursors[index].deltaType == DeltaDisplayType.INTEGRAL){
           ret[meas]![signal] = signalIntegral(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp);
+        }
+        else if(cursors[index].deltaType == DeltaDisplayType.MAX){
+          ret[meas]![signal] = signalMinMax(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp, max, double.negativeInfinity);
+        }
+        else if(cursors[index].deltaType == DeltaDisplayType.MIN){
+          ret[meas]![signal] = signalMinMax(meas, signal, cursors[index].timeStamp, cursors[absIdx].timeStamp, min, double.infinity);
         }
       }
     }
@@ -201,7 +215,7 @@ class CursorTooltip extends StatelessWidget {
                     value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
                   });
                 },
-                elementWidth: 90,
+                elementWidth: 80,
               ),
             cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
               CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex), cursorIndex: cursorIndex)
@@ -228,6 +242,10 @@ class CursorDataDisplay extends StatelessWidget {
         return UnitManipulation.unitDiv(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
       case DeltaDisplayType.INTEGRAL:
         return UnitManipulation.unitMult(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
+      case DeltaDisplayType.MAX:
+        return sigUnit;
+      case DeltaDisplayType.MIN:
+        return sigUnit;
     }
   }
 
@@ -239,6 +257,10 @@ class CursorDataDisplay extends StatelessWidget {
         return value * displayUnit.multiplier;
       case DeltaDisplayType.INTEGRAL:
         return value * displayUnit.multiplier;
+      case DeltaDisplayType.MAX:
+        return value;
+      case DeltaDisplayType.MIN:
+        return value;
     }
   }
 
