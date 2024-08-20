@@ -384,6 +384,7 @@ class Cursor extends StatelessWidget {
           onHorizontalDragUpdate: (details) {
             cursorInfoNotifier.update((cursorInfo) {
               cursorInfo.cursors[cursorIndex].timeStamp += ChartController.moveInCursonTime(details.delta.dx);
+              cursorInfo.cursors[cursorIndex].timeStamp = cursorInfo.cursors[cursorIndex].timeStamp.clamp(1, double.infinity);
               cursorInfo.cursors[cursorIndex].values = cursorDataAtTimeStamp(cursorInfo.cursors[cursorIndex].timeStamp, cursorInfo.visibility);
 
               if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){

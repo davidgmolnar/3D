@@ -85,6 +85,7 @@ class LapMarker extends StatelessWidget {
             placedLapMarkers.update((lapMarkers) {
               try{
                 lapMarkers[lapMarkerIndex] += ChartController.moveInCursonTime(details.delta.dx);
+                lapMarkers[lapMarkerIndex] = lapMarkers[lapMarkerIndex].clamp(1, double.infinity);
                 LapData.updateTemp(lapMarkerIndex, lapMarkers[lapMarkerIndex]);
               // ignore: empty_catches
               }catch(ex){}
