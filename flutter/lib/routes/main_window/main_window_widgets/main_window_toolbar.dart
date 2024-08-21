@@ -6,6 +6,7 @@ import '../../../data/settings_classes.dart';
 import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess_api.dart';
 import '../../../multiprocess/childprocess_controller.dart';
+import '../../../ui/charts/chart_logic/chart_controller.dart';
 import '../../../ui/dialogs/characteristics_setup_dialog.dart';
 import '../../../ui/dialogs/chart_grid_setup_dialog.dart';
 import '../../../ui/dialogs/dbc_selector_dialog.dart';
@@ -130,46 +131,52 @@ class MainWindowToolbar extends StatelessWidget {
     StyleManager.updater();
   }
 
-  static const List<Widget> _mainWindowToolbarItems = [
-    ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
+  static final List<Widget> _mainWindowToolbarItems = [
+    const ToolbarItemWithDropdown(iconData: FontAwesomeIcons.fileImport, dropdownItems: [
       ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
       ToolbarDropdownItem(onPressed: _importCustomChartWindow, text: "Import Custom Chart"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
-    ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
-    ToolbarItem(iconData: Icons.calculate, onPressed: _calfileRunnerWindow),
-    ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
-    ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [
+    const ToolbarItem(iconData: FontAwesomeIcons.fileExport,  onPressed: _exportLogWindow,),
+    const ToolbarItem(iconData: Icons.calculate, onPressed: _calfileRunnerWindow),
+    const ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
+    const ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [
       ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
       ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
       ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
-    ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
-    ToolbarItemWithDropdown(iconData: Icons.settings, dropdownItems: [
+    const ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
+    const ToolbarItemWithDropdown(iconData: Icons.settings, dropdownItems: [
       ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
       ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
       ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
-    ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
-    ToolbarItem(iconData: Icons.flag, onPressed: _lapDataDialog),
-    ToolbarItem(iconData: Icons.visibility, onPressed: _toggleTheme),
+    const ToolbarItem(iconData: Icons.receipt, onPressed: _logWindow),
+    const ToolbarItem(iconData: Icons.flag, onPressed: _lapDataDialog),
+    const ToolbarItem(iconData: Icons.visibility, onPressed: _toggleTheme),
+    ToolbarItemWithDropdown(iconData: FontAwesomeIcons.chartArea, dropdownItems: [
+      ToolbarDropdownItem(onPressed: (){ChartController.loadPreset(mainWindowNavigatorKey.currentContext!);}, text: "Import Preset"),
+      ToolbarDropdownItem(onPressed: (){ChartController.savePreset(mainWindowNavigatorKey.currentContext!);}, text: "Export Preset"),
+    ], iconHeight: toolbarItemSize, invertColors: false,),
   ];
 
-  static const List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
-    ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
-    ToolbarDropdownItem(onPressed: _importCustomChartWindow, text: "Import Custom Chart"),
-    ToolbarDropdownItem(onPressed: _exportLogWindow, text: "Export Log"),
-    ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
-    ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
-    ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
-    ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
-    ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
-    ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
-    ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
-    ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
-    ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
-    ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
-    ToolbarDropdownItem(onPressed: _lapDataDialog, text: "Laps"),
-    ToolbarDropdownItem(onPressed: _toggleTheme, text: "Toggle Theme"),
+  static final List<ToolbarDropdownItem> _mainWindowToolbarItemsHidden = [
+    const ToolbarDropdownItem(onPressed: _importLogWindow, text: "Import Log"),
+    const ToolbarDropdownItem(onPressed: _importCustomChartWindow, text: "Import Custom Chart"),
+    const ToolbarDropdownItem(onPressed: _exportLogWindow, text: "Export Log"),
+    const ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
+    const ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
+    const ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
+    const ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+    const ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
+    const ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
+    const ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),
+    const ToolbarDropdownItem(onPressed: _editParametersDialog, text: "Edit Parameters"),
+    const ToolbarDropdownItem(onPressed: _DBCMenuDialog, text: "DBC Selection"),
+    const ToolbarDropdownItem(onPressed: _logWindow, text: "Log"),
+    const ToolbarDropdownItem(onPressed: _lapDataDialog, text: "Laps"),
+    const ToolbarDropdownItem(onPressed: _toggleTheme, text: "Toggle Theme"),
+    ToolbarDropdownItem(onPressed: (){ChartController.loadPreset(mainWindowNavigatorKey.currentContext!);}, text: "Import Preset"),
+    ToolbarDropdownItem(onPressed: (){ChartController.savePreset(mainWindowNavigatorKey.currentContext!);}, text: "Export Preset"),
   ];
 
   static int _mainWindowToolbarItemsHiddenSkip(int i) => 

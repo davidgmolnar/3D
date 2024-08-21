@@ -14,6 +14,7 @@ abstract class FileSystem{
   static String get channelDir => "Channels/";
   static String get unitSystemDir => "UnitSystem/";
   static String get statPresetDir => "StatViewPresets/";
+  static String get mainChartPresetDir => "MainChartPresets/";
 
   static Future<String?> get getCurrentDirectory async {
     if(_currentDirectory != null){

@@ -268,6 +268,8 @@ class ChartBottomOverviewChartLine extends StatefulWidget {
 class ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartLine> {
   static String? meas;
   static List<String> signals = [];
+  String? prevMeas;
+  List<String> prevSignals = [];
   double? prevFirstVisibleTimestamp;
   double? prevLastVisibleTimestamp;
 
@@ -289,6 +291,16 @@ class ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartLi
 
     if(prevLastVisibleTimestamp == null || prevLastVisibleTimestamp != TraceSettingsProvider.lastVisibleTimestamp){
       prevLastVisibleTimestamp = TraceSettingsProvider.lastVisibleTimestamp;
+      needUpdate = true;
+    }
+
+    if(prevMeas == null || prevMeas != meas){
+      prevMeas = meas;
+      needUpdate = true;
+    }
+
+    if(prevSignals.isEmpty || prevSignals != signals){
+      prevSignals = signals;
       needUpdate = true;
     }
 

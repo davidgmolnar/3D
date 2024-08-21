@@ -1,10 +1,20 @@
+import 'package:flutter/material.dart';
+
+import '../../../data/data.dart';
 import '../../../data/settings_classes.dart';
 import '../../../data/custom_notifiers.dart';
+import '../../../io/file_system.dart';
+import '../../../io/logger.dart';
 import '../../../multiprocess/childprocess.dart';
 import '../../../routes/custom_chart/custom_chart_logic/custom_chart_window_type.dart';
 import '../../../routes/window_type.dart';
+import '../../dialogs/dialog_base.dart';
+import '../../dialogs/dropdown_input_dialog.dart';
+import '../../dialogs/string_input_dialog.dart';
 import '../chart_area.dart';
 import '../../../data/settings.dart';
+import '../chart_bottom_overview.dart';
+import '../../../ui/notifications/notification_logic.dart' as noti;
 
 const int _scrollMultiplierHorizontal = 1; // setting
 const int _dragMultiplierHorizontal = 1; // setting
@@ -41,6 +51,52 @@ class ChartDrawModes{
       return data[measurement]![signal]!;
     }
     return ChartDrawMode.LINE;
+  }
+}
+
+class MainChartPreset{
+  final Map<String, List<TraceSetting>> signals;
+  final String? bottomMeas;
+  final List<String> bottomSignals;
+
+  MainChartPreset({required this.signals, required this.bottomMeas, required this.bottomSignals});
+
+  void saveToFile(final String name){
+    final Map jsonFormattable = {};
+    jsonFormattable["traces"] = signals.map((key, value) => MapEntry(key, value.map((e) => e.asJson).toList()));
+    if(bottomMeas != null && bottomSignals.isNotEmpty){
+      jsonFormattable["bottom_overview"] = {
+        "meas": bottomMeas,
+        "signals": bottomSignals
+      };
+    }
+
+    FileSystem.trySaveMapToLocalSync(FileSystem.mainChartPresetDir, name, jsonFormattable);
+  }
+
+  static MainChartPreset loadFromFile(final String name){
+    final Map preset = FileSystem.tryLoadMapFromLocalSync(FileSystem.mainChartPresetDir, name);
+
+    final Map<String, List<TraceSetting>> signals = {};
+    String? bottomMeas;
+    final List<String> bottomSignals = [];
+
+    for(final String meas in preset["traces"]!.keys){
+      signals[meas] = [];
+      for(final Map sigdesc in preset["traces"]![meas]!.cast<Map>()){
+        final TraceSetting? setting = TraceSetting.fromJson(sigdesc.cast<String, dynamic>());
+        if(setting != null){
+          signals[meas]!.add(setting);
+        }
+      }
+    }
+
+    if(preset.containsKey("bottom_overview")){
+      bottomMeas = preset["bottom_overview"]!["meas"]!;
+      bottomSignals.addAll(preset["bottom_overview"]!["signals"]!.cast<String>());
+    }
+
+    return MainChartPreset(signals: signals, bottomMeas: bottomMeas, bottomSignals: bottomSignals);
   }
 }
 
@@ -134,5 +190,88 @@ abstract class ChartController{
 
   static double positionToTimeStamp(final double position){
     return (position / _chartAreaWidth * shownDurationNotifier.value.timeDuration) + shownDurationNotifier.value.timeOffset;
+  }
+
+  static void savePreset(final BuildContext context){
+    final MainChartPreset preset = MainChartPreset(
+      signals: TraceSettingsProvider.visibleSignalsData,
+      bottomMeas: ChartBottomOverviewChartLineState.meas,
+      bottomSignals: ChartBottomOverviewChartLineState.signals
+    );
+
+    showDialog<Widget>(context: context, builder: (BuildContext context){
+      return DialogBase(
+        title: "Input dialog",
+        dialog: StringInputDialog(
+          hintText: "Specify preset name",
+          onFinished: (presetName) async {
+            if(FileSystem.tryListElementsInLocalSync(FileSystem.mainChartPresetDir).any((element) => element.uri.path.endsWith("$presetName.3DCHARTPRESET"))){
+              noti.NotificationController.add(noti.Notification.decaying(LogEntry.error("A preset with this name already exists"), 5000));
+            }
+            else{
+              preset.saveToFile("$presetName.3DCHARTPRESET");
+              noti.NotificationController.add(noti.Notification.decaying(LogEntry.info("Preset saved"), 5000));
+            }
+          },
+        ),
+        minWidth: 400,
+        maxHeight: 100,
+      );
+    });
+  }
+
+  static void loadPreset(final BuildContext context){
+    final List<String> presetNames = (FileSystem.tryListElementsInLocalSync(FileSystem.mainChartPresetDir)).where((element) => element.uri.path.endsWith(".3DCHARTPRESET")).map((e) => e.uri.path.split('/').last.split('\\').last.split('.').first).toList();             
+    if(presetNames.isEmpty){
+      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("No previous Statisitics View presets have been found"), 5000));
+      return;
+    }
+
+    showDialog<Widget>(context: context, builder: (BuildContext context){
+      return DialogBase(
+        title: "Input dialog",
+        dialog: DropdownInputDialog(
+          hintText: "Specify preset name",
+          options: presetNames,
+          onFinished: (presetName) async {
+            if(presetName != null){
+              final MainChartPreset preset = MainChartPreset.loadFromFile("$presetName.3DCHARTPRESET");
+              for(final String meas in TraceSettingsProvider.traceSettingNotifier.value.keys){
+                for(int i = 0; i < TraceSettingsProvider.traceSettingNotifier.value[meas]!.length; i++){
+                  TraceSettingsProvider.traceSettingNotifier.value[meas]![i].isVisible = false;
+                }
+              }
+              for(final String meas in preset.signals.keys){
+                if(TraceSettingsProvider.traceSettingNotifier.value.containsKey(meas)){
+                  for(final TraceSetting sig in preset.signals[meas]!){
+                    if(signalData[meas]!.containsKey(sig.signal)){
+                      sig.scalingGroup = TraceSettingsProvider.nextScalingGroup;
+                      TraceSettingsProvider.traceSettingNotifier.value[meas]!.removeWhere((element) => element.signal == sig.signal);
+                      TraceSettingsProvider.traceSettingNotifier.value[meas]!.add(sig);
+                    }
+                    else{
+                      noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Signal ${sig.signal} is not imported, skipping"), 5000));
+                    }
+                  }
+                }
+                else{
+                  noti.NotificationController.add(noti.Notification.decaying(LogEntry.warning("Measurement $meas is not imported, skipping"), 5000));
+                }
+              }
+
+              if(preset.bottomMeas != null && preset.bottomSignals.isNotEmpty){
+                ChartBottomOverviewChartLineState.meas = preset.bottomMeas;
+                ChartBottomOverviewChartLineState.signals = preset.bottomSignals;
+              }
+
+              TraceSettingsProvider.reCalculateVisibleDuration();
+              TraceSettingsProvider.traceSettingNotifier.update((value) { });
+            }
+          }
+        ),
+        minWidth: 400,
+        maxHeight: 100,
+      );
+    });
   }
 }
