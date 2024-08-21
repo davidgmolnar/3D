@@ -6,6 +6,7 @@ import '../../data/data.dart';
 import '../../data/lapdata.dart';
 import '../../data/settings.dart';
 import '../../io/fscache.dart';
+import '../input_widgets/search_list_selector.dart';
 import '../theme/theme.dart';
 import 'chart_logic/chart_controller.dart';
 import 'chart_scaler.dart';
@@ -13,32 +14,89 @@ import 'cursor_displays.dart';
 
 const double chartBottomOverviewHeight = 100;
 
-class ChartBottomOverview extends StatelessWidget {
+class ChartBottomOverview extends StatefulWidget {
   const ChartBottomOverview({super.key});
 
   @override
+  State<ChartBottomOverview> createState() => _ChartBottomOverviewState();
+}
+
+class _ChartBottomOverviewState extends State<ChartBottomOverview> {
+  @override
+  void initState() {
+    TraceSettingsProvider.traceSettingNotifier.addListener(update);
+    super.initState();
+  }
+
+  void update() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onHorizontalDragUpdate: (details) {
-        //ChartController.moveInFullChannelTime = details.primaryDelta ?? 0;
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          SizedBox(
-            height: chartBottomOverviewHeight,
-            width: MediaQuery.of(context).size.width - (TraceSettingsProvider.scalingGroupData.length * chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1),
-            child: const Stack(
-              fit: StackFit.expand,
-              children: [
-                ChartBottomOverviewChartLine(),
-                ChartBottomOverviewFrame()
-              ],
+    if(ChartBottomOverviewChartLineState.meas != null && ChartBottomOverviewChartLineState.signals.isNotEmpty){
+      return GestureDetector(
+        onHorizontalDragUpdate: (details) {
+          //ChartController.moveInFullChannelTime = details.primaryDelta ?? 0;
+        },
+        onDoubleTap: () {
+          ChartBottomOverviewChartLineState.meas = null;
+          ChartBottomOverviewChartLineState.signals.clear();
+          setState(() {});
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+              height: chartBottomOverviewHeight,
+              width: MediaQuery.of(context).size.width - (TraceSettingsProvider.scalingGroupData.length * chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1),
+              child: const Stack(
+                fit: StackFit.expand,
+                children: [
+                  ChartBottomOverviewChartLine(),
+                  ChartBottomOverviewFrame()
+                ],
+              ),
             ),
-          ),
-        ],
-      )
+          ],
+        )
+      );
+    }
+    return SizedBox(
+      height: chartBottomOverviewHeight,
+      width: MediaQuery.of(context).size.width - (TraceSettingsProvider.scalingGroupData.length * chartScalerWidth + 2 * StyleManager.globalStyle.padding + 1),
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            DropdownButton<String>(
+              value: ChartBottomOverviewChartLineState.meas,
+              items: [DropdownMenuItem<String>(value: null, child: Text("Select a measurement", style: StyleManager.textStyle,)),
+                ...TraceSettingsProvider.traceSettingNotifier.value.keys.map((e) => DropdownMenuItem<String>(value: e, child: Text(e, style: StyleManager.textStyle,)))
+              ],
+              onChanged: (final String? value) {
+                ChartBottomOverviewChartLineState.meas = value;
+                setState(() {});
+              },
+            ),
+            SearchListSelector(
+              options: ChartBottomOverviewChartLineState.meas == null ? [] : TraceSettingsProvider.traceSettingNotifier.value[ChartBottomOverviewChartLineState.meas]!.map((e) => e.signal).toList(),
+              selection: ChartBottomOverviewChartLineState.signals,
+              hintText: "Select signals",
+              onSelected: (final List<String> selected) {
+                ChartBottomOverviewChartLineState.signals.clear();
+                ChartBottomOverviewChartLineState.signals.addAll(selected);
+                setState(() {});
+              },
+            )
+          ],
+        ),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    TraceSettingsProvider.traceSettingNotifier.removeListener(update);
+    super.dispose();
   }
 }
 
@@ -204,18 +262,18 @@ class ChartBottomOverviewChartLine extends StatefulWidget {
   const ChartBottomOverviewChartLine({super.key});
 
   @override
-  State<ChartBottomOverviewChartLine> createState() => _ChartBottomOverviewChartLineState();
+  State<ChartBottomOverviewChartLine> createState() => ChartBottomOverviewChartLineState();
 }
 
-class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartLine> {
-  Map<String, List<String>>? prevVisibleSignals;
+class ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartLine> {
+  static String? meas;
+  static List<String> signals = [];
   double? prevFirstVisibleTimestamp;
   double? prevLastVisibleTimestamp;
 
   @override
   void initState() {
     TraceSettingsProvider.traceSettingNotifier.addListener(update); // to know visible signals
-    prevVisibleSignals = TraceSettingsProvider.visibleSignals;
     prevFirstVisibleTimestamp = TraceSettingsProvider.firstVisibleTimestamp;
     prevLastVisibleTimestamp = TraceSettingsProvider.lastVisibleTimestamp;
     super.initState();
@@ -223,12 +281,6 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
 
   void update(){
     bool needUpdate = false;
-
-    Map<String, List<String>> vis = TraceSettingsProvider.visibleSignals;
-    if(prevVisibleSignals == null || prevVisibleSignals != vis){
-      prevVisibleSignals = vis;
-      needUpdate = true;
-    }
     
     if(prevFirstVisibleTimestamp == null || prevFirstVisibleTimestamp != TraceSettingsProvider.firstVisibleTimestamp){
       prevFirstVisibleTimestamp = TraceSettingsProvider.firstVisibleTimestamp;
@@ -241,15 +293,15 @@ class _ChartBottomOverviewChartLineState extends State<ChartBottomOverviewChartL
     }
 
     if(needUpdate){
-      ChartBottomOverviewChartLinePainter.storage.clear();
       setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    ChartBottomOverviewChartLinePainter.storage.clear();
     return CustomPaint(
-      painter: ChartBottomOverviewChartLinePainter(vis: prevVisibleSignals!),
+      painter: ChartBottomOverviewChartLinePainter(vis: {meas!: signals}),
     );
   }
 
