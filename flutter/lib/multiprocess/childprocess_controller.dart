@@ -109,7 +109,7 @@ abstract class ChildProcessController{
       }
     },
     onError: (err) async {
-      localLogger.error("Main socket listener got an error, reinitializing ${err.toString()}");
+      localLogger.warning("Main socket listener got an error, reinitializing ${err.toString()}");
       _sock!.close();
       _sock = await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, localSocketPort);
       _init();
