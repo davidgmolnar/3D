@@ -147,6 +147,7 @@ class CursorTooltip extends StatelessWidget {
     return Positioned(
       left: pos! + cursorHorizontalDragBuffer,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
@@ -305,7 +306,7 @@ class CursorDataDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: cursorInfoNotifier.value.cursors[cursorIndex].boxWidth,
-      height: 210,
+      height: min(210, 30.0 * values.keys.length + 30.0 * values.values.fold(0, (previousValue, element) => previousValue + element.length)),
       child: ListView(
         children: [
           for(String meas in values.keys)
