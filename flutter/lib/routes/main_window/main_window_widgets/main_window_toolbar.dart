@@ -141,7 +141,7 @@ class MainWindowToolbar extends StatelessWidget {
     const ToolbarItem(iconData: FontAwesomeIcons.chartLine, onPressed: _traceEditorWindow),
     const ToolbarItemWithDropdown(iconData: Icons.grid_view_sharp, dropdownItems: [
       ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
-      ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+      ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "XY plot"),
       ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
     ], iconHeight: toolbarItemSize, invertColors: false,),
     const ToolbarItem(iconData: Icons.create, onPressed: _calfileCreatorWindow),
@@ -166,7 +166,7 @@ class MainWindowToolbar extends StatelessWidget {
     const ToolbarDropdownItem(onPressed: _calfileRunnerWindow, text: "Run Calfile"),
     const ToolbarDropdownItem(onPressed: _traceEditorWindow, text: "Open Trace Editor"),
     const ToolbarDropdownItem(onPressed: _chartGridSetup, text: "Chart grid"),
-    const ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "Characteristics"),
+    const ToolbarDropdownItem(onPressed: _characteristicsSetup, text: "XY plot"),
     const ToolbarDropdownItem(onPressed: _statisticsViewWindow, text: "Statistics View"),
     const ToolbarDropdownItem(onPressed: _calfileCreatorWindow, text: "Create/Test Calfile"),
     const ToolbarDropdownItem(onPressed: _settingsWindow, text: "General Settings"),

@@ -32,8 +32,8 @@ enum DeltaDisplayType{
 
 const Map<DeltaDisplayType, String> deltaDisplayTypeNames = {
   DeltaDisplayType.ABSDIFF: "Y Diff",
-  DeltaDisplayType.DERIVATE: "Derivate",
-  DeltaDisplayType.INTEGRAL: "Integral",
+  DeltaDisplayType.DERIVATE: "Deriv",
+  DeltaDisplayType.INTEGRAL: "Int",
   DeltaDisplayType.MAX: "Max",
   DeltaDisplayType.MIN: "Min",
 };
@@ -55,7 +55,7 @@ class CursorData{
   });
 
   factory CursorData.fromCurrent(final double timeStamp, final Map<String, Map<String, num>> values){
-    return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null, boxWidth: 300);
+    return CursorData(timeStamp: timeStamp, values: values, isDelta: false, deltaTarget: null, boxWidth: 250);
   }
 
   String represent(final int index) {
@@ -216,7 +216,7 @@ class CursorTooltip extends StatelessWidget {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: Text("Timestamp: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
+                      child: Text("t: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
                     ),
                     if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
                       Padding(
@@ -234,7 +234,7 @@ class CursorTooltip extends StatelessWidget {
                         value.cursors[cursorIndex].deltaType = deltaDisplayTypeNames.keys.firstWhere((element) => deltaDisplayTypeNames[element] == selected);
                       });
                     },
-                    elementWidth: 80,
+                    elementWidth: 60,
                   ),
                 cursorInfoNotifier.value.cursors[cursorIndex].isDelta ? 
                   CursorDataDisplay(values: cursorInfoNotifier.value.calcDelta(cursorIndex), cursorIndex: cursorIndex)
@@ -250,7 +250,7 @@ class CursorTooltip extends StatelessWidget {
               onHorizontalDragUpdate: (details) {
                 cursorInfoNotifier.update((cursorInfo) {
                   cursorInfo.cursors[cursorIndex].boxWidth += details.delta.dx;
-                  cursorInfo.cursors[cursorIndex].boxWidth = cursorInfo.cursors[cursorIndex].boxWidth.clamp(200, 700);
+                  cursorInfo.cursors[cursorIndex].boxWidth = cursorInfo.cursors[cursorIndex].boxWidth.clamp(250, 700);
                 });
               },
               child: const SizedBox(
