@@ -288,7 +288,9 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
           }
         },
         onDoubleTapDown: (details) {
-          LapData.addTemp(ChartController.positionToTimeStamp(details.localPosition.dx));
+          if(!(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS)){
+            LapData.addTemp(ChartController.positionToTimeStamp(details.localPosition.dx));
+          }
         },
         behavior: HitTestBehavior.opaque,
         child: Stack(
@@ -305,7 +307,9 @@ class __ChartGestureAreaState extends State<_ChartGestureArea> {
                 child: CustomPaint(painter: TimeAxisPainter(valueAxisData: valueAxisData),)
               ),
             ),
-            const LapMarkersOverlay(),
+            
+            if(!(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS))
+              const LapMarkersOverlay(),
             const CursorOverlay(),
           ],
         ),
@@ -407,9 +411,11 @@ class TimeAxisPainter extends CustomPainter{
     final Paint paintBase = Paint()..color = StyleManager.globalStyle.primaryColor;
 
     int i = 0;
+    final bool isCharacteristics = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS;
     for(final num label in valueAxisData.majorTickValues){
+      final String text = isCharacteristics ? representNumber(label.toString()) : msToTimeString(label, addMs: valueAxisData.majorTickValues.length > 1 && valueAxisData.majorTickValues[1] - valueAxisData.majorTickValues[0] < 1000);
       final TextPainter tp = textPainterBase..text = TextSpan(
-        text: msToTimeString(label, addMs: valueAxisData.majorTickValues.length > 1 && valueAxisData.majorTickValues[1] - valueAxisData.majorTickValues[0] < 1000),
+        text: text,
         style: StyleManager.textStyle.copyWith(color: StyleManager.globalStyle.primaryColor),
       );
       tp.layout();

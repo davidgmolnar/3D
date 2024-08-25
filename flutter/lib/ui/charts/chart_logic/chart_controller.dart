@@ -118,11 +118,12 @@ abstract class ChartController{
   static set zoomInTime(double pointerSignalScrollDelta){
     double delta = (shownDurationNotifier.value.timeDuration * 1e-3 * pointerSignalScrollDelta * _scrollMultiplierHorizontal);
 
+    final bool isCharacteristics = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS;
     shownDurationNotifier.update((shown) {
       shown.timeOffset += delta;
       shown.timeDuration -= delta * 2;
 
-      if(shown.timeOffset < 0){
+      if(shown.timeOffset < 0 && !isCharacteristics){
         shown.timeOffset = 0;
       }
     });
@@ -131,11 +132,12 @@ abstract class ChartController{
   }
 
   static set moveInTime(double horizontalDragUpdateDelta){
+    final bool isCharacteristics = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS;
     shownDurationNotifier.update((shown) {
       final double delta = horizontalDragUpdateDelta / _chartAreaWidth * shown.timeDuration * _dragMultiplierHorizontal;
       shown.timeOffset -= delta;
 
-      if(shown.timeOffset < 0){
+      if(shown.timeOffset < 0 && !isCharacteristics){
         shown.timeOffset = 0;
       }
     });

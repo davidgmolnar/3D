@@ -12,7 +12,7 @@ import 'chart_logic/chart_controller.dart';
 import 'chart_scaler.dart';
 import 'cursor_displays.dart';
 
-const double chartBottomOverviewHeight = 100;
+double chartBottomOverviewHeight = 100;
 
 class ChartBottomOverview extends StatefulWidget {
   const ChartBottomOverview({super.key});

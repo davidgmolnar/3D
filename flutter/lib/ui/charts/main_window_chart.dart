@@ -35,10 +35,11 @@ class Chart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       children: [
-        Expanded(child: ChartArea(),),
-        ChartBottomOverview()
+        const Expanded(child: ChartArea(),),
+        if(chartBottomOverviewHeight != 0)
+          const ChartBottomOverview()
       ],
     );
   }

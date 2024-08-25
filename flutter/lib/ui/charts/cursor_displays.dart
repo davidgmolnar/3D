@@ -144,6 +144,7 @@ class CursorTooltip extends StatelessWidget {
     if(pos == null){
       return const SizedBox();
     }
+    final bool isCharacteristics = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS;
     return Positioned(
       left: pos! + cursorHorizontalDragBuffer,
       child: Row(
@@ -217,12 +218,12 @@ class CursorTooltip extends StatelessWidget {
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                      child: Text("t: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
+                      child: Text(isCharacteristics ? "x: ${representNumber(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp.toString())}" : "t: ${msToTimeString(cursorInfoNotifier.value.cursors[cursorIndex].timeStamp, addMs: true)}"),
                     ),
                     if(cursorInfoNotifier.value.cursors[cursorIndex].isDelta)
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                        child: Text("dt: ${msToTimeString(cursorInfoNotifier.value.dt(cursorIndex), addMs: true)}"),
+                        child: Text(isCharacteristics ? "dx: ${representNumber(cursorInfoNotifier.value.dt(cursorIndex).toString())}" : "dt: ${msToTimeString(cursorInfoNotifier.value.dt(cursorIndex), addMs: true)}"),
                       ),
                   ],
                 ),
@@ -272,14 +273,14 @@ class CursorDataDisplay extends StatelessWidget {
   final Map<String, Map<String, num>> values;
   final int cursorIndex;
 
-  CompoundUnit _getUnit(final CompoundUnit sigUnit){
+  CompoundUnit _getUnit(final CompoundUnit sigUnit, final CompoundUnit xAxisUnit){
     switch(cursorInfoNotifier.value.cursors[cursorIndex].deltaType){
       case DeltaDisplayType.ABSDIFF:
         return sigUnit;
       case DeltaDisplayType.DERIVATE:
-        return UnitManipulation.unitDiv(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
+        return UnitManipulation.unitDiv(sigUnit, xAxisUnit);
       case DeltaDisplayType.INTEGRAL:
-        return UnitManipulation.unitMult(sigUnit, CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {}));
+        return UnitManipulation.unitMult(sigUnit, xAxisUnit);
       case DeltaDisplayType.MAX:
         return sigUnit;
       case DeltaDisplayType.MIN:
@@ -304,6 +305,10 @@ class CursorDataDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final CompoundUnit xAxisUnit = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS ?
+     signalData[customCharacteristics!.measurement]![customCharacteristics!.baseSignal]!.unit
+     :
+     CompoundUnit(multiplier: 1, nom: {"seconds": 1}, denom: {});
     return SizedBox(
       width: cursorInfoNotifier.value.cursors[cursorIndex].boxWidth,
       height: min(210, 30.0 * values.keys.length + 30.0 * values.values.fold(0, (previousValue, element) => previousValue + element.length)),
@@ -338,7 +343,7 @@ class CursorDataDisplay extends StatelessWidget {
                           width: 100,
                           child: Padding(
                             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
-                            child: Text(representNumber(_getValue(values[meas]![signal]!, _getUnit(signalData[meas]![signal]!.unit)).toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
+                            child: Text(representNumber(_getValue(values[meas]![signal]!, _getUnit(signalData[meas]![signal]!.unit, xAxisUnit)).toString(), maxDigit: 9), style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize)),
                           ),
                         ),
                         SizedBox(
@@ -347,7 +352,7 @@ class CursorDataDisplay extends StatelessWidget {
                             padding: EdgeInsets.symmetric(horizontal: StyleManager.globalStyle.padding),
                             child: LaTexT(
                               laTeXCode: Text(
-                                _getUnit(signalData[meas]![signal]!.unit).toLaTextString(),
+                                _getUnit(signalData[meas]![signal]!.unit, xAxisUnit).toLaTextString(),
                                 style: TextStyle(color: TraceSettingsProvider.colorOfSignal(signal), fontSize: StyleManager.globalStyle.fontSize),
                               ),
                             ),
@@ -385,7 +390,10 @@ class Cursor extends StatelessWidget {
           onHorizontalDragUpdate: (details) {
             cursorInfoNotifier.update((cursorInfo) {
               cursorInfo.cursors[cursorIndex].timeStamp += ChartController.moveInCursonTime(details.delta.dx);
-              cursorInfo.cursors[cursorIndex].timeStamp = cursorInfo.cursors[cursorIndex].timeStamp.clamp(1, double.infinity);
+              final bool isCharacteristics = windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.CHARACTERISTICS;
+              if(!isCharacteristics){
+                cursorInfo.cursors[cursorIndex].timeStamp = cursorInfo.cursors[cursorIndex].timeStamp.clamp(1, double.infinity);
+              }
               cursorInfo.cursors[cursorIndex].values = cursorDataAtTimeStamp(cursorInfo.cursors[cursorIndex].timeStamp, cursorInfo.visibility);
 
               if(windowType == WindowType.CUSTOM_CHART && customChartWindowType == CustomChartWindowType.GRID && isInSharingGroup){

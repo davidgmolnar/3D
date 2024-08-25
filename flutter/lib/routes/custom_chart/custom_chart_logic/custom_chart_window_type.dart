@@ -4,6 +4,7 @@ import '../../../data/data.dart';
 import '../../../data/settings.dart';
 import '../../../data/settings_classes.dart';
 import '../../../io/logger.dart';
+import '../../../ui/charts/chart_bottom_overview.dart';
 import '../../../ui/charts/chart_logic/characteristics.dart';
 import '../../../ui/charts/chart_logic/chart_controller.dart';
 import '../../../ui/charts/cursor_displays.dart';
@@ -173,6 +174,9 @@ void customChartHandleDataReceived(Map data) async {
             value.timeDuration = TraceSettingsProvider.lastVisibleTimestamp - value.timeOffset;
           });
           TraceSettingsProvider.traceSettingNotifier.update((value) { });
+          
+          chartBottomOverviewHeight = 0;
+          StyleManager.updater();
           localLogger.info("Finished setup for ${customCharacteristics!.name}", doNoti: false);
         }
       }
