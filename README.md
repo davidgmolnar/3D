@@ -180,4 +180,4 @@ Below is a list of currently implemented calculation instructions.
 
 * **Author**: Dávid Gergely Molnár
 * **Organization**: BME Formula Racing Team
-* **2D datalogger**: 2D is a product of [2D-Datarecording](https://2d-datarecording.com/en/)
+* **2D datalogger**: 2D is a product of [2D-Datarecording](https://2d-datarecording.com/)
