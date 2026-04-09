@@ -25,7 +25,7 @@ The application has been tested and developed on the following Windows 10 22H2 c
 | **OS** | Win 10 22H2 | Win 10 22H2 |
 | **CPU** | Ryzen 7 5800H | i5 8300H |
 | **RAM** | 16 GB RAM | 12 GB RAM |
-| **Disk** | TEAM TM8FP6001T | WD10SPZX-24Z10|
+| **Disk** | TEAM TM8FP6001T | WD10SPZX-24Z10 |
 
 
 * **Memory (RAM)**: The application itself uses only about 100 MB of RAM. Additional memory is used to store the measurement data, so the amount of available RAM will influence the size and quantity of logs you can analyze simultaneously.
