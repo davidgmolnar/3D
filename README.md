@@ -21,7 +21,7 @@
 The application has been tested and developed on the following Windows 10 22H2 configurations:
 
 | Component | System 1 | System 2 |
-| : | : | : |
+| :--- | :--- | :--- |
 | **OS** | Win 10 22H2 | Win 10 22H2 |
 | **CPU** | Ryzen 7 5800H | i5 8300H |
 | **RAM** | 16 GB RAM | 12 GB RAM |
